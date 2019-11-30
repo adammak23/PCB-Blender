@@ -25,7 +25,8 @@ bl_info = {
 import bpy
 from . PCB_Creator import GenerateOperator
 from . test_panel import LayoutDemoPanel
+from . Test import GeneratePCB
 
-classes = (GenerateOperator, LayoutDemoPanel)
+classes = (GenerateOperator, LayoutDemoPanel, GeneratePCB)
 
 register, unregister = bpy.utils.register_classes_factory(classes)
