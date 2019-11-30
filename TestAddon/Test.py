@@ -1,5 +1,10 @@
 import os
+import sys
+print(sys.exec_prefix)
+# Jak sprawić żeby blender/python widział folder gerber
+#os.chdir()
 from gerber import PCB
+import bpy
 from bpy.types import Operator
 
 class GeneratePCB(Operator):
