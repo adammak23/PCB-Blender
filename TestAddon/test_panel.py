@@ -3,6 +3,7 @@ import bpy
 from bpy.props import StringProperty, BoolProperty
 from bpy.types import Operator, Panel
 from bpy_extras.io_utils import ImportHelper
+from . PCB_Creator import GenerateOperator
 
 class LayoutDemoPanel(Panel, ImportHelper):
     """Creates a Panel in the scene context of the properties editor"""
@@ -32,11 +33,11 @@ class LayoutDemoPanel(Panel, ImportHelper):
         scene = context.scene
         
         col = layout.column()
-        first_string = col.prop(context.scene, 'first_path')
-        fsecond_string = col.prop(context.scene, 'second_path')
+        #first_string = col.prop(context.scene, 'first_path')
+        #fsecond_string = col.prop(context.scene, 'second_path')
         
         row = layout.row()
-        GenerateOperator.string1 = bpy.context.scene.first_path
-        GenerateOperator.string2 = bpy.context.scene.second_path
-        row.operator('xd.generate')
+        #GenerateOperator.string1 = bpy.context.scene.first_path
+        #GenerateOperator.string2 = bpy.context.scene.second_path
+        #row.operator('xd.generate')
         row.operator('lol.generate')
