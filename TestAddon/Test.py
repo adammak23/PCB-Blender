@@ -27,60 +27,47 @@ class GeneratePCB(Operator):
     string2 = ""
     
     def execute(self, context):
-        bpy.ops.object.select_all(action='SELECT')
-        bpy.ops.object.delete(use_global=False)
+        #bpy.ops.object.select_all(action='SELECT')
+        #bpy.ops.object.delete(use_global=False)
 
         GERBER_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), 'gerbers'))
         # Create a new PCB instance
         pcb = PCB.from_directory(GERBER_FOLDER)
 
         layer = pcb.layers[0]
-        
-        verts_raw = (
-            ["a0",1.0,-1.0,-1.0],
-            ["a1",1.0,-1.0,1.0],
-            ["a2",-1.0,-1.0,-1.0],
-            ["a3",-1.0,-1.0,1.0],
-            ["a4",1.0,1.0,-1.0],
-            ["a5",1.0,1.0,1.0],
-            ["a6",-1.0,1.0,-1.0],
-            ["a7",-1.0,1.0,1.0],
-        )
+        print(layer)
+        i = 0
+        verts_raw = []
+        edges_raw = []
+        for primitive in layer.primitives:
+            if(type(primitive) == gerber.primitives.Line):
+                verts_raw.append([primitive.start[0],primitive.start[1],0])
+                verts_raw.append([primitive.end[0],primitive.end[1],0])
+                edges_raw.append([i,i+1])
+                i+=2
 
-        edges_raw = (
-            ["a4","a0"],
-            ["a4","a6"],
-            ["a4","a5"],
-            ["a0","a2"],
-            ["a0","a1"],
-            ["a2","a6"],
-            ["a2","a3"],
-            ["a6","a7"],
-            ["a5","a1"],
-            ["a5","a7"],
-            ["a1","a3"],
-            ["a3","a7"],
-        )
+        # verts = []
+        # for v in verts_raw:
+        #     verts.append(v[1:])
 
-        verts = []
-        for v in verts_raw:
-            verts.append(v[1:])
-
-        edges = []
-        for a, b in edges_raw:
-            edges.append((int(a[1:]), int(b[1:])))
+        # edges = []
+        # for a, b in edges_raw:
+        #     edges.append((int(a[1:]), int(b[1:])))
 
         me = bpy.data.meshes.new("")
-        me.from_pydata(verts, edges, [])
+        me.from_pydata(verts_raw, edges_raw, [])
         me.validate()
         me.update()
 
-        ob = bpy.data.objects.new("", me)
-        scene = bpy.context.scene
-        scene.objects.link(ob)
-        scene.update()
+        obj = bpy.data.objects.new("objeeect", me)
+        bpy.context.scene.collection.objects.link(obj)
+        obj.convert(target='CURVE')
+        #bpy.ops.object.convert(target='CURVE')
 
-            
+        #obj.convert(target='CURVE')
+        #print(obj)
+        #print(bpy.context.scene.collection.objects[0])
+        #obj.convert(target='CURVE')
         # i = 0
         # for primitive in layer.primitives:
         #     i+=1
