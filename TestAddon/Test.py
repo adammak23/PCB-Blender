@@ -61,9 +61,27 @@ class GeneratePCB(Operator):
 
         obj = bpy.data.objects.new("objeeect", me)
         bpy.context.scene.collection.objects.link(obj)
-        obj.convert(target='CURVE')
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.remove_doubles()
+        bpy.ops.object.mode_set(mode='OBJECT')
         #bpy.ops.object.convert(target='CURVE')
+        # console: 
+        # bpy.context.object.data.dimensions = '2D'
+        # usage:
+        #obj.data.dimensions = '2D'
+        #obj.data.resolution_u = 1
+        #obj.data.bevel_depth = 0.001
 
+        #lps = obj.data.loops
+        #bpy.context.view_layer.objects.active = obj
+        #bpy.ops.object.select_all(action='SELECT')
+
+        #area = bpy.context.area
+        #old_area = bpy.context.area.type
+        #area.type = 'VIEW_3D'
+        #area.type = old_type
         #obj.convert(target='CURVE')
         #print(obj)
         #print(bpy.context.scene.collection.objects[0])
