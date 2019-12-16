@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 # Jak sprawić żeby blender/python widział folder gerber
 #os.chdir()
 from . import gerber
@@ -40,12 +41,29 @@ class GeneratePCB(Operator):
         verts_raw = []
         edges_raw = []
         for primitive in layer.primitives:
-            if(type(primitive) == gerber.primitives.Line):
+            if(type(primitive) == gerber.primitives.Diamond): #Line
                 verts_raw.append([primitive.start[0],primitive.start[1],0])
                 verts_raw.append([primitive.end[0],primitive.end[1],0])
                 edges_raw.append([i,i+1])
                 i+=2
-
+            elif(type(primitive) == gerber.primitives.Diamond): #Rectangle
+                verts_raw.append([primitive.vertices[0][0],primitive.vertices[0][1],0])
+                verts_raw.append([primitive.vertices[1][0],primitive.vertices[1][1],0])
+                verts_raw.append([primitive.vertices[2][0],primitive.vertices[2][1],0])
+                verts_raw.append([primitive.vertices[3][0],primitive.vertices[3][1],0])
+                edges_raw.append([i,i+1])
+                edges_raw.append([i+1,i+2])
+                edges_raw.append([i+2,i+3])
+                edges_raw.append([i+3,i])
+                i+=4
+            elif(type(primitive) == gerber.primitives.Circle):
+                r = primitive.radius
+                # sin rotation is 2*PI = 6.283
+                for x in range(63):
+                    verts_raw.append([r*math.cos(x/10), r*math.sin(x/10),0])
+                    edges_raw.append([i,i+1])
+                    i+=1
+                edges_raw.append([i-1,i-63])
         # verts = []
         # for v in verts_raw:
         #     verts.append(v[1:])
@@ -66,13 +84,13 @@ class GeneratePCB(Operator):
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.remove_doubles()
         bpy.ops.object.mode_set(mode='OBJECT')
-        #bpy.ops.object.convert(target='CURVE')
-        # console: 
+        bpy.ops.object.convert(target='CURVE')
+        # console says: 
         # bpy.context.object.data.dimensions = '2D'
-        # usage:
-        #obj.data.dimensions = '2D'
-        #obj.data.resolution_u = 1
-        #obj.data.bevel_depth = 0.001
+        # in code:
+        obj.data.dimensions = '2D'
+        obj.data.resolution_u = 1
+        obj.data.bevel_depth = 0.001
 
         #lps = obj.data.loops
         #bpy.context.view_layer.objects.active = obj
