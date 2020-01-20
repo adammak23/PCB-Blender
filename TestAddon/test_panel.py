@@ -40,4 +40,4 @@ class LayoutDemoPanel(Panel, ImportHelper):
         #GenerateOperator.string1 = bpy.context.scene.first_path
         #GenerateOperator.string2 = bpy.context.scene.second_path
         #row.operator('xd.generate')
-        row.operator('lol.generate')
+        row.operator('test.generate')
