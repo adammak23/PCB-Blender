@@ -2,6 +2,7 @@ import os
 import sys
 import math
 from pprint import pprint
+# pprint(vars(your_object))
 # How to make blender/python see gerber folder?
 #os.chdir()
 from . import gerber
@@ -27,33 +28,41 @@ def RenderLayer(self, layer):
     verts_raw = []
     edges_raw = []
     for primitive in layer.primitives:
-        # if(type(primitive) == gerber.primitives.Line):
-        #     verts_raw.append([primitive.start[0],primitive.start[1],0])
-        #     verts_raw.append([primitive.end[0],primitive.end[1],0])
-        #     edges_raw.append([i,i+1])
-        #     i+=2
+        if(type(primitive) == gerber.primitives.Line):
+            # Should this be filled inside?
+            verts_raw.append([primitive.start[0],primitive.start[1],0])
+            verts_raw.append([primitive.end[0],primitive.end[1],0])
+            edges_raw.append([i,i+1])
+            i+=2
 
-        # elif(type(primitive) == gerber.primitives.Rectangle):
-        #     verts_raw.append([primitive.vertices[0][0],primitive.vertices[0][1],0])
-        #     verts_raw.append([primitive.vertices[1][0],primitive.vertices[1][1],0])
-        #     verts_raw.append([primitive.vertices[2][0],primitive.vertices[2][1],0])
-        #     verts_raw.append([primitive.vertices[3][0],primitive.vertices[3][1],0])
-        #     edges_raw.append([i,i+1])
-        #     edges_raw.append([i+1,i+2])
-        #     edges_raw.append([i+2,i+3])
-        #     edges_raw.append([i+3,i])
-        #     i+=4
+        elif(type(primitive) == gerber.primitives.Rectangle):
+            verts_raw.append([primitive.vertices[0][0],primitive.vertices[0][1],0])
+            verts_raw.append([primitive.vertices[1][0],primitive.vertices[1][1],0])
+            verts_raw.append([primitive.vertices[2][0],primitive.vertices[2][1],0])
+            verts_raw.append([primitive.vertices[3][0],primitive.vertices[3][1],0])
+            edges_raw.append([i,i+1])
+            edges_raw.append([i+1,i+2])
+            edges_raw.append([i+2,i+3])
+            edges_raw.append([i+3,i])
+            i+=4
 
         if(type(primitive) == gerber.primitives.Circle):
+            #pprint(vars(primitive))
+            
+            if(primitive.hole_diameter != None):
+                #FILL INSIDE
+                pass
+            
             r = primitive.radius
             # sin rotation is 2*PI = 6.283
             CircleResolution = 50
             for x in range(CircleResolution):
                 i+=1
                 verts_raw.append([r*math.cos(x*(2*math.pi/CircleResolution))+primitive._position[0], r*math.sin(x*(2*math.pi/CircleResolution))+primitive._position[1],0])
-                edges_raw.append([i-1,i])
+                if(x!=CircleResolution-1):
+                    edges_raw.append([i-1,i])
 
-            #edges_raw.append([i-1,i-100])
+            edges_raw.append([i-1,i-CircleResolution])
 
             # verts = []
             # for v in verts_raw:
@@ -63,25 +72,25 @@ def RenderLayer(self, layer):
             # for a, b in edges_raw:
             #     edges.append((int(a[1:]), int(b[1:])))
 
-            me = bpy.data.meshes.new("")
-            me.from_pydata(verts_raw, edges_raw, [])
-            me.validate()
-            me.update()
+    me = bpy.data.meshes.new("")
+    me.from_pydata(verts_raw, edges_raw, [])
+    me.validate()
+    me.update()
 
-            obj = bpy.data.objects.new(str(layer), me)
-            bpy.context.scene.collection.objects.link(obj)
-            obj.select_set(True)
-            bpy.context.view_layer.objects.active = obj
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.mesh.remove_doubles()
-            bpy.ops.object.mode_set(mode='OBJECT')
-            bpy.ops.object.convert(target='CURVE')
+    obj = bpy.data.objects.new(str(layer), me)
+    bpy.context.scene.collection.objects.link(obj)
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.remove_doubles()
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.convert(target='CURVE')
             # console says: 
             # bpy.context.object.data.dimensions = '2D'
             # in code:
-            obj.data.dimensions = '2D'
-            obj.data.resolution_u = 1
-            #obj.data.bevel_depth = 0.001
+    obj.data.dimensions = '2D'
+    obj.data.resolution_u = 1
+    obj.data.bevel_depth = 0.001
 
             #lps = obj.data.loops
             #bpy.context.view_layer.objects.active = obj
