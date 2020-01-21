@@ -11,86 +11,93 @@ import bpy
 import bmesh
 from bpy.types import Operator
 
-def create_Vertices (name, verts):
-    # Create mesh and object
-    me = bpy.data.meshes.new('Mesh')
-    ob = bpy.data.objects.new(name, me)
-    ob.show_name = True
-    # Link object to scene
-    bpy.context.scene.collection.objects.link(ob)
-    me.from_pydata(verts, [], [])
-    # Update mesh with new data
-    me.update()
-    return ob
+# def create_Vertices (name, verts):
+#     # Create mesh and object
+#     me = bpy.data.meshes.new('Mesh')
+#     ob = bpy.data.objects.new(name, me)
+#     ob.show_name = True
+#     # Link object to scene
+#     bpy.context.scene.collection.objects.link(ob)
+#     me.from_pydata(verts, [], [])
+#     # Update mesh with new data
+#     me.update()
+#     return ob
 
 def RenderLayer(self, layer):
-    i = 0
-    verts_raw = []
-    edges_raw = []
+    
+    mesh_i = 0
+    mesh_verts = []
+    mesh_edges = []
+    mesh_faces = []
+
+    curve_i = 0
+    curve_verts = []
+    curve_edges = []
+    curve_thickness = 0.001
+
+    #pprint(vars(primitive))
+
     for primitive in layer.primitives:
-        if(type(primitive) == gerber.primitives.Line):
-            # Should this be filled inside?
-            verts_raw.append([primitive.start[0],primitive.start[1],0])
-            verts_raw.append([primitive.end[0],primitive.end[1],0])
-            edges_raw.append([i,i+1])
-            i+=2
 
-        elif(type(primitive) == gerber.primitives.Rectangle):
-            verts_raw.append([primitive.vertices[0][0],primitive.vertices[0][1],0])
-            verts_raw.append([primitive.vertices[1][0],primitive.vertices[1][1],0])
-            verts_raw.append([primitive.vertices[2][0],primitive.vertices[2][1],0])
-            verts_raw.append([primitive.vertices[3][0],primitive.vertices[3][1],0])
-            edges_raw.append([i,i+1])
-            edges_raw.append([i+1,i+2])
-            edges_raw.append([i+2,i+3])
-            edges_raw.append([i+3,i])
-            i+=4
+        if(type(primitive) == gerber.primitives.Rectangle):
+            mesh_verts.append([primitive.vertices[0][0],primitive.vertices[0][1],0])
+            mesh_verts.append([primitive.vertices[1][0],primitive.vertices[1][1],0])
+            mesh_verts.append([primitive.vertices[2][0],primitive.vertices[2][1],0])
+            mesh_verts.append([primitive.vertices[3][0],primitive.vertices[3][1],0])
+            mesh_edges.append([mesh_i,mesh_i+1])
+            mesh_edges.append([mesh_i+1,mesh_i+2])
+            mesh_edges.append([mesh_i+2,mesh_i+3])
+            mesh_edges.append([mesh_i+3,mesh_i])
+            mesh_faces.append([mesh_i,mesh_i+1,mesh_i+2])
+            mesh_faces.append([mesh_i+2,mesh_i+3,mesh_i])
+            mesh_i+=4
 
-        if(type(primitive) == gerber.primitives.Circle):
-            #pprint(vars(primitive))
-            
-            if(primitive.hole_diameter != None):
-                #FILL INSIDE
-                pass
-            
+        elif(type(primitive) == gerber.primitives.Circle):
             r = primitive.radius
             # sin rotation is 2*PI = 6.283
             CircleResolution = 50
+            first_point = mesh_i
             for x in range(CircleResolution):
-                i+=1
-                verts_raw.append([r*math.cos(x*(2*math.pi/CircleResolution))+primitive._position[0], r*math.sin(x*(2*math.pi/CircleResolution))+primitive._position[1],0])
+                mesh_i+=1
+                mesh_verts.append([r*math.cos(x*(2*math.pi/CircleResolution))+primitive._position[0], r*math.sin(x*(2*math.pi/CircleResolution))+primitive._position[1],0])
                 if(x!=CircleResolution-1):
-                    edges_raw.append([i-1,i])
+                    mesh_edges.append([mesh_i-1,mesh_i])
+                    mesh_faces.append([mesh_i-1,mesh_i,first_point])
+            mesh_edges.append([mesh_i-1,mesh_i-CircleResolution])
 
-            edges_raw.append([i-1,i-CircleResolution])
+        elif(type(primitive) == gerber.primitives.Line):
+            print(primitive.aperture.diameter)
+            curve_thickness = primitive.aperture.diameter
+            curve_verts.append([primitive.start[0],primitive.start[1],0])
+            curve_verts.append([primitive.end[0],primitive.end[1],0])
+            curve_edges.append([curve_i,curve_i+1])
+            curve_i+=2
 
-            # verts = []
-            # for v in verts_raw:
-            #     verts.append(v[1:])
-
-            # edges = []
-            # for a, b in edges_raw:
-            #     edges.append((int(a[1:]), int(b[1:])))
-
-    me = bpy.data.meshes.new("")
-    me.from_pydata(verts_raw, edges_raw, [])
+    me = bpy.data.meshes.new(str(layer)+"_Mesh")
+    me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
     me.validate()
     me.update()
+    MeshObj = bpy.data.objects.new(str(layer)+"_Mesh", me)
+    bpy.context.scene.collection.objects.link(MeshObj)
 
-    obj = bpy.data.objects.new(str(layer), me)
-    bpy.context.scene.collection.objects.link(obj)
-    obj.select_set(True)
-    bpy.context.view_layer.objects.active = obj
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.mesh.remove_doubles()
-    bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.convert(target='CURVE')
-            # console says: 
-            # bpy.context.object.data.dimensions = '2D'
-            # in code:
-    obj.data.dimensions = '2D'
-    obj.data.resolution_u = 1
-    obj.data.bevel_depth = 0.001
+    if(curve_edges):
+        cu = bpy.data.meshes.new(str(layer)+"_Curve")
+        cu.from_pydata(curve_verts, curve_edges, [])
+        cu.validate()
+        cu.update()
+        CurveObj = bpy.data.objects.new(str(layer)+"_Curve", cu)
+        bpy.context.scene.collection.objects.link(CurveObj)
+        CurveObj.select_set(True)
+        bpy.context.view_layer.objects.active = CurveObj
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.remove_doubles()
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.convert(target='CURVE')
+        CurveObj.data.dimensions = '2D'
+        CurveObj.data.resolution_u = 1
+        CurveObj.data.bevel_depth = curve_thickness
+        #CurveObj.data.data.splines[5].use_smooth = True
+
 
             #lps = obj.data.loops
             #bpy.context.view_layer.objects.active = obj
@@ -138,7 +145,7 @@ class GeneratePCB(Operator):
         # Create a new PCB instance
         pcb = PCB.from_directory(GERBER_FOLDER)
 
-        RenderLayer(self, pcb.layers[1])
+        RenderLayer(self, pcb.layers[0])
         #for layer in pcb.layers:
         #    RenderLayer(self, layer)
         return {'FINISHED'}
