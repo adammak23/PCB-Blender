@@ -119,10 +119,14 @@ def RenderLayer(self, layer):
         CurveObj.data.resolution_u = 1
         CurveObj.data.bevel_depth = curve_thickness/2
 
+#Top - miedź
+
+
 # topmask
-#bpy.ops.material.new()
-#bpy.data.materials["Material.002"].node_tree.nodes["Principled BSDF"].inputs[4].default_value = 1
-#bpy.data.materials["Material.002"].node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.8, 0.8, 0.8, 1)
+    #Material
+    #bpy.ops.material.new()
+    #bpy.data.materials["Material.002"].node_tree.nodes["Principled BSDF"].inputs[4].default_value = 1
+    #bpy.data.materials["Material.002"].node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.8, 0.8, 0.8, 1)
 
             #lps = obj.data.loops
             #bpy.context.view_layer.objects.active = obj
@@ -166,10 +170,11 @@ class GeneratePCB(Operator):
         #bpy.ops.object.select_all(action='SELECT')
         #bpy.ops.object.delete(use_global=False)
 
-        GERBER_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), 'gerbers'))
+        GERBER_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), 'adum'))
         # Create a new PCB instance
         pcb = PCB.from_directory(GERBER_FOLDER)
 
         for layer in pcb.layers:
             RenderLayer(self, layer)
+            #print(layer.layer_class)
         return {'FINISHED'}

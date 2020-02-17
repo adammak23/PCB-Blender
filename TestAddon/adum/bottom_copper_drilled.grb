@@ -1,0 +1,163 @@
+G04 FreePCB version 1.355*
+G04 C:\FcPoly-Ttest\bottom_copper.grb*
+G04 bottom copper layer *
+G04 Scale: 100 percent, Rotated: No, Reflected: No *
+G04 Drilled by FpcPoly Version 1.13R on Wed May 15 18:47:10 2019 *
+
+%FSLAX24Y24*%
+%MOIN*%
+%LN bottom copper *%
+G04 Rounded Rectangle Macro, params: W/2, H/2, R *
+%AMRNDREC*
+21,1,$1+$1,$2+$2-$3-$3,0,0,0*
+21,1,$1+$1-$3-$3,$2+$2,0,0,0*
+1,1,$3+$3,$1-$3,$2-$3*
+1,1,$3+$3,$3-$1,$2-$3*
+1,1,$3+$3,$1-$3,$3-$2*
+1,1,$3+$3,$3-$1,$3-$2*%
+G04 Rectangular Thermal Macro, params: W/2, H/2, T/2 *
+%AMRECTHERM*
+$4=$3/2*
+21,1,$1-$3,$2-$3,0-$1/2-$4,0-$2/2-$4,0*
+21,1,$1-$3,$2-$3,0-$1/2-$4,$2/2+$4,0*
+21,1,$1-$3,$2-$3,$1/2+$4,0-$2/2-$4,0*
+21,1,$1-$3,$2-$3,$1/2+$4,$2/2+$4,0*%
+%ADD10C,0.005000*%
+%ADD11C,0.060000*%
+%ADD12C,0.010000*%
+%ADD13C,0.040000*%
+
+G90*
+G70D02*
+
+G04 Step and Repeat for panelization *
+
+G04 ----------------------- Draw board outline (positive)*
+%LPD*%
+G54D10*
+G01X0Y11800D02*
+G01X23250Y11800D01*
+G04 end of side 1*
+G01X23250Y0D01*
+G04 end of side 2*
+G01X0Y0D01*
+G04 end of side 3*
+G01X0Y11800D01*
+
+G04 -------------- Draw Parts, Pads, Traces, Vias and Text (positive)*
+%LPD*%
+G04 Draw part J1*
+G54D11*
+G01X3960Y7900D03*
+G01X3960Y6900D03*
+G01X3960Y5900D03*
+G01X3960Y4900D03*
+G01X3960Y3900D03*
+G04 Draw part C1*
+G04 Draw part C2*
+G04 Draw part U1*
+G04 Draw part C3*
+G04 Draw part C4*
+G04 Draw part C5*
+G04 Draw part C6*
+G04 Draw part R1*
+G04 Draw part R2*
+G04 Draw part R3*
+G04 Draw part R4*
+G04 Draw part J2*
+G01X19280Y7860D03*
+G01X19280Y6860D03*
+G01X19280Y5860D03*
+G01X19280Y4860D03*
+G01X19280Y3860D03*
+G04 Draw part C7*
+G04 Draw part C8*
+G04 Draw part J3*
+G01X16340Y6700D03*
+G01X16340Y5700D03*
+G01X16340Y4700D03*
+G04 Draw part J4*
+G01X6920Y6700D03*
+G01X6920Y5700D03*
+G01X6920Y4700D03*
+G04 Draw part U2*
+G01X10130Y7000D03*
+G01X11130Y7000D03*
+G01X12130Y7000D03*
+G01X13130Y7000D03*
+
+G04 Draw traces*
+
+G04 Draw Text*
+
+G04 ----------------------- Draw Pilot Holes (scratch)*
+%LPC*%
+G04 draw pilot holes for part J1*
+G54D12*
+G01X3960Y7900D03*
+G01X3960Y6900D03*
+G01X3960Y5900D03*
+G01X3960Y4900D03*
+G01X3960Y3900D03*
+G04 draw pilot holes for part C1*
+G04 draw pilot holes for part C2*
+G04 draw pilot holes for part U1*
+G04 draw pilot holes for part C3*
+G04 draw pilot holes for part C4*
+G04 draw pilot holes for part C5*
+G04 draw pilot holes for part C6*
+G04 draw pilot holes for part R1*
+G04 draw pilot holes for part R2*
+G04 draw pilot holes for part R3*
+G04 draw pilot holes for part R4*
+G04 draw pilot holes for part J2*
+G01X19280Y7860D03*
+G01X19280Y6860D03*
+G01X19280Y5860D03*
+G01X19280Y4860D03*
+G01X19280Y3860D03*
+G04 draw pilot holes for part C7*
+G04 draw pilot holes for part C8*
+G04 draw pilot holes for part J3*
+G01X16340Y6700D03*
+G01X16340Y5700D03*
+G01X16340Y4700D03*
+G04 draw pilot holes for part J4*
+G01X6920Y6700D03*
+G01X6920Y5700D03*
+G01X6920Y4700D03*
+G04 draw pilot holes for part U2*
+G01X10130Y7000D03*
+G01X11130Y7000D03*
+G01X12130Y7000D03*
+G01X13130Y7000D03*
+
+G04 Draw pilot holes for vias*
+
+%LPC*%
+
+
+G54D13*
+X003960Y007900D03*
+X003960Y006900D03*
+X003960Y005900D03*
+X003960Y004900D03*
+X003960Y003900D03*
+X019280Y007860D03*
+X019280Y006860D03*
+X019280Y005860D03*
+X019280Y004860D03*
+X019280Y003860D03*
+X016340Y006700D03*
+X016340Y005700D03*
+X016340Y004700D03*
+X006920Y006700D03*
+X006920Y005700D03*
+X006920Y004700D03*
+X010130Y007000D03*
+X011130Y007000D03*
+X012130Y007000D03*
+X013130Y007000D03*
+
+M00*
+M02*

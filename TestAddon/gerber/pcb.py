@@ -71,7 +71,7 @@ class PCB(object):
     @property
     def top_layers(self):
         board_layers = [l for l in reversed(self.layers) if l.layer_class in
-                        ('topsilk', 'topmask', 'top')]
+                        ('topsilk', 'topmask', 'top', 'top_silk')]
         drill_layers = [l for l in self.drill_layers if 'top' in l.layers]
         # Drill layer goes under soldermask for proper rendering of tented vias
         return [board_layers[0]] + drill_layers + board_layers[1:]

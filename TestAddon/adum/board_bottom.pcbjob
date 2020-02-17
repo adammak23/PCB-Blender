@@ -1,0 +1,57 @@
+GLOBAL
+{
+    DPI = 600;
+    MARGIN = 5.0;
+    AA = .001;                              # a value of zero is ignored...
+}
+
+BACKGROUND
+{
+    IMG = Background.png;                   # background first
+}
+
+LAYER                                       # stack up the image layers from bottom to top
+{
+    GERBER = outline_poly_drilledof1.gbr;   # drop shadow first
+    COLOR = 0.0, 0.0, 0.0;                  # black
+    MIRROR = TRUE;                          # all FALSE for top view, TRUE for bottom
+    ALPHA = 0.3;                            # 70% transparent 
+}
+
+LAYER
+{
+    GERBER = outline_poly_drilled.gbr;      # bottom dielectric 
+    COLOR = 0.6, 0.6, 0.6;                  # for Rogers 4000, for FR-4 use 0.4, 0.6, 0.4
+    MIRROR = TRUE;
+    ALPHA = .75;                            # 25% transparent to show lower copper
+}
+
+LAYER
+{
+    GERBER = bottom_copper_drilled.grb;     # upper copper
+    COLOR = 0.92, 0.75, 0.09;               # for ENIG Gold, for HASL use 0.6, 0.6, 0.6
+    MIRROR = TRUE;
+}
+
+LAYER
+{
+    GERBER = bottom_smask_poly.gbr;         # top solder mask
+    COLOR = 0.05, 0.5, 0.1;                 # light green LPI, for Vacril dry film use 0.4, 0.7, 0.4
+    MIRROR = TRUE;
+    ALPHA = .7;				
+}
+
+LAYER
+{
+    GERBER = Bottom_silk.grb;               # top silk screen
+    COLOR = 0.9, 0.9, 0.9;
+    MIRROR = TRUE;
+}
+
+LAYER                                       # optional paste
+{
+    GERBER = bottom_paste_mask.grb;         # shows well on ENIG but not on HASL
+    COLOR = 0.4, 0.4, 0.4;
+    MIRROR = TRUE;
+}
+
