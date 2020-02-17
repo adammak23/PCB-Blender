@@ -23,8 +23,24 @@ from bpy.types import Operator
 #     me.update()
 #     return ob
 
+def RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, radius, Xax, Yax):
+    # sin rotation is 2*PI = 6.283
+    CircleResolution = 50
+    first_point = mesh_i
+    for x in range(CircleResolution):
+        mesh_i+=1
+        mesh_verts.append([radius*math.cos(x*(2*math.pi/CircleResolution))+Xax, radius*math.sin(x*(2*math.pi/CircleResolution))+Yax,0])
+        if(x!=CircleResolution-1):
+            mesh_edges.append([mesh_i-1,mesh_i])
+            mesh_faces.append([mesh_i-1,mesh_i,first_point])
+    mesh_edges.append([mesh_i-1,mesh_i-CircleResolution])
+    # since in this function mesh_i is local immutable parameter we have to return it in order to change it's value
+    return mesh_i
+
 def RenderLayer(self, layer):
-    
+    bpy.ops.material.new()
+
+    print("Rendering layer:",layer)
     mesh_i = 0
     mesh_verts = []
     mesh_edges = []
@@ -53,25 +69,31 @@ def RenderLayer(self, layer):
             mesh_i+=4
 
         elif(type(primitive) == gerber.primitives.Circle):
-            r = primitive.radius
-            # sin rotation is 2*PI = 6.283
-            CircleResolution = 50
-            first_point = mesh_i
-            for x in range(CircleResolution):
-                mesh_i+=1
-                mesh_verts.append([r*math.cos(x*(2*math.pi/CircleResolution))+primitive._position[0], r*math.sin(x*(2*math.pi/CircleResolution))+primitive._position[1],0])
-                if(x!=CircleResolution-1):
-                    mesh_edges.append([mesh_i-1,mesh_i])
-                    mesh_faces.append([mesh_i-1,mesh_i,first_point])
-            mesh_edges.append([mesh_i-1,mesh_i-CircleResolution])
+            mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, primitive.radius, primitive._position[0], primitive._position[1])
+            # r = primitive.radius
+            # # sin rotation is 2*PI = 6.283
+            # CircleResolution = 50
+            # first_point = mesh_i
+            # for x in range(CircleResolution):
+            #     mesh_i+=1
+            #     mesh_verts.append([r*math.cos(x*(2*math.pi/CircleResolution))+primitive._position[0], r*math.sin(x*(2*math.pi/CircleResolution))+primitive._position[1],0])
+            #     if(x!=CircleResolution-1):
+            #         mesh_edges.append([mesh_i-1,mesh_i])
+            #         mesh_faces.append([mesh_i-1,mesh_i,first_point])
+            # mesh_edges.append([mesh_i-1,mesh_i-CircleResolution])
 
         elif(type(primitive) == gerber.primitives.Line):
-            print(primitive.aperture.diameter)
             curve_thickness = primitive.aperture.diameter
-            curve_verts.append([primitive.start[0],primitive.start[1],0])
-            curve_verts.append([primitive.end[0],primitive.end[1],0])
-            curve_edges.append([curve_i,curve_i+1])
-            curve_i+=2
+            if(curve_thickness >= 0.05):
+                mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, curve_thickness/2, primitive.start[0], primitive.start[1])
+                mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, curve_thickness/2, (primitive.start[0]+primitive.end[0])/2, (primitive.start[1]+primitive.end[1])/2)
+                mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, curve_thickness/2, primitive.end[0], primitive.end[1])
+            else:
+                curve_verts.append([primitive.start[0],primitive.start[1],0])
+                curve_verts.append([primitive.end[0],primitive.end[1],0])
+                curve_edges.append([curve_i,curve_i+1])
+                curve_i+=2
+        #else (all other primitives are drills)
 
     me = bpy.data.meshes.new(str(layer)+"_Mesh")
     me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
@@ -95,9 +117,12 @@ def RenderLayer(self, layer):
         bpy.ops.object.convert(target='CURVE')
         CurveObj.data.dimensions = '2D'
         CurveObj.data.resolution_u = 1
-        CurveObj.data.bevel_depth = curve_thickness
-        #CurveObj.data.data.splines[5].use_smooth = True
+        CurveObj.data.bevel_depth = curve_thickness/2
 
+# topmask
+#bpy.ops.material.new()
+#bpy.data.materials["Material.002"].node_tree.nodes["Principled BSDF"].inputs[4].default_value = 1
+#bpy.data.materials["Material.002"].node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.8, 0.8, 0.8, 1)
 
             #lps = obj.data.loops
             #bpy.context.view_layer.objects.active = obj
@@ -145,8 +170,6 @@ class GeneratePCB(Operator):
         # Create a new PCB instance
         pcb = PCB.from_directory(GERBER_FOLDER)
 
-        RenderLayer(self, pcb.layers[0])
-        #for layer in pcb.layers:
-        #    RenderLayer(self, layer)
+        for layer in pcb.layers:
+            RenderLayer(self, layer)
         return {'FINISHED'}
-            #if(layer == 'topsilk'):
