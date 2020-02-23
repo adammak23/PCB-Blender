@@ -10,6 +10,7 @@ from .gerber import PCB
 import bpy
 import bmesh
 from bpy.types import Operator
+from bpy.props import StringProperty
 
 # def create_Vertices (name, verts):
 #     # Create mesh and object
@@ -37,10 +38,9 @@ def RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, radius, Xax, 
     # since in this function mesh_i is local immutable parameter we have to return it in order to change it's value
     return mesh_i
 
-def RenderLayer(self, layer):
-    bpy.ops.material.new()
+def RenderLayer(self, layer, material):
 
-    print("Rendering layer:",layer)
+    #print("Rendering layer:",layer)
     mesh_i = 0
     mesh_verts = []
     mesh_edges = []
@@ -96,14 +96,16 @@ def RenderLayer(self, layer):
         #else (all other primitives are drills)
 
     me = bpy.data.meshes.new(str(layer)+"_Mesh")
+    me.materials.append(material)
     me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
     me.validate()
     me.update()
     MeshObj = bpy.data.objects.new(str(layer)+"_Mesh", me)
     bpy.context.scene.collection.objects.link(MeshObj)
 
-    if(curve_edges):
+    if(curve_i > 0):
         cu = bpy.data.meshes.new(str(layer)+"_Curve")
+        cu.materials.append(material)
         cu.from_pydata(curve_verts, curve_edges, [])
         cu.validate()
         cu.update()
@@ -117,6 +119,7 @@ def RenderLayer(self, layer):
         bpy.ops.object.convert(target='CURVE')
         CurveObj.data.dimensions = '2D'
         CurveObj.data.resolution_u = 1
+        # sort all and add multiple objects with appropriate thickness
         CurveObj.data.bevel_depth = curve_thickness/2
 
 #Top - miedź
@@ -162,19 +165,25 @@ def RenderLayer(self, layer):
 class GeneratePCB(Operator):
     bl_idname = "test.generate"
     bl_label = "test gerber"
-    string1 = ""
+    GERBER_FOLDER = ""
     string2 = ""
-    
-    
+
     def execute(self, context):
         #bpy.ops.object.select_all(action='SELECT')
         #bpy.ops.object.delete(use_global=False)
-
-        GERBER_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), 'adum'))
+        #GERBER_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), 'gerbers'))
+        MATERIALS = os.path.abspath(os.path.join(os.path.dirname(__file__), 'materials'))
         # Create a new PCB instance
-        pcb = PCB.from_directory(GERBER_FOLDER)
+        pcb = PCB.from_directory(self.GERBER_FOLDER)
 
-        for layer in pcb.layers:
-            RenderLayer(self, layer)
-            #print(layer.layer_class)
+        with bpy.data.libraries.load(MATERIALS+'/materials.blend', link=False) as (data_from, data_to):
+            data_to.materials = data_from.materials
+
+        for layer in pcb.copper_layers:
+            RenderLayer(self, layer, bpy.data.materials.get("Copper"))
+
+        #bpy.ops.wm.append("test_material", MATERIALS_FOLDER+'/materials.blend\\Material\\')
+        #for layer in pcb.layers:
+        #    RenderLayer(self, layer)
+
         return {'FINISHED'}

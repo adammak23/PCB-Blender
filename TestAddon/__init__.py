@@ -14,8 +14,8 @@
 bl_info = {
     "name" : "AddonName",
     "author" : "Adam Makiewicz",
-    "description" : "testowy addon",
-    "blender" : (2, 80, 0),
+    "description" : "test description",
+    "blender" : (2, 80, 1),
     "version" : (0, 0, 1),
     "location" : "",
     "warning" : "",
@@ -23,10 +23,9 @@ bl_info = {
 }
 
 import bpy
-from . PCB_Creator import GenerateOperator
 from . test_panel import LayoutDemoPanel
 from . Test import GeneratePCB
 
-classes = (GenerateOperator, LayoutDemoPanel, GeneratePCB)
+classes = (LayoutDemoPanel, GeneratePCB)
 
 register, unregister = bpy.utils.register_classes_factory(classes)

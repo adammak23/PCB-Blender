@@ -45,10 +45,10 @@ class PCB(object):
                 if verbose:
                     print('[PCB]: Added {} layer <{}>'.format(layer.layer_class,
                                                               filename))
-            except ParseError:
+            except (ParseError, IOError) as e:
                 if verbose:
                     print('[PCB]: Skipping file {}'.format(filename))
-            except IOError:
+            except UnicodeError:
                 if verbose:
                     print('[PCB]: Skipping file {}'.format(filename))
 

@@ -3,7 +3,7 @@ import bpy
 from bpy.props import StringProperty, BoolProperty
 from bpy.types import Operator, Panel
 from bpy_extras.io_utils import ImportHelper
-from . PCB_Creator import GenerateOperator
+from . Test import GeneratePCB
 
 class LayoutDemoPanel(Panel, ImportHelper):
     """Creates a Panel in the scene context of the properties editor"""
@@ -19,25 +19,17 @@ class LayoutDemoPanel(Panel, ImportHelper):
     description = "Define file path",
     subtype = 'FILE_PATH'
     )
-    bpy.types.Scene.second_path = StringProperty(
-    name = "2nd File path",
-    default = "",
-    description = "Define file path",
-    subtype = 'FILE_PATH'
-    )
-
 
     def draw(self, context):
         layout = self.layout
-
-        scene = context.scene
         
         col = layout.column()
-        #first_string = col.prop(context.scene, 'first_path')
-        #fsecond_string = col.prop(context.scene, 'second_path')
+        first_string = col.prop(context.scene, 'first_path')
         
         row = layout.row()
         #GenerateOperator.string1 = bpy.context.scene.first_path
-        #GenerateOperator.string2 = bpy.context.scene.second_path
         #row.operator('xd.generate')
+        
+        GeneratePCB.GERBER_FOLDER = bpy.context.scene.first_path
         row.operator('test.generate')
+        
