@@ -2,9 +2,6 @@ import os
 import sys
 import math
 from pprint import pprint
-# pprint(vars(your_object))
-# How to make blender/python see gerber folder?
-#os.chdir()
 from . import gerber
 from .gerber import PCB
 import bpy
@@ -24,6 +21,33 @@ from bpy.props import StringProperty
 #     me.update()
 #     return ob
 
+def RenderBounds(self, name, bounds, material):
+    print(bounds)
+    mesh_i = 0
+    mesh_verts = []
+    mesh_edges = []
+    mesh_faces = []
+
+    mesh_verts.append([bounds[0][0], bounds[1][0],0])
+    mesh_verts.append([bounds[0][1], bounds[1][0],0])
+    mesh_verts.append([bounds[0][1], bounds[1][1],0])
+    mesh_verts.append([bounds[0][0], bounds[1][1],0])
+    mesh_edges.append([mesh_i,mesh_i+1])
+    mesh_edges.append([mesh_i+1,mesh_i+2])
+    mesh_edges.append([mesh_i+2,mesh_i+3])
+    mesh_edges.append([mesh_i+3,mesh_i])
+    mesh_faces.append([mesh_i,mesh_i+1,mesh_i+2])
+    mesh_faces.append([mesh_i+2,mesh_i+3,mesh_i])
+
+    me = bpy.data.meshes.new(str(name))
+    me.materials.append(material)
+    me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
+    me.validate()
+    me.update()
+    TempObj = bpy.data.objects.new(str(name), me)
+    bpy.context.scene.collection.objects.link(TempObj)
+    return TempObj
+
 def RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, radius, Xax, Yax):
     # sin rotation is 2*PI = 6.283
     CircleResolution = 50
@@ -38,9 +62,8 @@ def RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, radius, Xax, 
     # since in this function mesh_i is local immutable parameter we have to return it in order to change it's value
     return mesh_i
 
-def RenderLayer(self, layer, material):
+def RenderLayer(self, layer, material, optional_curve_thickness = 0.008):
 
-    #print("Rendering layer:",layer)
     mesh_i = 0
     mesh_verts = []
     mesh_edges = []
@@ -50,8 +73,6 @@ def RenderLayer(self, layer, material):
     curve_verts = []
     curve_edges = []
     curve_thickness = 0.001
-
-    #pprint(vars(primitive))
 
     for primitive in layer.primitives:
 
@@ -70,17 +91,6 @@ def RenderLayer(self, layer, material):
 
         elif(type(primitive) == gerber.primitives.Circle):
             mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, primitive.radius, primitive._position[0], primitive._position[1])
-            # r = primitive.radius
-            # # sin rotation is 2*PI = 6.283
-            # CircleResolution = 50
-            # first_point = mesh_i
-            # for x in range(CircleResolution):
-            #     mesh_i+=1
-            #     mesh_verts.append([r*math.cos(x*(2*math.pi/CircleResolution))+primitive._position[0], r*math.sin(x*(2*math.pi/CircleResolution))+primitive._position[1],0])
-            #     if(x!=CircleResolution-1):
-            #         mesh_edges.append([mesh_i-1,mesh_i])
-            #         mesh_faces.append([mesh_i-1,mesh_i,first_point])
-            # mesh_edges.append([mesh_i-1,mesh_i-CircleResolution])
 
         elif(type(primitive) == gerber.primitives.Line):
             curve_thickness = primitive.aperture.diameter
@@ -105,11 +115,11 @@ def RenderLayer(self, layer, material):
 
     if(curve_i > 0):
         cu = bpy.data.meshes.new(str(layer)+"_Curve")
-        cu.materials.append(material)
         cu.from_pydata(curve_verts, curve_edges, [])
         cu.validate()
         cu.update()
         CurveObj = bpy.data.objects.new(str(layer)+"_Curve", cu)
+        CurveObj.data.materials.append(material)
         bpy.context.scene.collection.objects.link(CurveObj)
         CurveObj.select_set(True)
         bpy.context.view_layer.objects.active = CurveObj
@@ -119,48 +129,24 @@ def RenderLayer(self, layer, material):
         bpy.ops.object.convert(target='CURVE')
         CurveObj.data.dimensions = '2D'
         CurveObj.data.resolution_u = 1
-        # sort all and add multiple objects with appropriate thickness
-        CurveObj.data.bevel_depth = curve_thickness/2
+        # TODO: sort all and add multiple objects, render separate with appropriate thickness
+        # CurveObj.data.bevel_depth = curve_thickness/2
+        # For now, simplified:
+        CurveObj.data.bevel_depth = optional_curve_thickness
+        CurveObj.data.bevel_resolution = 0
 
-#Top - miedź
+        bpy.ops.transform.resize(value=(1, 1, 0.01), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False)
+        bpy.ops.object.convert(target='MESH')
+    
+    if CurveObj and MeshObj:
+        bpy.ops.object.select_all(action='DESELECT')
+        CurveObj.select_set(True)
+        MeshObj.select_set(True)
+        bpy.ops.object.join()
+        CurveObj.name = str(layer)
+        bpy.ops.object.select_all(action='DESELECT')
 
-
-# topmask
-    #Material
-    #bpy.ops.material.new()
-    #bpy.data.materials["Material.002"].node_tree.nodes["Principled BSDF"].inputs[4].default_value = 1
-    #bpy.data.materials["Material.002"].node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.8, 0.8, 0.8, 1)
-
-            #lps = obj.data.loops
-            #bpy.context.view_layer.objects.active = obj
-            #bpy.ops.object.select_all(action='SELECT')
-
-            #area = bpy.context.area
-            #old_area = bpy.context.area.type
-            #area.type = 'VIEW_3D'
-            #area.type = old_type
-            #obj.convert(target='CURVE')
-            #print(obj)
-            #print(bpy.context.scene.collection.objects[0])
-            #obj.convert(target='CURVE')
-            # i = 0
-            # for primitive in layer.primitives:
-            #     i+=1
-            #     if(i==100):
-            #         break
-            #     if(type(primitive) == gerber.primitives.Line):
-            #         bpy.ops.object.empty_add(type='PLAIN_AXES', location=(primitive.start[0], primitive.start[0], 0))
-            #         bpy.ops.object.empty_add(type='PLAIN_AXES', location=(primitive.start[1], primitive.start[1], 0))
-            #         bpy.ops.object.empty_add(type='PLAIN_AXES', location=(primitive.end[0], primitive.end[0], 0))
-            #         bpy.ops.object.empty_add(type='PLAIN_AXES', location=(primitive.end[1], primitive.end[1], 0))
-
-            #bpy.ops.curve.primitive_nurbs_path_add(enter_editmode=False, location=(0, 0, 0))
-            #bpy.ops.curve.vertex_add(location=(0, 0, 0))
-
-            #for layer in pcb.layers:
-            #    print(layer)
-            #    print('bounds: ',layer.bounds)
-            #    print(layer.primitives)
+    return CurveObj
 
 class GeneratePCB(Operator):
     bl_idname = "test.generate"
@@ -179,8 +165,18 @@ class GeneratePCB(Operator):
         with bpy.data.libraries.load(MATERIALS+'/materials.blend', link=False) as (data_from, data_to):
             data_to.materials = data_from.materials
 
+        pprint(pcb.board_bounds)
+        print(pcb.board_bounds)
+        print(type(pcb.board_bounds))
+        Generated_bounds = RenderBounds(self, "bounds", pcb.board_bounds, bpy.data.materials.get("Laminate"))
+
+        generated_copper_layers = []
         for layer in pcb.copper_layers:
-            RenderLayer(self, layer, bpy.data.materials.get("Copper"))
+            generated_copper_layers.append(RenderLayer(self, layer, bpy.data.materials.get("Copper")))
+
+        #generated_silk_layers = []
+        #for layer in pcb.silk_layers:
+        #    generated_silk_layers.append(RenderLayer(self, layer, bpy.data.materials.get("White"), 0.001))
 
         #bpy.ops.wm.append("test_material", MATERIALS_FOLDER+'/materials.blend\\Material\\')
         #for layer in pcb.layers:

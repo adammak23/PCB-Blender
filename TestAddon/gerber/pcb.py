@@ -69,9 +69,15 @@ class PCB(object):
         return len(self.layers)
 
     @property
+    def silk_layers(self):
+        board_layers = [l for l in reversed(self.layers) if l.layer_class in
+                        ('topsilk', 'top_silk', 'bottomsilk')]
+        return board_layers
+
+    @property
     def top_layers(self):
         board_layers = [l for l in reversed(self.layers) if l.layer_class in
-                        ('topsilk', 'topmask', 'top', 'top_silk')]
+                        ('topmask', 'top')]
         drill_layers = [l for l in self.drill_layers if 'top' in l.layers]
         # Drill layer goes under soldermask for proper rendering of tented vias
         return [board_layers[0]] + drill_layers + board_layers[1:]
@@ -79,7 +85,7 @@ class PCB(object):
     @property
     def bottom_layers(self):
         board_layers = [l for l in self.layers if l.layer_class in
-                        ('bottomsilk', 'bottommask', 'bottom')]
+                        ('bottommask', 'bottom')]
         drill_layers = [l for l in self.drill_layers if 'bottom' in l.layers]
         # Drill layer goes under soldermask for proper rendering of tented vias
         return [board_layers[0]] + drill_layers + board_layers[1:]

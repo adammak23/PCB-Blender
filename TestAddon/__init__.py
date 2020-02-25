@@ -15,8 +15,8 @@ bl_info = {
     "name" : "AddonName",
     "author" : "Adam Makiewicz",
     "description" : "test description",
-    "blender" : (2, 80, 1),
-    "version" : (0, 0, 1),
+    "blender" : (2, 82, 0),
+    "version" : (0, 0, 3),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
