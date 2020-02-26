@@ -6,20 +6,16 @@ from . import gerber
 from .gerber import PCB
 import bpy
 import bmesh
+import mathutils
 from bpy.types import Operator
 from bpy.props import StringProperty
 
-# def create_Vertices (name, verts):
-#     # Create mesh and object
-#     me = bpy.data.meshes.new('Mesh')
-#     ob = bpy.data.objects.new(name, me)
-#     ob.show_name = True
-#     # Link object to scene
-#     bpy.context.scene.collection.objects.link(ob)
-#     me.from_pydata(verts, [], [])
-#     # Update mesh with new data
-#     me.update()
-#     return ob
+def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
+
+        def draw(self, context):
+            self.layout.label(text=message)
+
+        bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
 
 def RenderBounds(self, name, bounds, material):
     print(bounds)
@@ -113,6 +109,7 @@ def RenderLayer(self, layer, material, optional_curve_thickness = 0.008):
     MeshObj = bpy.data.objects.new(str(layer)+"_Mesh", me)
     bpy.context.scene.collection.objects.link(MeshObj)
 
+    CurveObj = None
     if(curve_i > 0):
         cu = bpy.data.meshes.new(str(layer)+"_Curve")
         cu.from_pydata(curve_verts, curve_edges, [])
@@ -148,6 +145,13 @@ def RenderLayer(self, layer, material, optional_curve_thickness = 0.008):
 
     return CurveObj
 
+def MoveUp(object, times=1, distance = 0.0001):
+    for x in range(times):
+        object.location += mathutils.Vector((0,0,distance))
+
+def MoveDown(object, times=1, distance = 0.0001):
+    MoveUp(object, times, -distance)
+
 class GeneratePCB(Operator):
     bl_idname = "test.generate"
     bl_label = "test gerber"
@@ -155,9 +159,13 @@ class GeneratePCB(Operator):
     string2 = ""
 
     def execute(self, context):
-        #bpy.ops.object.select_all(action='SELECT')
-        #bpy.ops.object.delete(use_global=False)
-        #GERBER_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), 'gerbers'))
+        #if(self.GERBER_FOLDER == ""):
+        #    ShowMessageBox("Please enter path to folder with gerber files", "Error", 'ERROR')
+        #    return
+
+        bpy.ops.object.select_all(action='SELECT')
+        bpy.ops.object.delete(use_global=False)
+
         MATERIALS = os.path.abspath(os.path.join(os.path.dirname(__file__), 'materials'))
         # Create a new PCB instance
         pcb = PCB.from_directory(self.GERBER_FOLDER)
@@ -165,19 +173,50 @@ class GeneratePCB(Operator):
         with bpy.data.libraries.load(MATERIALS+'/materials.blend', link=False) as (data_from, data_to):
             data_to.materials = data_from.materials
 
-        pprint(pcb.board_bounds)
-        print(pcb.board_bounds)
-        print(type(pcb.board_bounds))
-        Generated_bounds = RenderBounds(self, "bounds", pcb.board_bounds, bpy.data.materials.get("Laminate"))
+        generated_layers = []
 
-        generated_copper_layers = []
+        Laminate = RenderBounds(self, "bounds", pcb.board_bounds, bpy.data.materials.get("Laminate"))
+        Laminate.name = "Laminate"
+        Soldermask_Dark_Up = RenderBounds(self, "bounds", pcb.board_bounds, bpy.data.materials.get("Soldermask_Dark"))
+        Soldermask_Dark_Up.name = "Soldermask_Dark_Up"
+        Soldermask_Dark_Down = RenderBounds(self, "bounds", pcb.board_bounds, bpy.data.materials.get("Soldermask_Dark"))
+        Soldermask_Dark_Down.name = "Soldermask_Dark_Down"
+
+        # Can also make copy but then need to nake it single user and unlink data which makes it slower
+        # Soldermask_Dark_Down = Soldermask_Dark_Up.copy()
+        # bpy.context.scene.collection.objects.link(Soldermask_Dark_Down)
+
+        MoveUp(Soldermask_Dark_Up, 1)
+        MoveDown(Soldermask_Dark_Down, 1)
+        
         for layer in pcb.copper_layers:
-            generated_copper_layers.append(RenderLayer(self, layer, bpy.data.materials.get("Copper")))
+            if(layer in pcb.top_layers):
+                generated_layers.append(layer)
+                TopCopper = RenderLayer(self, layer, bpy.data.materials.get("Copper"))
+                TopCopper.name = "TopCopper"
+                MoveUp(TopCopper,2)
+                Soldermask_Bright_Up = RenderLayer(self, layer, bpy.data.materials.get("Soldermask_Bright"))
+                Soldermask_Bright_Up.name = "Soldermask_Bright_Up"
+                MoveUp(Soldermask_Bright_Up,3)
+            else:
+                generated_layers.append(layer)
+                BottomCopper = RenderLayer(self, layer, bpy.data.materials.get("Copper"))
+                BottomCopper.name = "BottomCopper"
+                MoveDown(BottomCopper,2)
+                Soldermask_Bright_Down = RenderLayer(self, layer, bpy.data.materials.get("Soldermask_Bright"))
+                Soldermask_Bright_Down.name = "Soldermask_Bright_Down"
+                MoveDown(Soldermask_Bright_Down,3)
 
-        #generated_silk_layers = []
-        #for layer in pcb.silk_layers:
-        #    generated_silk_layers.append(RenderLayer(self, layer, bpy.data.materials.get("White"), 0.001))
+        generated_silk_layers = []
+        for layer in pcb.silk_layers:
+            generated_layers.append(layer)
+            generated_silk_layers.append(RenderLayer(self, layer, bpy.data.materials.get("White"), 0.001))
 
+        for layer in pcb.layers:
+            if(layer not in generated_layers):
+                RenderLayer(self, layer, bpy.data.materials.get("White"))
+
+        # TODO: Simplify rendering so the top- and bottommask work well with Boolean Modifier (no intersecting geometry)
         #bpy.ops.wm.append("test_material", MATERIALS_FOLDER+'/materials.blend\\Material\\')
         #for layer in pcb.layers:
         #    RenderLayer(self, layer)

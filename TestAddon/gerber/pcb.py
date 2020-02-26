@@ -77,7 +77,7 @@ class PCB(object):
     @property
     def top_layers(self):
         board_layers = [l for l in reversed(self.layers) if l.layer_class in
-                        ('topmask', 'top')]
+                        ('top')]
         drill_layers = [l for l in self.drill_layers if 'top' in l.layers]
         # Drill layer goes under soldermask for proper rendering of tented vias
         return [board_layers[0]] + drill_layers + board_layers[1:]
@@ -85,7 +85,7 @@ class PCB(object):
     @property
     def bottom_layers(self):
         board_layers = [l for l in self.layers if l.layer_class in
-                        ('bottommask', 'bottom')]
+                        ('bottom')]
         drill_layers = [l for l in self.drill_layers if 'bottom' in l.layers]
         # Drill layer goes under soldermask for proper rendering of tented vias
         return [board_layers[0]] + drill_layers + board_layers[1:]
@@ -99,6 +99,13 @@ class PCB(object):
         return list(reversed([layer for layer in self.layers if
                               layer.layer_class in
                               ('top', 'bottom', 'internal')]))
+    @property
+    def topmask(self):
+        return next(layer for layer in self.layers if layer.layer_class == 'topmask')
+
+    @property
+    def bottommask(self):
+        return next(layer for layer in self.layers if layer.layer_class == 'bottommask')
 
     @property
     def layer_count(self):
