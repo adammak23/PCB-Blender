@@ -94,7 +94,8 @@ def RenderLayer(self, name, layer, material, optional_curve_thickness = 0.008):
 
         elif(type(primitive) == gerber.primitives.Line):
             curve_thickness = primitive.aperture.diameter
-            if(curve_thickness >= 0.05):
+            #print(curve_thickness)
+            if(curve_thickness > 0.05):
                 mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, curve_thickness/2, primitive.start[0], primitive.start[1])
                 mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, curve_thickness/2, (primitive.start[0]+primitive.end[0])/2, (primitive.start[1]+primitive.end[1])/2)
                 mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, curve_thickness/2, primitive.end[0], primitive.end[1])
@@ -184,15 +185,19 @@ class GeneratePCB(Operator):
         #    ShowMessageBox("Please enter path to folder with gerber files", "Error", 'ERROR')
         #    return
 
-        bpy.ops.object.select_all(action='SELECT')
-        bpy.ops.object.delete(use_global=False)
+        #bpy.ops.object.select_all(action='SELECT')
+        #bpy.ops.object.delete(use_global=False)
 
         MATERIALS = os.path.abspath(os.path.join(os.path.dirname(__file__), 'materials'))
         # Create a new PCB instance
         pcb = PCB.from_directory(self.GERBER_FOLDER)
-        
+
         with bpy.data.libraries.load(MATERIALS+'/materials.blend', link=False) as (data_from, data_to):
             data_to.materials = data_from.materials
+
+        #RenderLayer(self, pcb.layers[2].layer_class, pcb.layers[2], bpy.data.materials.get("Copper"))
+        print(pcb.__format__)
+        return {'FINISHED'}
 
         generated_layers = []
 

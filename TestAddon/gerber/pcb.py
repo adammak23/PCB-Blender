@@ -105,7 +105,7 @@ class PCB(object):
 
     @property
     def bottommask(self):
-        return next(layer for layer in self.layers if layer.layer_class == 'bottommask')
+        return next(layer for layer in self.layers if layer.layer_class in ('bottommask'))
 
     @property
     def layer_count(self):
