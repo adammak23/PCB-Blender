@@ -17,8 +17,10 @@ def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
 
         bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
 
-def RenderBounds(self, name, bounds, material):
-    print(bounds)
+def RenderBounds(name, bounds, material):
+
+    if bounds is None: return
+
     mesh_i = 0
     mesh_verts = []
     mesh_edges = []
@@ -35,12 +37,12 @@ def RenderBounds(self, name, bounds, material):
     mesh_faces.append([mesh_i,mesh_i+1,mesh_i+2])
     mesh_faces.append([mesh_i+2,mesh_i+3,mesh_i])
 
-    me = bpy.data.meshes.new(str(name))
+    me = bpy.data.meshes.new(name)
     me.materials.append(material)
     me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
     me.validate()
     me.update()
-    TempObj = bpy.data.objects.new(str(name), me)
+    TempObj = bpy.data.objects.new(name, me)
     bpy.context.scene.collection.objects.link(TempObj)
     return TempObj
 
@@ -58,7 +60,9 @@ def RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, radius, Xax, 
     # since in this function mesh_i is local immutable parameter we have to return it in order to change it's value
     return mesh_i
 
-def RenderLayer(self, layer, material, optional_curve_thickness = 0.008):
+def RenderLayer(self, name, layer, material, optional_curve_thickness = 0.008):
+
+    if layer is None: return
 
     mesh_i = 0
     mesh_verts = []
@@ -101,21 +105,21 @@ def RenderLayer(self, layer, material, optional_curve_thickness = 0.008):
                 curve_i+=2
         #else (all other primitives are drills)
 
-    me = bpy.data.meshes.new(str(layer)+"_Mesh")
+    me = bpy.data.meshes.new("mesh")
     me.materials.append(material)
     me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
     me.validate()
     me.update()
-    MeshObj = bpy.data.objects.new(str(layer)+"_Mesh", me)
+    MeshObj = bpy.data.objects.new("mesh", me)
     bpy.context.scene.collection.objects.link(MeshObj)
 
     CurveObj = None
     if(curve_i > 0):
-        cu = bpy.data.meshes.new(str(layer)+"_Curve")
+        cu = bpy.data.meshes.new("curve")
         cu.from_pydata(curve_verts, curve_edges, [])
         cu.validate()
         cu.update()
-        CurveObj = bpy.data.objects.new(str(layer)+"_Curve", cu)
+        CurveObj = bpy.data.objects.new("curve", cu)
         CurveObj.data.materials.append(material)
         bpy.context.scene.collection.objects.link(CurveObj)
         CurveObj.select_set(True)
@@ -140,17 +144,34 @@ def RenderLayer(self, layer, material, optional_curve_thickness = 0.008):
         CurveObj.select_set(True)
         MeshObj.select_set(True)
         bpy.ops.object.join()
-        CurveObj.name = str(layer)
+        CurveObj.name = name
         bpy.ops.object.select_all(action='DESELECT')
 
-    return CurveObj
+        return CurveObj
 
-def MoveUp(object, times=1, distance = 0.0001):
+    MeshObj.name = name
+    return MeshObj
+
+def MoveUp(obj, times=1, distance = 0.0001):
+    if obj is None: return
     for x in range(times):
-        object.location += mathutils.Vector((0,0,distance))
+        obj.location += mathutils.Vector((0,0,distance))
 
 def MoveDown(object, times=1, distance = 0.0001):
     MoveUp(object, times, -distance)
+
+def BooleanCut(source, cutter):
+    solidifymodifier = cutter.modifiers.new("SOLIDIFY", type = "SOLIDIFY")
+    solidifymodifier.offset = 0
+    bpy.context.view_layer.objects.active = cutter
+    bpy.ops.object.modifier_apply(modifier="SOLIDIFY")
+    
+    boolmod = source.modifiers.new("BOOLEAN", type = "BOOLEAN")
+    boolmod.object = cutter
+    # boolmod.operation = 'DIFFERENCE' (is default)
+    bpy.context.view_layer.objects.active = source
+    bpy.ops.object.modifier_apply(modifier="BOOLEAN")
+    bpy.data.objects.remove(cutter)
 
 class GeneratePCB(Operator):
     bl_idname = "test.generate"
@@ -169,18 +190,15 @@ class GeneratePCB(Operator):
         MATERIALS = os.path.abspath(os.path.join(os.path.dirname(__file__), 'materials'))
         # Create a new PCB instance
         pcb = PCB.from_directory(self.GERBER_FOLDER)
-
+        
         with bpy.data.libraries.load(MATERIALS+'/materials.blend', link=False) as (data_from, data_to):
             data_to.materials = data_from.materials
 
         generated_layers = []
 
-        Laminate = RenderBounds(self, "bounds", pcb.board_bounds, bpy.data.materials.get("Laminate"))
-        Laminate.name = "Laminate"
-        Soldermask_Dark_Up = RenderBounds(self, "bounds", pcb.board_bounds, bpy.data.materials.get("Soldermask_Dark"))
-        Soldermask_Dark_Up.name = "Soldermask_Dark_Up"
-        Soldermask_Dark_Down = RenderBounds(self, "bounds", pcb.board_bounds, bpy.data.materials.get("Soldermask_Dark"))
-        Soldermask_Dark_Down.name = "Soldermask_Dark_Down"
+        Laminate = RenderBounds("Laminate", pcb.board_bounds, bpy.data.materials.get("Laminate"))
+        Soldermask_Dark_Up = RenderBounds("Soldermask_Dark_Up", pcb.board_bounds, bpy.data.materials.get("Soldermask_Dark"))
+        Soldermask_Dark_Down = RenderBounds("Soldermask_Dark_Down", pcb.board_bounds, bpy.data.materials.get("Soldermask_Dark"))
 
         # Can also make copy but then need to nake it single user and unlink data which makes it slower
         # Soldermask_Dark_Down = Soldermask_Dark_Up.copy()
@@ -192,33 +210,35 @@ class GeneratePCB(Operator):
         for layer in pcb.copper_layers:
             if(layer in pcb.top_layers):
                 generated_layers.append(layer)
-                TopCopper = RenderLayer(self, layer, bpy.data.materials.get("Copper"))
-                TopCopper.name = "TopCopper"
+                TopCopper = RenderLayer(self, "TopCopper", layer, bpy.data.materials.get("Copper"))
                 MoveUp(TopCopper,2)
-                Soldermask_Bright_Up = RenderLayer(self, layer, bpy.data.materials.get("Soldermask_Bright"))
-                Soldermask_Bright_Up.name = "Soldermask_Bright_Up"
+                Soldermask_Bright_Up = RenderLayer(self, "Soldermask_Bright_Up", layer, bpy.data.materials.get("Soldermask_Bright"))
                 MoveUp(Soldermask_Bright_Up,3)
             else:
                 generated_layers.append(layer)
-                BottomCopper = RenderLayer(self, layer, bpy.data.materials.get("Copper"))
-                BottomCopper.name = "BottomCopper"
+                BottomCopper = RenderLayer(self, "BottomCopper", layer, bpy.data.materials.get("Copper"))
                 MoveDown(BottomCopper,2)
-                Soldermask_Bright_Down = RenderLayer(self, layer, bpy.data.materials.get("Soldermask_Bright"))
-                Soldermask_Bright_Down.name = "Soldermask_Bright_Down"
+                Soldermask_Bright_Down = RenderLayer(self, "Soldermask_Bright_Down", layer, bpy.data.materials.get("Soldermask_Bright"))
                 MoveDown(Soldermask_Bright_Down,3)
 
-        generated_silk_layers = []
         for layer in pcb.silk_layers:
             generated_layers.append(layer)
-            generated_silk_layers.append(RenderLayer(self, layer, bpy.data.materials.get("White"), 0.001))
-
-        for layer in pcb.layers:
-            if(layer not in generated_layers):
-                RenderLayer(self, layer, bpy.data.materials.get("White"))
+            if(layer.layer_class == 'topsilk'):
+                Topsilk = RenderLayer(self, "Topsilk", layer, bpy.data.materials.get("White"), 0.001)
+                Topsilk.name = "Topsilk"
+                MoveUp(Topsilk, 4)
+            else:
+                Bottomsilk = RenderLayer(self, "Bottomsilk", layer, bpy.data.materials.get("White"), 0.001)
+                Bottomsilk.name = "Bottomsilk"
+                MoveDown(Bottomsilk, 4)
 
         # TODO: Simplify rendering so the top- and bottommask work well with Boolean Modifier (no intersecting geometry)
-        #bpy.ops.wm.append("test_material", MATERIALS_FOLDER+'/materials.blend\\Material\\')
-        #for layer in pcb.layers:
-        #    RenderLayer(self, layer)
+        TopMask = RenderLayer(self, "TopMask", pcb.topmask, bpy.data.materials.get("White"))
+        BooleanCut(Soldermask_Bright_Up, TopMask)
+        BottomMask = RenderLayer(self, "BottomMask", pcb.bottommask, bpy.data.materials.get("White"))
+        BooleanCut(Soldermask_Bright_Down, BottomMask)
+
+
+        # TODO: Drill layers
 
         return {'FINISHED'}

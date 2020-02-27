@@ -101,7 +101,7 @@ class PCB(object):
                               ('top', 'bottom', 'internal')]))
     @property
     def topmask(self):
-        return next(layer for layer in self.layers if layer.layer_class == 'topmask')
+        return next(layer for layer in self.layers if layer.layer_class in ('topmask'))
 
     @property
     def bottommask(self):

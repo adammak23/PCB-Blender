@@ -1,0 +1,29 @@
+G04 FreePCB version 1.355*
+G04 C:\FcPoly-Ttest\board_outline.grb*
+G04 board outline layer *
+G04 Scale: 100 percent, Rotated: No, Reflected: No *
+G04 Converted by FpcPoly Version 1.13R on Wed May 15 18:47:10 2019 *
+
+%FSLAX24Y24*%
+%MOIN*%
+G90*
+
+%LPD*%
+
+G04 Begin outline 1 *
+
+G36*
+X0Y11800D02*
+X23250Y11800D01*
+G04 end of side 1*
+X23250Y0D01*
+G04 end of side 2*
+X0Y0D01*
+G04 end of side 3*
+X0Y11800D01*
+
+G37*
+G04 End outline 1 *
+
+M00*
+M02*
