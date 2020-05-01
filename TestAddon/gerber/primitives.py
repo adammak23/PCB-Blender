@@ -320,9 +320,6 @@ class Line(Primitive):
     def __repr__(self):
         return str(self)
 
-    def name(self):
-        return "Line"
-
 class Arc(Primitive):
     """
     """

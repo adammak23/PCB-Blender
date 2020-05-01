@@ -16,10 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-try:
-    import cairo
-except ImportError:
-    import cairocffi as cairo
+#try:
+import cairocffi as cairo
+#except ImportError:
+#    from pcb import cairocffi as cairo
 
 from operator import mul
 import tempfile

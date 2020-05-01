@@ -18,7 +18,7 @@
 
 import os
 from .exceptions import ParseError
-from .layers import PCBLayer, sort_layers
+from .layers import PCBLayer, sort_layers, layer_signatures
 from .common import read as gerber_read
 from .utils import listdir
 
@@ -41,14 +41,21 @@ class PCB(object):
                 camfile = gerber_read(os.path.join(directory, filename))
                 layer = PCBLayer.from_cam(camfile)
                 layers.append(layer)
-                names.add(os.path.splitext(filename)[0])
+                name = os.path.splitext(filename)[0]
+                if len(os.path.splitext(filename)) > 1:
+                    _name, ext = os.path.splitext(name)
+                    if ext[1:] in layer_signatures(layer.layer_class):
+                        name = _name
+                    if layer.layer_class == 'drill' and 'drill' in ext:
+                        name = _name
+                names.add(name)
                 if verbose:
                     print('[PCB]: Added {} layer <{}>'.format(layer.layer_class,
                                                               filename))
-            except (ParseError, IOError) as e:
+            except ParseError:
                 if verbose:
                     print('[PCB]: Skipping file {}'.format(filename))
-            except UnicodeError:
+            except IOError:
                 if verbose:
                     print('[PCB]: Skipping file {}'.format(filename))
 
@@ -69,15 +76,9 @@ class PCB(object):
         return len(self.layers)
 
     @property
-    def silk_layers(self):
-        board_layers = [l for l in reversed(self.layers) if l.layer_class in
-                        ('topsilk', 'top_silk', 'bottomsilk')]
-        return board_layers
-
-    @property
     def top_layers(self):
         board_layers = [l for l in reversed(self.layers) if l.layer_class in
-                        ('top')]
+                        ('topsilk', 'topmask', 'top')]
         drill_layers = [l for l in self.drill_layers if 'top' in l.layers]
         # Drill layer goes under soldermask for proper rendering of tented vias
         return [board_layers[0]] + drill_layers + board_layers[1:]
@@ -85,7 +86,7 @@ class PCB(object):
     @property
     def bottom_layers(self):
         board_layers = [l for l in self.layers if l.layer_class in
-                        ('bottom')]
+                        ('bottomsilk', 'bottommask', 'bottom')]
         drill_layers = [l for l in self.drill_layers if 'bottom' in l.layers]
         # Drill layer goes under soldermask for proper rendering of tented vias
         return [board_layers[0]] + drill_layers + board_layers[1:]
@@ -99,13 +100,12 @@ class PCB(object):
         return list(reversed([layer for layer in self.layers if
                               layer.layer_class in
                               ('top', 'bottom', 'internal')]))
-    @property
-    def topmask(self):
-        return next(layer for layer in self.layers if layer.layer_class in ('topmask'))
 
     @property
-    def bottommask(self):
-        return next(layer for layer in self.layers if layer.layer_class in ('bottommask'))
+    def outline_layer(self):
+        for layer in self.layers:
+            if layer.layer_class == 'outline':
+                return layer
 
     @property
     def layer_count(self):
