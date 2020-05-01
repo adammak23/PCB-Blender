@@ -48,7 +48,7 @@ def RenderBounds(name, bounds, material):
 
 def RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, radius, Xax, Yax):
     # sin rotation is 2*PI = 6.283
-    CircleResolution = 50
+    CircleResolution = 4
     first_point = mesh_i
     for x in range(CircleResolution):
         mesh_i+=1
@@ -161,6 +161,92 @@ def MoveUp(obj, times=1, distance = 0.0001):
 def MoveDown(object, times=1, distance = 0.0001):
     MoveUp(object, times, -distance)
 
+def CairoExample_FilesIntoLayers(GERBER_FOLDER, OUTPUT_FOLDER):
+   
+    from .gerber import load_layer
+    from .gerber.render import RenderSettings, theme
+    from .gerber.render.cairo_backend import GerberCairoContext
+    # Open the gerber files
+    copper = load_layer(os.path.join(GERBER_FOLDER, 'copper.GTL'))
+    mask = load_layer(os.path.join(GERBER_FOLDER, 'soldermask.GTS'))
+    silk = load_layer(os.path.join(GERBER_FOLDER, 'silkscreen.GTO'))
+    drill = load_layer(os.path.join(GERBER_FOLDER, 'ncdrill.DRD'))
+
+    # Create a new drawing context
+    ctx = GerberCairoContext()
+
+    # Draw the copper layer. render_layer() uses the default color scheme for the
+    # layer, based on the layer type. Copper layers are rendered as
+    ctx.render_layer(copper)
+
+    # Draw the soldermask layer
+    ctx.render_layer(mask)
+
+
+    # The default style can be overridden by passing a RenderSettings instance to
+    # render_layer().
+    # First, create a settings object:
+    our_settings = RenderSettings(color=theme.COLORS['white'], alpha=0.85)
+
+    # Draw the silkscreen layer, and specify the rendering settings to use
+    ctx.render_layer(silk, settings=our_settings)
+
+    # Draw the drill layer
+    ctx.render_layer(drill)
+
+    # Write output to png file
+    #ctx.dump(os.path.join(os.path.dirname(__file__), 'cairo_example.png'))
+    ctx.dump(os.path.join(OUTPUT_FOLDER, 'cairo_example.png'))
+
+    # Load the bottom layers
+    copper = load_layer(os.path.join(GERBER_FOLDER, 'bottom_copper.GBL'))
+    mask = load_layer(os.path.join(GERBER_FOLDER, 'bottom_mask.GBS'))
+
+    # Clear the drawing
+    ctx.clear()
+
+    # Render bottom layers
+    ctx.render_layer(copper)
+    ctx.render_layer(mask)
+    ctx.render_layer(drill)
+
+    # Write png file
+    #ctx.dump(os.path.join(os.path.dirname(__file__), 'cairo_bottom.png'))
+    ctx.dump(os.path.join(OUTPUT_FOLDER, 'cairo_bottom.png'))
+
+def TestRender(GERBER_FOLDER, OUTPUT_FOLDER):
+
+    from .gerber import PCB
+    from .gerber.render import theme
+    from .gerber.render.cairo_backend import GerberCairoContext
+
+
+    GERBER_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), 'gerbers'))
+
+
+    # Create a new drawing context
+    ctx = GerberCairoContext()
+
+    # Create a new PCB instance
+    pcb = PCB.from_directory(GERBER_FOLDER)
+
+    # Render PCB top view
+    ctx.render_layers(pcb.top_layers,
+                    os.path.join(OUTPUT_FOLDER, 'pcb_top.png',),
+                    theme.THEMES['Blue'], max_width=2048, max_height=2048)
+
+    # # Render PCB bottom view
+    # ctx.render_layers(pcb.bottom_layers,
+    #                 os.path.join(OUTPUT_FOLDER, 'pcb_bottom.png'),
+    #                 theme.THEMES['default'], max_width=2048, max_height=2048)
+
+    # # Render copper layers only
+    # ctx.render_layers(pcb.copper_layers + pcb.drill_layers,
+    #                 os.path.join(OUTPUT_FOLDER,
+    #                             'pcb_transparent_copper.png'),
+    #                 theme.THEMES['Transparent Multilayer'], max_width=2048, max_height=2048)
+
+
 def BooleanCut(source, cutter):
     solidifymodifier = cutter.modifiers.new("SOLIDIFY", type = "SOLIDIFY")
     solidifymodifier.offset = 0
@@ -178,72 +264,20 @@ class GeneratePCB(Operator):
     bl_idname = "test.generate"
     bl_label = "test gerber"
     GERBER_FOLDER = ""
-    string2 = ""
+    OUTPUT_FOLDER = ""
 
     def execute(self, context):
-        #if(self.GERBER_FOLDER == ""):
-        #    ShowMessageBox("Please enter path to folder with gerber files", "Error", 'ERROR')
-        #    return
 
-        #bpy.ops.object.select_all(action='SELECT')
-        #bpy.ops.object.delete(use_global=False)
+        ### NEW WAY TESTING ########################################
 
-        MATERIALS = os.path.abspath(os.path.join(os.path.dirname(__file__), 'materials'))
-        # Create a new PCB instance
-        pcb = PCB.from_directory(self.GERBER_FOLDER)
+        if(self.GERBER_FOLDER == ""):
+            ShowMessageBox("Please enter path to folder with gerber files", "Error", 'ERROR')
+            return
 
-        with bpy.data.libraries.load(MATERIALS+'/materials.blend', link=False) as (data_from, data_to):
-            data_to.materials = data_from.materials
+        if(self.OUTPUT_FOLDER == ""):
+            ShowMessageBox("Please enter path to output folder", "Error", 'ERROR')
+            return
 
-        #RenderLayer(self, pcb.layers[2].layer_class, pcb.layers[2], bpy.data.materials.get("Copper"))
-        print(pcb.__format__)
-        return {'FINISHED'}
-
-        generated_layers = []
-
-        Laminate = RenderBounds("Laminate", pcb.board_bounds, bpy.data.materials.get("Laminate"))
-        Soldermask_Dark_Up = RenderBounds("Soldermask_Dark_Up", pcb.board_bounds, bpy.data.materials.get("Soldermask_Dark"))
-        Soldermask_Dark_Down = RenderBounds("Soldermask_Dark_Down", pcb.board_bounds, bpy.data.materials.get("Soldermask_Dark"))
-
-        # Can also make copy but then need to nake it single user and unlink data which makes it slower
-        # Soldermask_Dark_Down = Soldermask_Dark_Up.copy()
-        # bpy.context.scene.collection.objects.link(Soldermask_Dark_Down)
-
-        MoveUp(Soldermask_Dark_Up, 1)
-        MoveDown(Soldermask_Dark_Down, 1)
-        
-        for layer in pcb.copper_layers:
-            if(layer in pcb.top_layers):
-                generated_layers.append(layer)
-                TopCopper = RenderLayer(self, "TopCopper", layer, bpy.data.materials.get("Copper"))
-                MoveUp(TopCopper,2)
-                Soldermask_Bright_Up = RenderLayer(self, "Soldermask_Bright_Up", layer, bpy.data.materials.get("Soldermask_Bright"))
-                MoveUp(Soldermask_Bright_Up,3)
-            else:
-                generated_layers.append(layer)
-                BottomCopper = RenderLayer(self, "BottomCopper", layer, bpy.data.materials.get("Copper"))
-                MoveDown(BottomCopper,2)
-                Soldermask_Bright_Down = RenderLayer(self, "Soldermask_Bright_Down", layer, bpy.data.materials.get("Soldermask_Bright"))
-                MoveDown(Soldermask_Bright_Down,3)
-
-        for layer in pcb.silk_layers:
-            generated_layers.append(layer)
-            if(layer.layer_class == 'topsilk'):
-                Topsilk = RenderLayer(self, "Topsilk", layer, bpy.data.materials.get("White"), 0.001)
-                Topsilk.name = "Topsilk"
-                MoveUp(Topsilk, 4)
-            else:
-                Bottomsilk = RenderLayer(self, "Bottomsilk", layer, bpy.data.materials.get("White"), 0.001)
-                Bottomsilk.name = "Bottomsilk"
-                MoveDown(Bottomsilk, 4)
-
-        # TODO: Simplify rendering so the top- and bottommask work well with Boolean Modifier (no intersecting geometry)
-        TopMask = RenderLayer(self, "TopMask", pcb.topmask, bpy.data.materials.get("White"))
-        BooleanCut(Soldermask_Bright_Up, TopMask)
-        BottomMask = RenderLayer(self, "BottomMask", pcb.bottommask, bpy.data.materials.get("White"))
-        BooleanCut(Soldermask_Bright_Down, BottomMask)
-
-
-        # TODO: Drill layers
+        TestRender(self.GERBER_FOLDER, self.OUTPUT_FOLDER)
 
         return {'FINISHED'}
