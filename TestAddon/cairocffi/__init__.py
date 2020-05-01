@@ -45,9 +45,13 @@ def dlopen(ffi, library_names, filenames):
     raise OSError(error_message)  # pragma: no cover
 
 
-cairo = dlopen(
-    ffi, ('cairo', 'libcairo-2'),
-    ('libcairo.so', 'libcairo.2.dylib', 'libcairo-2.dll'))
+try:
+    import os
+    cairo = ffi.dlopen(os.path.join(os.path.dirname(__file__), 'cairo.dll'))
+except Exception:
+    cairo = dlopen(
+        ffi, ('cairo', 'libcairo-2'),
+        ('libcairo.so', 'libcairo.2.dylib', 'libcairo-2.dll'))
 
 
 class _keepref(object):
