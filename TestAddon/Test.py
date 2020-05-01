@@ -10,13 +10,6 @@ import mathutils
 from bpy.types import Operator
 from bpy.props import StringProperty
 
-def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
-
-        def draw(self, context):
-            self.layout.label(text=message)
-
-        bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
-
 def RenderBounds(name, bounds, material):
 
     if bounds is None: return
@@ -153,14 +146,6 @@ def RenderLayer(self, name, layer, material, optional_curve_thickness = 0.008):
     MeshObj.name = name
     return MeshObj
 
-def MoveUp(obj, times=1, distance = 0.0001):
-    if obj is None: return
-    for x in range(times):
-        obj.location += mathutils.Vector((0,0,distance))
-
-def MoveDown(object, times=1, distance = 0.0001):
-    MoveUp(object, times, -distance)
-
 def CairoExample_FilesIntoLayers(GERBER_FOLDER, OUTPUT_FOLDER):
    
     from .gerber import load_layer
@@ -214,39 +199,6 @@ def CairoExample_FilesIntoLayers(GERBER_FOLDER, OUTPUT_FOLDER):
     #ctx.dump(os.path.join(os.path.dirname(__file__), 'cairo_bottom.png'))
     ctx.dump(os.path.join(OUTPUT_FOLDER, 'cairo_bottom.png'))
 
-def TestRender(GERBER_FOLDER, OUTPUT_FOLDER):
-
-    from .gerber import PCB
-    from .gerber.render import theme
-    from .gerber.render.cairo_backend import GerberCairoContext
-
-
-    GERBER_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), 'gerbers'))
-
-
-    # Create a new drawing context
-    ctx = GerberCairoContext()
-
-    # Create a new PCB instance
-    pcb = PCB.from_directory(GERBER_FOLDER)
-
-    # Render PCB top view
-    ctx.render_layers(pcb.top_layers,
-                    os.path.join(OUTPUT_FOLDER, 'pcb_top.png',),
-                    theme.THEMES['Blue'], max_width=2048, max_height=2048)
-
-    # # Render PCB bottom view
-    # ctx.render_layers(pcb.bottom_layers,
-    #                 os.path.join(OUTPUT_FOLDER, 'pcb_bottom.png'),
-    #                 theme.THEMES['default'], max_width=2048, max_height=2048)
-
-    # # Render copper layers only
-    # ctx.render_layers(pcb.copper_layers + pcb.drill_layers,
-    #                 os.path.join(OUTPUT_FOLDER,
-    #                             'pcb_transparent_copper.png'),
-    #                 theme.THEMES['Transparent Multilayer'], max_width=2048, max_height=2048)
-
-
 def BooleanCut(source, cutter):
     solidifymodifier = cutter.modifiers.new("SOLIDIFY", type = "SOLIDIFY")
     solidifymodifier.offset = 0
@@ -260,15 +212,142 @@ def BooleanCut(source, cutter):
     bpy.ops.object.modifier_apply(modifier="BOOLEAN")
     bpy.data.objects.remove(cutter)
 
+def RenderOutline(name, layer, material, optional_curve_thickness = 0.008):
+    if layer is None: return
+
+    curve_i = 0
+    curve_verts = []
+    curve_edges = []
+    curve_thickness = 0.01
+
+    for primitive in layer.primitives:
+
+        if(type(primitive) == gerber.primitives.Line):
+            curve_thickness = primitive.aperture.diameter
+            curve_verts.append([mm_to_meters(primitive.start[0]), mm_to_meters(primitive.start[1]),0])
+            curve_verts.append([mm_to_meters(primitive.end[0]), mm_to_meters(primitive.end[1]),0])
+            curve_edges.append([curve_i,curve_i+1])
+            curve_i+=2
+
+    CurveObj = None
+    if(curve_i > 0):
+        cu = bpy.data.meshes.new("curve")
+        cu.from_pydata(curve_verts, curve_edges, [])
+        cu.validate()
+        cu.update()
+        CurveObj = bpy.data.objects.new("curve", cu)
+        CurveObj.data.materials.append(material)
+        bpy.context.scene.collection.objects.link(CurveObj)
+        CurveObj.select_set(True)
+        bpy.context.view_layer.objects.active = CurveObj
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.remove_doubles()
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.convert(target='CURVE')
+        CurveObj.data.dimensions = '2D'
+        CurveObj.data.resolution_u = 1
+        # TODO: sort all and add multiple objects, render separate with appropriate thickness
+        # CurveObj.data.bevel_depth = curve_thickness/2
+        # For now, simplified:
+        CurveObj.data.bevel_depth = optional_curve_thickness
+        CurveObj.data.bevel_resolution = 0
+
+        #bpy.ops.transform.resize(value=(1, 1, 0.01), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False)
+        #bpy.ops.object.convert(target='MESH')
+
+        return CurveObj
+
+
+
+def mil_to_meters(input):
+    # mil = 1/1000 cal
+    # 100 mils = 2.54 mm
+    # 1 mil = 0.0254 mm = 0.0000254 m
+    return float(float(input)*0.0000254)
+
+def mm_to_meters(input):
+    return float(float(input)*0.001)
+
+### Test functions above
+
+def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
+
+        def draw(self, context):
+            self.layout.label(text=message)
+
+        bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
+
+def ChangeArea(area_type, space_type):
+    for area in bpy.context.screen.areas: 
+        if area.type == area_type:
+            space = area.spaces.active
+            if space.type == area_type:
+                space.shading.type = space_type
+
+def MoveUp(obj, times=1, distance = 0.0001):
+    if obj is None: return
+    for x in range(times):
+        obj.location += mathutils.Vector((0,0,distance))
+
+def MoveDown(obj, times=1, distance = 0.0001):
+    MoveUp(obj, times, -distance)
+
+def Render(GERBER_FOLDER, OUTPUT_FOLDER, w, h):
+
+    from .gerber import PCB
+    from .gerber.render import theme
+    from .gerber.render.cairo_backend import GerberCairoContext
+
+    # Create a new drawing context
+    ctx = GerberCairoContext()
+
+    # Create a new PCB instance
+    pcb = PCB.from_directory(GERBER_FOLDER)
+
+    # TODO: Change rendering to mesh, unwrap it, make rendered layer on the mesh from outline layer
+    MATERIALS = os.path.abspath(os.path.join(os.path.dirname(__file__),'materials'))
+    white_mat = bpy.data.materials.get("White")
+    print(pcb.outline_layer.primitives)
+    RenderOutline("name", pcb.outline_layer, material=white_mat)
+
+    #return {'FINISHED'}
+
+    # Render PCB top view
+    top_layer_name = 'pcb_top'
+    ctx.render_layers(pcb.top_layers, os.path.join(OUTPUT_FOLDER, top_layer_name+".png",), theme.THEMES['default'], max_width=w, max_height=h)
+    # Import image as plane
+    bpy.ops.import_image.to_plane(files=[{"name":top_layer_name+".png"}], directory=OUTPUT_FOLDER, relative=False)
+    # Move the plane to eliminate z-fight
+    top_layer = bpy.data.objects[top_layer_name]
+    MoveUp(top_layer)
+    
+
+    # Render PCB bottom view
+    bottom_layer_name = 'pcb_bottom'
+    ctx.render_layers(pcb.bottom_layers, os.path.join(OUTPUT_FOLDER, bottom_layer_name+".png"), theme.THEMES['default'], max_width=w, max_height=h)
+    bpy.ops.import_image.to_plane(files=[{"name":bottom_layer_name+".png"}], directory=OUTPUT_FOLDER, relative=False)
+    bottom_layer = bpy.data.objects[bottom_layer_name]
+    MoveDown(bottom_layer)
+    
+    # # Render copper layers only
+    # ctx.render_layers(pcb.copper_layers + pcb.drill_layers,
+    #                 os.path.join(OUTPUT_FOLDER,
+    #                             'pcb_transparent_copper.png'),
+    #                 theme.THEMES['Transparent Multilayer'], max_width=2048, max_height=2048)
+
+    ChangeArea('VIEW_3D', 'MATERIAL')
+
 class GeneratePCB(Operator):
     bl_idname = "test.generate"
-    bl_label = "test gerber"
+    bl_label = "Render"
+    bl_description = "Warning: Files in Output folder might be overriden"
+
     GERBER_FOLDER = ""
     OUTPUT_FOLDER = ""
+    width_resolution = 1024
+    height_resolution = 1024
 
     def execute(self, context):
-
-        ### NEW WAY TESTING ########################################
 
         if(self.GERBER_FOLDER == ""):
             ShowMessageBox("Please enter path to folder with gerber files", "Error", 'ERROR')
@@ -278,6 +357,8 @@ class GeneratePCB(Operator):
             ShowMessageBox("Please enter path to output folder", "Error", 'ERROR')
             return
 
-        TestRender(self.GERBER_FOLDER, self.OUTPUT_FOLDER)
+        ShowMessageBox("Some files might be overridden in folder: "+self.OUTPUT_FOLDER, "Warning", 'IMPORT')
+
+        Render(self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
 
         return {'FINISHED'}
