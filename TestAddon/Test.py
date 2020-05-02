@@ -152,18 +152,23 @@ def CairoExample_FilesIntoLayers(GERBER_FOLDER, OUTPUT_FOLDER):
     from .gerber.render import RenderSettings, theme
     from .gerber.render.cairo_backend import GerberCairoContext
     # Open the gerber files
-    copper = load_layer(os.path.join(GERBER_FOLDER, 'copper.GTL'))
-    mask = load_layer(os.path.join(GERBER_FOLDER, 'soldermask.GTS'))
-    silk = load_layer(os.path.join(GERBER_FOLDER, 'silkscreen.GTO'))
-    drill = load_layer(os.path.join(GERBER_FOLDER, 'ncdrill.DRD'))
+    copper = load_layer(os.path.join(GERBER_FOLDER, 'proste1-F_Cu.gbr'))
+    mask = load_layer(os.path.join(GERBER_FOLDER, 'proste1-F_Mask.gbr'))
+    paste = load_layer(os.path.join(GERBER_FOLDER, 'proste1-F_Paste.gbr'))
+    silk = load_layer(os.path.join(GERBER_FOLDER, 'proste1-F_SilkS.gbr'))
+    drill = load_layer(os.path.join(GERBER_FOLDER, 'proste1-PTH.drl'))
+    outline = load_layer(os.path.join(GERBER_FOLDER, 'proste1-Edge_Cuts.gbr'))
 
     # Create a new drawing context
     ctx = GerberCairoContext()
+
+    ctx.render_layer(outline)
 
     # Draw the copper layer. render_layer() uses the default color scheme for the
     # layer, based on the layer type. Copper layers are rendered as
     ctx.render_layer(copper)
 
+    ctx.render_layer(paste)
     # Draw the soldermask layer
     ctx.render_layer(mask)
 
@@ -181,23 +186,23 @@ def CairoExample_FilesIntoLayers(GERBER_FOLDER, OUTPUT_FOLDER):
 
     # Write output to png file
     #ctx.dump(os.path.join(os.path.dirname(__file__), 'cairo_example.png'))
-    ctx.dump(os.path.join(OUTPUT_FOLDER, 'cairo_example.png'))
+    ctx.dump(os.path.join(OUTPUT_FOLDER, 'cairo_example2.png'))
 
-    # Load the bottom layers
-    copper = load_layer(os.path.join(GERBER_FOLDER, 'bottom_copper.GBL'))
-    mask = load_layer(os.path.join(GERBER_FOLDER, 'bottom_mask.GBS'))
+    # # Load the bottom layers
+    # copper = load_layer(os.path.join(GERBER_FOLDER, 'bottom_copper.GBL'))
+    # mask = load_layer(os.path.join(GERBER_FOLDER, 'bottom_mask.GBS'))
 
-    # Clear the drawing
-    ctx.clear()
+    # # Clear the drawing
+    # ctx.clear()
 
-    # Render bottom layers
-    ctx.render_layer(copper)
-    ctx.render_layer(mask)
-    ctx.render_layer(drill)
+    # # Render bottom layers
+    # ctx.render_layer(copper)
+    # ctx.render_layer(mask)
+    # ctx.render_layer(drill)
 
-    # Write png file
-    #ctx.dump(os.path.join(os.path.dirname(__file__), 'cairo_bottom.png'))
-    ctx.dump(os.path.join(OUTPUT_FOLDER, 'cairo_bottom.png'))
+    # # Write png file
+    # #ctx.dump(os.path.join(os.path.dirname(__file__), 'cairo_bottom.png'))
+    # ctx.dump(os.path.join(OUTPUT_FOLDER, 'cairo_bottom.png'))
 
 def BooleanCut(source, cutter):
     solidifymodifier = cutter.modifiers.new("SOLIDIFY", type = "SOLIDIFY")
@@ -212,52 +217,37 @@ def BooleanCut(source, cutter):
     bpy.ops.object.modifier_apply(modifier="BOOLEAN")
     bpy.data.objects.remove(cutter)
 
-def RenderOutline(name, layer, material, optional_curve_thickness = 0.008):
+def RenderOutline(name, layer, material):
     if layer is None: return
 
-    curve_i = 0
-    curve_verts = []
-    curve_edges = []
-    curve_thickness = 0.01
+    mesh_i = 0
+    mesh_verts = []
+    mesh_edges = []
+    mesh_faces = []
 
     for primitive in layer.primitives:
 
         if(type(primitive) == gerber.primitives.Line):
-            curve_thickness = primitive.aperture.diameter
-            curve_verts.append([mm_to_meters(primitive.start[0]), mm_to_meters(primitive.start[1]),0])
-            curve_verts.append([mm_to_meters(primitive.end[0]), mm_to_meters(primitive.end[1]),0])
-            curve_edges.append([curve_i,curve_i+1])
-            curve_i+=2
 
-    CurveObj = None
-    if(curve_i > 0):
-        cu = bpy.data.meshes.new("curve")
-        cu.from_pydata(curve_verts, curve_edges, [])
-        cu.validate()
-        cu.update()
-        CurveObj = bpy.data.objects.new("curve", cu)
-        CurveObj.data.materials.append(material)
-        bpy.context.scene.collection.objects.link(CurveObj)
-        CurveObj.select_set(True)
-        bpy.context.view_layer.objects.active = CurveObj
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.remove_doubles()
-        bpy.ops.object.mode_set(mode='OBJECT')
-        bpy.ops.object.convert(target='CURVE')
-        CurveObj.data.dimensions = '2D'
-        CurveObj.data.resolution_u = 1
-        # TODO: sort all and add multiple objects, render separate with appropriate thickness
-        # CurveObj.data.bevel_depth = curve_thickness/2
-        # For now, simplified:
-        CurveObj.data.bevel_depth = optional_curve_thickness
-        CurveObj.data.bevel_resolution = 0
+            mesh_verts.append([primitive.start[0],primitive.start[1],0])
+            mesh_verts.append([primitive.end[0],primitive.end[1],0])
+            mesh_i+=1
 
-        #bpy.ops.transform.resize(value=(1, 1, 0.01), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False)
-        #bpy.ops.object.convert(target='MESH')
+    me = bpy.data.meshes.new("mesh")
+    me.materials.append(material)
+    me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
+    me.validate()
+    me.update()
+    MeshObj = bpy.data.objects.new("mesh", me)
+    bpy.context.scene.collection.objects.link(MeshObj)
 
-        return CurveObj
-
-
+    MeshObj.select_set(True)
+    bpy.context.view_layer.objects.active = MeshObj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.edge_face_add()
+    bpy.ops.uv.cube_project(cube_size=1, scale_to_bounds=True)
+    
+    return MeshObj
 
 def mil_to_meters(input):
     # mil = 1/1000 cal
@@ -304,31 +294,31 @@ def Render(GERBER_FOLDER, OUTPUT_FOLDER, w, h):
     # Create a new PCB instance
     pcb = PCB.from_directory(GERBER_FOLDER)
 
-    # TODO: Change rendering to mesh, unwrap it, make rendered layer on the mesh from outline layer
-    MATERIALS = os.path.abspath(os.path.join(os.path.dirname(__file__),'materials'))
-    white_mat = bpy.data.materials.get("White")
-    print(pcb.outline_layer.primitives)
-    RenderOutline("name", pcb.outline_layer, material=white_mat)
-
-    #return {'FINISHED'}
+    # TODO:
+    # Change rendering to mesh
+    # unwrap it
+    # make rendered layer on the mesh from outline layer
+    # MATERIALS = os.path.abspath(os.path.join(os.path.dirname(__file__),'materials'))
+    # white_mat = bpy.data.materials.get("White")
+    # RenderOutline("name", pcb.outline_layer, material=white_mat)
+    
 
     # Render PCB top view
     top_layer_name = 'pcb_top'
-    ctx.render_layers(pcb.top_layers, os.path.join(OUTPUT_FOLDER, top_layer_name+".png",), theme.THEMES['default'], max_width=w, max_height=h)
+    ctx.render_layers(pcb.top_layers, os.path.join(OUTPUT_FOLDER, top_layer_name+'.png',), theme.THEMES['default'], max_width=w, max_height=h)
     # Import image as plane
-    bpy.ops.import_image.to_plane(files=[{"name":top_layer_name+".png"}], directory=OUTPUT_FOLDER, relative=False)
+    bpy.ops.import_image.to_plane(files=[{"name":top_layer_name+'.png'}], directory=OUTPUT_FOLDER, relative=False)
     # Move the plane to eliminate z-fight
     top_layer = bpy.data.objects[top_layer_name]
     MoveUp(top_layer)
-    
 
     # Render PCB bottom view
     bottom_layer_name = 'pcb_bottom'
-    ctx.render_layers(pcb.bottom_layers, os.path.join(OUTPUT_FOLDER, bottom_layer_name+".png"), theme.THEMES['default'], max_width=w, max_height=h)
-    bpy.ops.import_image.to_plane(files=[{"name":bottom_layer_name+".png"}], directory=OUTPUT_FOLDER, relative=False)
+    ctx.render_layers(pcb.bottom_layers, os.path.join(OUTPUT_FOLDER, bottom_layer_name+'.png',), theme.THEMES['default'], max_width=w, max_height=h)
+    bpy.ops.import_image.to_plane(files=[{"name":bottom_layer_name+'.png'}], directory=OUTPUT_FOLDER, relative=False)
     bottom_layer = bpy.data.objects[bottom_layer_name]
     MoveDown(bottom_layer)
-    
+
     # # Render copper layers only
     # ctx.render_layers(pcb.copper_layers + pcb.drill_layers,
     #                 os.path.join(OUTPUT_FOLDER,
@@ -337,28 +327,43 @@ def Render(GERBER_FOLDER, OUTPUT_FOLDER, w, h):
 
     ChangeArea('VIEW_3D', 'MATERIAL')
 
+def RenderFromFiles(*args):
+    
+
 class GeneratePCB(Operator):
-    bl_idname = "test.generate"
+    bl_idname = "pcb.generate"
     bl_label = "Render"
     bl_description = "Warning: Files in Output folder might be overriden"
-
     GERBER_FOLDER = ""
     OUTPUT_FOLDER = ""
     width_resolution = 1024
     height_resolution = 1024
+    cu = None
+    mu = None
+    pu = None
+    su = None
+    cb = None
+    mb = None
+    pb = None
+    sb = None
+    edg = None
+    drl = None
 
     def execute(self, context):
-
-        if(self.GERBER_FOLDER == ""):
+        
+        if(str(self.GERBER_FOLDER) == ""):
             ShowMessageBox("Please enter path to folder with gerber files", "Error", 'ERROR')
-            return
+            return {'CANCELLED'}
 
-        if(self.OUTPUT_FOLDER == ""):
+        if(str(self.OUTPUT_FOLDER) == ""):
             ShowMessageBox("Please enter path to output folder", "Error", 'ERROR')
-            return
+            return {'CANCELLED'}
 
-        ShowMessageBox("Some files might be overridden in folder: "+self.OUTPUT_FOLDER, "Warning", 'IMPORT')
+        #ShowMessageBox("Some files might be overridden in folder: "+self.OUTPUT_FOLDER, "Warning", 'IMPORT')
 
-        Render(self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
+        #Render(self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
+
+        RenderFromFiles(copperUp = cu, maskUp = mu, pasteUp = pu, silkUp = su, copperBottom = cb, maskBottom = mb, pasteBottom = pb, silkBottom = sb, edge = edg, drill = drl)
+        #CairoExample_FilesIntoLayers(self.GERBER_FOLDER, self.OUTPUT_FOLDER)
 
         return {'FINISHED'}

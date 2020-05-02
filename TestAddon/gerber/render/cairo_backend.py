@@ -16,10 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#try:
-import cairocffi as cairo
-#except ImportError:
-#    from pcb import cairocffi as cairo
+
+# local import:
+from ... import cairocffi as cairo
+
+# try:
+#     import cairo
+# except ImportError:
+#     import cairocffi as cairo
+
 
 from operator import mul
 import tempfile
@@ -126,9 +131,8 @@ class GerberCairoContext(GerberContext):
         bgsettings = theme['background']
         for layer in layers:
             settings = theme.get(layer.layer_class, RenderSettings())
-            self.render_layer(layer, settings=settings, bgsettings=bgsettings,
-                              verbose=verbose)
-        self.dump(filename, verbose)
+            self.render_layer(layer, settings=settings, bgsettings=bgsettings, verbose=verbose)
+        self.dump_png(filename)
 
     def dump(self, filename=None, verbose=False):
         """ Save image as `filename`
@@ -155,6 +159,12 @@ class GerberCairoContext(GerberContext):
         fobj = BytesIO()
         self.surface.write_to_png(fobj)
         return fobj.getvalue()
+
+    def dump_png(self, filename=None):
+        """ Return a rendered image as PNG.
+        """
+        fobj = BytesIO()
+        return self.surface.write_to_png(target = filename)
 
     def dump_svg_str(self):
         """ Return a string containg the rendered SVG.

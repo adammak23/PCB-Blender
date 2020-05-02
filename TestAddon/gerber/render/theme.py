@@ -53,13 +53,13 @@ class Theme(object):
 
     def __init__(self, name=None, **kwargs):
         self.name = 'Default' if name is None else name
-        self.background = kwargs.get('background', RenderSettings(COLORS['fr-4']))
+        self.background = kwargs.get('background', RenderSettings(COLORS['fr-4'], alpha=0.85))
         self.topsilk = kwargs.get('topsilk', RenderSettings(COLORS['white']))
-        self.bottomsilk = kwargs.get('bottomsilk', RenderSettings(COLORS['white'], mirror=True))
+        self.bottomsilk = kwargs.get('bottomsilk', RenderSettings(COLORS['white'], mirror=False))
         self.topmask = kwargs.get('topmask', RenderSettings(COLORS['green soldermask'], alpha=0.85, invert=True))
-        self.bottommask = kwargs.get('bottommask', RenderSettings(COLORS['green soldermask'], alpha=0.85, invert=True, mirror=True))
+        self.bottommask = kwargs.get('bottommask', RenderSettings(COLORS['green soldermask'], alpha=0.85, invert=True, mirror=False))
         self.top = kwargs.get('top', RenderSettings(COLORS['hasl copper']))
-        self.bottom = kwargs.get('bottom', RenderSettings(COLORS['hasl copper'], mirror=True))
+        self.bottom = kwargs.get('bottom', RenderSettings(COLORS['hasl copper'], mirror=False))
         self.drill = kwargs.get('drill', RenderSettings(COLORS['black']))
         self.ipc_netlist = kwargs.get('ipc_netlist', RenderSettings(COLORS['red']))
         self._internal = kwargs.get('internal', [RenderSettings(x) for x in SPECTRUM])
@@ -85,6 +85,7 @@ class Theme(object):
 
 THEMES = {
     'default': Theme(),
+
     'OSH Park': Theme(name='OSH Park',
                       background=RenderSettings(COLORS['purple soldermask']),
                       top=RenderSettings(COLORS['enig copper']),

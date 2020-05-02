@@ -644,11 +644,9 @@ class Surface(object):
             target = io.BytesIO()
         if hasattr(target, 'write'):
             write_func = _make_write_func(target)
-            _check_status(cairo.cairo_surface_write_to_png_stream(
-                self._pointer, write_func, ffi.NULL))
+            _check_status(cairo.cairo_surface_write_to_png_stream(self._pointer, write_func, ffi.NULL))
         else:
-            _check_status(cairo.cairo_surface_write_to_png(
-                self._pointer, _encode_filename(target)))
+            _check_status(cairo.cairo_surface_write_to_png(self._pointer, _encode_filename(target)))
         if return_bytes:
             return target.getvalue()
 

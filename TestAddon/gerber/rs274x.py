@@ -23,11 +23,7 @@ import json
 import os
 import re
 import sys
-
-try:
-    from cStringIO import StringIO
-except(ImportError):
-    from io import StringIO
+from io import StringIO
 
 from .gerber_statements import *
 from .primitives import *
