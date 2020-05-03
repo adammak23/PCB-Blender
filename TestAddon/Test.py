@@ -10,6 +10,14 @@ import mathutils
 from bpy.types import Operator
 from bpy.props import StringProperty
 
+# Saving timestamp in filename
+from datetime import datetime
+
+# Cairo rendering
+from .gerber import load_layer
+from .gerber.render import RenderSettings, theme
+from .gerber.render.cairo_backend import GerberCairoContext
+
 def RenderBounds(name, bounds, material):
 
     if bounds is None: return
@@ -217,7 +225,7 @@ def BooleanCut(source, cutter):
     bpy.ops.object.modifier_apply(modifier="BOOLEAN")
     bpy.data.objects.remove(cutter)
 
-def RenderOutline(name, layer, material):
+def RenderOutline(name, layer, material, offset, scaler):
     if layer is None: return
 
     mesh_i = 0
@@ -229,16 +237,16 @@ def RenderOutline(name, layer, material):
 
         if(type(primitive) == gerber.primitives.Line):
 
-            mesh_verts.append([primitive.start[0],primitive.start[1],0])
-            mesh_verts.append([primitive.end[0],primitive.end[1],0])
+            vec1 = [(primitive.start[0] + offset[0])/scaler[0], (primitive.start[1] + offset[1])/scaler[1],0]
+            mesh_verts.append(vec1)
             mesh_i+=1
 
-    me = bpy.data.meshes.new("mesh")
+    me = bpy.data.meshes.new("outline")
     me.materials.append(material)
     me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
     me.validate()
     me.update()
-    MeshObj = bpy.data.objects.new("mesh", me)
+    MeshObj = bpy.data.objects.new("outline", me)
     bpy.context.scene.collection.objects.link(MeshObj)
 
     MeshObj.select_set(True)
@@ -246,6 +254,7 @@ def RenderOutline(name, layer, material):
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.edge_face_add()
     bpy.ops.uv.cube_project(cube_size=1, scale_to_bounds=True)
+    bpy.ops.object.mode_set(mode='OBJECT')
     
     return MeshObj
 
@@ -294,10 +303,6 @@ def Render(GERBER_FOLDER, OUTPUT_FOLDER, w, h):
     # Create a new PCB instance
     pcb = PCB.from_directory(GERBER_FOLDER)
 
-    # TODO:
-    # Change rendering to mesh
-    # unwrap it
-    # make rendered layer on the mesh from outline layer
     # MATERIALS = os.path.abspath(os.path.join(os.path.dirname(__file__),'materials'))
     # white_mat = bpy.data.materials.get("White")
     # RenderOutline("name", pcb.outline_layer, material=white_mat)
@@ -305,30 +310,53 @@ def Render(GERBER_FOLDER, OUTPUT_FOLDER, w, h):
 
     # Render PCB top view
     top_layer_name = 'pcb_top'
-    ctx.render_layers(pcb.top_layers, os.path.join(OUTPUT_FOLDER, top_layer_name+'.png',), theme.THEMES['default'], max_width=w, max_height=h)
+    
+    layers_to_render = pcb.top_layers
+    if pcb.outline_layer is not None:
+        layers_to_render.insert(0, pcb.outline_layer)
+    
+    ctx.render_layers(layers_to_render, os.path.join(OUTPUT_FOLDER, top_layer_name+'.png'), theme.THEMES['default'], max_width=w, max_height=h)
     # Import image as plane
-    bpy.ops.import_image.to_plane(files=[{"name":top_layer_name+'.png'}], directory=OUTPUT_FOLDER, relative=False)
+    #bpy.ops.import_image.to_plane(files=[{"name":top_layer_name+'.png'}], directory=OUTPUT_FOLDER, relative=False)
     # Move the plane to eliminate z-fight
-    top_layer = bpy.data.objects[top_layer_name]
-    MoveUp(top_layer)
+    #top_layer = bpy.data.objects[top_layer_name]
+    #MoveUp(top_layer)
 
     # Render PCB bottom view
     bottom_layer_name = 'pcb_bottom'
-    ctx.render_layers(pcb.bottom_layers, os.path.join(OUTPUT_FOLDER, bottom_layer_name+'.png',), theme.THEMES['default'], max_width=w, max_height=h)
-    bpy.ops.import_image.to_plane(files=[{"name":bottom_layer_name+'.png'}], directory=OUTPUT_FOLDER, relative=False)
-    bottom_layer = bpy.data.objects[bottom_layer_name]
-    MoveDown(bottom_layer)
+    ctx.render_layers(pcb.bottom_layers, os.path.join(OUTPUT_FOLDER, bottom_layer_name+'.png'), theme.THEMES['default'], max_width=w, max_height=h)
 
-    # # Render copper layers only
-    # ctx.render_layers(pcb.copper_layers + pcb.drill_layers,
-    #                 os.path.join(OUTPUT_FOLDER,
-    #                             'pcb_transparent_copper.png'),
-    #                 theme.THEMES['Transparent Multilayer'], max_width=2048, max_height=2048)
+    mat = bpy.data.materials.new(name = top_layer_name)
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    texImage = mat.node_tree.nodes.new('ShaderNodeTexImage')
+    texImage.image = bpy.data.images.load(os.path.join(OUTPUT_FOLDER, top_layer_name+'.png'))
+    mat.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
+    mesh = RenderOutline(
+        "outline",
+        pcb.outline_layer,
+        mat,
+        -mathutils.Vector((ctx.origin_in_inch[0], ctx.origin_in_inch[1], 0)),
+         mathutils.Vector((100, 100, 0))
+         )
+
 
     ChangeArea('VIEW_3D', 'MATERIAL')
 
-def RenderFromFiles(*args):
-    
+def RenderFromFiles(name, GERBER_FOLDER, OUTPUT_FOLDER, layers, w=800, h=600):
+
+    layers_files = []
+    for layer in layers:
+        if layer is "" or None: continue
+        layers_files.append(load_layer(os.path.join(GERBER_FOLDER, layer)))
+
+    ctx = GerberCairoContext()
+
+    ctx.render_layers(layers_files, os.path.join(OUTPUT_FOLDER, name +'.png',), theme.THEMES['default'], max_width=w, max_height=h)
+    ctx.dump(os.path.join(OUTPUT_FOLDER, name+'.png'))
+
+    # Import image as plane
+    bpy.ops.import_image.to_plane(files=[{"name":name+'.png'}], directory=OUTPUT_FOLDER, relative=False)
 
 class GeneratePCB(Operator):
     bl_idname = "pcb.generate"
@@ -338,6 +366,8 @@ class GeneratePCB(Operator):
     OUTPUT_FOLDER = ""
     width_resolution = 1024
     height_resolution = 1024
+
+    use_separate_files = False
     cu = None
     mu = None
     pu = None
@@ -348,22 +378,39 @@ class GeneratePCB(Operator):
     sb = None
     edg = None
     drl = None
+    drl2 = None
 
     def execute(self, context):
-        
-        if(str(self.GERBER_FOLDER) == ""):
-            ShowMessageBox("Please enter path to folder with gerber files", "Error", 'ERROR')
-            return {'CANCELLED'}
 
         if(str(self.OUTPUT_FOLDER) == ""):
             ShowMessageBox("Please enter path to output folder", "Error", 'ERROR')
             return {'CANCELLED'}
 
+        if(self.use_separate_files is not None):
+            if(self.use_separate_files):
+                up_layers     = [self.edg, self.pu, self.su, self.cu, self.mu, self.drl, self.drl2]
+                bottom_layers = [self.edg, self.pb, self.sb, self.cb, self.mb, self.drl, self.drl2]
+
+                RenderFromFiles("Top_Layer", self.GERBER_FOLDER, self.OUTPUT_FOLDER, up_layers, self.width_resolution, self.height_resolution)
+                # Move the plane to eliminate z-fight
+                MoveUp(bpy.data.objects["Top_Layer"])
+                RenderFromFiles("Bottom_Layer", self.GERBER_FOLDER, self.OUTPUT_FOLDER, bottom_layers, self.width_resolution, self.height_resolution)
+                MoveDown(bpy.data.objects["Bottom_Layer"])
+
+                return {'FINISHED'}
+
+
+        if(str(self.GERBER_FOLDER) == ""):
+            ShowMessageBox("Please enter path to folder with gerber files", "Error", 'ERROR')
+            return {'CANCELLED'}
+        else:
+            Render(self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
+            return {'FINISHED'}
+
         #ShowMessageBox("Some files might be overridden in folder: "+self.OUTPUT_FOLDER, "Warning", 'IMPORT')
 
         #Render(self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
 
-        RenderFromFiles(copperUp = cu, maskUp = mu, pasteUp = pu, silkUp = su, copperBottom = cb, maskBottom = mb, pasteBottom = pb, silkBottom = sb, edge = edg, drill = drl)
+        #RenderFromFiles(self.GERBER_FOLDER, [self.cu, self.mu, self.pu, self.su], copperBottom = self.cb, maskBottom = self.mb, pasteBottom = self.pb, silkBottom = self.sb, edge = self.edg, drill = self.drl)
+        
         #CairoExample_FilesIntoLayers(self.GERBER_FOLDER, self.OUTPUT_FOLDER)
-
-        return {'FINISHED'}
