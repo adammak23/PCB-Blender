@@ -45,7 +45,15 @@ def RenderBounds(name, bounds, material):
     me.update()
     TempObj = bpy.data.objects.new(name, me)
     bpy.context.scene.collection.objects.link(TempObj)
+
+    TempObj.select_set(True)
+    bpy.context.view_layer.objects.active = TempObj
+
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.uv.cube_project(cube_size=1, scale_to_bounds=True)
+    bpy.ops.object.mode_set(mode='OBJECT')
     return TempObj
+
 
 def RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, radius, Xax, Yax):
     # sin rotation is 2*PI = 6.283
@@ -95,7 +103,6 @@ def RenderLayer(self, name, layer, material, optional_curve_thickness = 0.008):
 
         elif(type(primitive) == gerber.primitives.Line):
             curve_thickness = primitive.aperture.diameter
-            #print(curve_thickness)
             if(curve_thickness > 0.05):
                 mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, curve_thickness/2, primitive.start[0], primitive.start[1])
                 mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, curve_thickness/2, (primitive.start[0]+primitive.end[0])/2, (primitive.start[1]+primitive.end[1])/2)
@@ -291,17 +298,8 @@ def MoveUp(obj, times=1, distance = 0.0001):
 def MoveDown(obj, times=1, distance = 0.0001):
     MoveUp(obj, times, -distance)
 
-def Render(GERBER_FOLDER, OUTPUT_FOLDER, w, h):
-
-    from .gerber import PCB
-    from .gerber.render import theme
-    from .gerber.render.cairo_backend import GerberCairoContext
-
-    # Create a new drawing context
-    ctx = GerberCairoContext()
-
-    # Create a new PCB instance
-    pcb = PCB.from_directory(GERBER_FOLDER)
+def RenderPCB(GERBER_FOLDER, OUTPUT_FOLDER, w, h):
+    
 
     # MATERIALS = os.path.abspath(os.path.join(os.path.dirname(__file__),'materials'))
     # white_mat = bpy.data.materials.get("White")
@@ -323,8 +321,9 @@ def Render(GERBER_FOLDER, OUTPUT_FOLDER, w, h):
     #MoveUp(top_layer)
 
     # Render PCB bottom view
-    bottom_layer_name = 'pcb_bottom'
-    ctx.render_layers(pcb.bottom_layers, os.path.join(OUTPUT_FOLDER, bottom_layer_name+'.png'), theme.THEMES['default'], max_width=w, max_height=h)
+    
+    name = 'pcb_bottom'
+    ctx.render_layers(pcb.bottom_layers, os.path.join(OUTPUT_FOLDER, name+'.png'), theme.THEMES['default'], max_width=w, max_height=h)
 
     mat = bpy.data.materials.new(name = top_layer_name)
     mat.use_nodes = True
@@ -339,9 +338,44 @@ def Render(GERBER_FOLDER, OUTPUT_FOLDER, w, h):
         -mathutils.Vector((ctx.origin_in_inch[0], ctx.origin_in_inch[1], 0)),
          mathutils.Vector((100, 100, 0))
          )
-
-
     ChangeArea('VIEW_3D', 'MATERIAL')
+
+
+
+def CreateModel(name, source_folder, ctx, pcb_instance=None):
+
+    mat = bpy.data.materials.new(name = name)
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    texImage = mat.node_tree.nodes.new('ShaderNodeTexImage')
+    texImage.image = bpy.data.images.load(os.path.join(source_folder, name+'.png'))
+    mat.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
+
+    mesh = None
+    if(pcb_instance is not None):
+        if(pcb_instance.outline_layer is not None):
+            mesh = RenderOutline(
+                "outline",
+                pcb_instance.outline_layer,
+                mat,
+                -mathutils.Vector((ctx.origin_in_inch[0], ctx.origin_in_inch[1], 0)),
+                mathutils.Vector((100, 100, 0)))
+        else:
+            mesh = RenderBounds(
+                    "outline",
+                    ctx.first_bounds,
+                    mat,
+                    )
+    return mesh
+
+def CreateImage(name, layers, ctx, GERBER_FOLDER, OUTPUT_FOLDER, w=512, h=512, pcb_instance=None):
+     
+    layers_to_render = layers
+    if(pcb_instance is not None):
+        if pcb_instance.outline_layer is not None:
+            layers_to_render.insert(0, pcb_instance.outline_layer)
+
+    ctx.render_layers(layers_to_render, os.path.join(OUTPUT_FOLDER, name+'.png'), theme.THEMES['default'], max_width=w, max_height=h)
 
 def RenderFromFiles(name, GERBER_FOLDER, OUTPUT_FOLDER, layers, w=800, h=600):
 
@@ -388,14 +422,28 @@ class GeneratePCB(Operator):
 
         if(self.use_separate_files is not None):
             if(self.use_separate_files):
-                up_layers     = [self.edg, self.pu, self.su, self.cu, self.mu, self.drl, self.drl2]
-                bottom_layers = [self.edg, self.pb, self.sb, self.cb, self.mb, self.drl, self.drl2]
+                # Create a new drawing context
+                ctx = GerberCairoContext()
+                # Preprocess and load layers from strings
+                string_up_layers     = [self.edg, self.pu, self.su, self.cu, self.mu, self.drl, self.drl2]
+                up_layers = []
+                string_bottom_layers = [self.edg, self.pb, self.sb, self.cb, self.mb, self.drl, self.drl2]
+                bottom_layers = []
+                for stringlayer in string_up_layers:
+                    if(stringlayer is not None and stringlayer is not ""):
+                        up_layers.append(load_layer(os.path.join(self.GERBER_FOLDER, stringlayer)))
+                for stringlayer in string_bottom_layers:
+                    if(stringlayer is not None and stringlayer is not ""):
+                        bottom_layers.append(load_layer(os.path.join(self.GERBER_FOLDER, stringlayer)))
 
-                RenderFromFiles("Top_Layer", self.GERBER_FOLDER, self.OUTPUT_FOLDER, up_layers, self.width_resolution, self.height_resolution)
-                # Move the plane to eliminate z-fight
-                MoveUp(bpy.data.objects["Top_Layer"])
-                RenderFromFiles("Bottom_Layer", self.GERBER_FOLDER, self.OUTPUT_FOLDER, bottom_layers, self.width_resolution, self.height_resolution)
-                MoveDown(bpy.data.objects["Bottom_Layer"])
+                # Render images
+                CreateImage("Top_layer", up_layers, ctx, self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
+                CreateImage("Bottom_layer", bottom_layers, ctx, self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
+
+                Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx)
+                MoveUp(Top_layer)
+                Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx)
+                MoveDown(Bottom_layer)
 
                 return {'FINISHED'}
 
@@ -404,7 +452,20 @@ class GeneratePCB(Operator):
             ShowMessageBox("Please enter path to folder with gerber files", "Error", 'ERROR')
             return {'CANCELLED'}
         else:
-            Render(self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
+            # Create a new drawing context
+            ctx = GerberCairoContext()
+            # Create a new PCB instance
+            pcb = PCB.from_directory(self.GERBER_FOLDER)
+            # Render images
+            CreateImage("Top_layer", pcb.top_layers, ctx, self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
+            CreateImage("Bottom_layer", pcb.bottom_layers, ctx, self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
+
+            Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
+            MoveUp(Top_layer)
+            Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
+            MoveDown(Bottom_layer)
+
+            ChangeArea('VIEW_3D', 'MATERIAL')
             return {'FINISHED'}
 
         #ShowMessageBox("Some files might be overridden in folder: "+self.OUTPUT_FOLDER, "Warning", 'IMPORT')

@@ -55,6 +55,7 @@ class GerberCairoContext(GerberContext):
         self.size_in_inch = None
         self._xform_matrix = None
         self._render_count = 0
+        self.first_bounds = None
 
     @property
     def origin_in_pixels(self):
@@ -71,6 +72,7 @@ class GerberCairoContext(GerberContext):
         size_in_inch = (abs(bounds[0][1] - bounds[0][0]),
                         abs(bounds[1][1] - bounds[1][0]))
         size_in_pixels = self.scale_point(size_in_inch)
+
         self.origin_in_inch = origin_in_inch if self.origin_in_inch is None else self.origin_in_inch
         self.size_in_inch = size_in_inch if self.size_in_inch is None else self.size_in_inch
         self._xform_matrix = cairo.Matrix(xx=1.0, yy=-1.0,
@@ -79,7 +81,7 @@ class GerberCairoContext(GerberContext):
         if (self.surface is None) or new_surface:
             self.surface_buffer = tempfile.NamedTemporaryFile()
             self.surface = cairo.SVGSurface(self.surface_buffer, size_in_pixels[0], size_in_pixels[1])
-            self.output_ctx = cairo.Context(self.surface)
+            self.output_ctx = cairo.Context(self.surface)    
 
     def render_layer(self, layer, filename=None, settings=None, bgsettings=None,
                      verbose=False, bounds=None):
@@ -113,8 +115,11 @@ class GerberCairoContext(GerberContext):
         y_range = [10000, -10000]
         for layer in layers:
             bounds = layer.bounds
-            if bounds is not None:
-                layer_x, layer_y = bounds
+            if(self.first_bounds is None):
+                self.first_bounds = bounds
+
+            if self.first_bounds is not None:
+                layer_x, layer_y = self.first_bounds
                 x_range[0] = min(x_range[0], layer_x[0])
                 x_range[1] = max(x_range[1], layer_x[1])
                 y_range[0] = min(y_range[0], layer_y[0])
@@ -126,13 +131,13 @@ class GerberCairoContext(GerberContext):
         self.scale = (scale, scale)
 
         self.clear()
-
         # Render layers
         bgsettings = theme['background']
         for layer in layers:
             settings = theme.get(layer.layer_class, RenderSettings())
-            self.render_layer(layer, settings=settings, bgsettings=bgsettings, verbose=verbose)
-        self.dump_png(filename)
+            self.render_layer(layer, settings=settings, bgsettings=bgsettings, verbose=verbose, bounds = self.first_bounds)
+        
+        self.dump(filename)
 
     def dump(self, filename=None, verbose=False):
         """ Save image as `filename`
