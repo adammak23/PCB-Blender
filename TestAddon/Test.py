@@ -10,13 +10,16 @@ import mathutils
 from bpy.types import Operator
 from bpy.props import StringProperty
 
-# Saving timestamp in filename
-from datetime import datetime
+# TODO: Saving timestamp in filename
+#from datetime import datetime
 
 # Cairo rendering
 from .gerber import load_layer
 from .gerber.render import RenderSettings, theme
 from .gerber.render.cairo_backend import GerberCairoContext
+
+# Placement reading
+import csv
 
 def RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, radius, Xax, Yax):
     # sin rotation is 2*PI = 6.283
@@ -206,7 +209,89 @@ def mm_to_meters(input):
 
 ### Test functions above
 
+def deselectAll():
+    bpy.ops.object.select_all(action='DESELECT')
 
+def read_csv(file_csv):
+    
+    objects = None
+
+    component_root = os.path.abspath(os.path.dirname('components/'))
+    print(component_root)
+    with open(file_csv, newline='', encoding='ISO-8859-15') as fobj:
+        reader = csv.reader(filter(lambda row: row[0] != '#', fobj))
+        layout_table = list(reader)
+
+    required = list(col[1] for col in layout_table)
+
+    print(required)
+
+    compfiles = []
+    for compfile in os.listdir(component_root):
+        #print(compfile)
+        if compfile.lower().endswith('.blend'):
+            compfiles.append(component_root + os.sep + compfile)
+
+    for compfile in compfiles:
+        #print("Loading models from " + compfile + "\n")
+        with bpy.data.libraries.load(compfile, link=True) as (data_from, data_to):
+            #for value in data_from.meshes:
+            #    print(value)
+            found = [value for value in data_from.meshes if value in required]
+            for f in found:
+                print("    Found: " + f + "\n")
+            data_to.meshes = found
+            required = [value for value in required if value not in data_from.meshes]
+            
+    print("\nMissing components:\n")
+    for missing in required:
+        print("    " + missing + "\n")
+            
+    objects_data  = bpy.data.objects
+    objects_scene = bpy.context.scene.objects
+
+    deselectAll()
+
+    objects = []
+
+    for id, name, value, x, y, rot, side in layout_table:
+
+        if id == "(unknown)" or id == "Ref":
+            continue
+        z = 0
+        yrot = 0
+        if side == "bottom":
+            z = -1.6
+            yrot = 180 / 57.2957795
+        loc = tuple(float(val) for val in (x, y, z))
+        frot = float(rot)
+        try:
+            if rotations[id]:
+                frot = rotations[id]
+        except:
+            pass
+        try:
+            if self.dnp[id] == 1:
+                continue
+        except:
+            pass
+        frot = frot / 57.2957795
+        zrot = tuple(float(val) for val in (0, yrot, frot))
+
+        oname = id + " - " + name
+        # for ob in bpy.data.objects:
+        #     if ob.name.startswith(id + " - "):
+        #         bpy.context.view_layer.objects.active = ob
+        #         ob.select_set(True)
+        #         bpy.ops.object.delete()
+        
+        mesh = bpy.data.meshes.get(name)
+        dupli = objects_data.new(oname, mesh)
+        dupli.location = loc
+        dupli.rotation_euler = zrot
+        bpy.context.scene.collection.objects.link(dupli)
+        
+        objects.append(oname)
 
 # Blender UI context
 
@@ -331,6 +416,14 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None):
                     )
     return mesh
 
+def ReadPlacement(top,bottom=None):
+    with open(top, newline='') as csvfile:
+        placement = csv.reader(csvfile, delimiter=' ', quotechar='|')
+        for row in placement:
+            print(', '.join(row))
+
+    return {'FINISHED'}
+
 # Cairo-based rendering
 
 def CreateImage(name, layers, ctx, GERBER_FOLDER, OUTPUT_FOLDER, w=512, h=512, pcb_instance=None):
@@ -363,8 +456,13 @@ class GeneratePCB(Operator):
     edg = None
     drl = None
     drl2 = None
+    placeTop = None
+    placeBottom = None
 
     def execute(self, context):
+
+        read_csv(self.placeTop)
+        return {'FINISHED'}
 
         if(str(self.OUTPUT_FOLDER) == ""):
             ShowMessageBox("Please enter path to output folder", "Error", 'ERROR')
@@ -390,11 +488,14 @@ class GeneratePCB(Operator):
                 CreateImage("Top_layer", up_layers, ctx, self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
                 CreateImage("Bottom_layer", bottom_layers, ctx, self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
 
+                # Create models
                 Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx)
                 MoveUp(Top_layer)
                 Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx)
                 MoveDown(Bottom_layer)
                 
+                # Placement list
+
                 ChangeArea('VIEW_3D', 'MATERIAL')
                 return {'FINISHED'}
 
@@ -411,10 +512,14 @@ class GeneratePCB(Operator):
             CreateImage("Top_layer", pcb.top_layers, ctx, self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
             CreateImage("Bottom_layer", pcb.bottom_layers, ctx, self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
 
+            # Create models
             Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
             MoveUp(Top_layer)
             Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
             MoveDown(Bottom_layer)
+
+            # Placement list
+            #ReadPlacement(self.PlaceTop, self.placeBottom)
 
             ChangeArea('VIEW_3D', 'MATERIAL')
             return {'FINISHED'}

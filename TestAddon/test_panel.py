@@ -25,10 +25,10 @@ class LayoutDemoPanel(Panel, ImportHelper):
     bpy.types.Scene.height = Float("Height","Max image resolution [Height]",1024)
     bpy.types.Scene.expand = bpy.props.BoolProperty(default=False)
 
-    bpy.types.Scene.cu = FilePath("Copper Up", "Define file")
-    bpy.types.Scene.mu = FilePath("Mask Up", "Define file")
-    bpy.types.Scene.pu = FilePath("Paste Up", "Define file")
-    bpy.types.Scene.su = FilePath("Silk Up", "Define file")
+    bpy.types.Scene.cu = FilePath("Copper Top", "Define file")
+    bpy.types.Scene.mu = FilePath("Mask Top", "Define file")
+    bpy.types.Scene.pu = FilePath("Paste Top", "Define file")
+    bpy.types.Scene.su = FilePath("Silk Top", "Define file")
 
     bpy.types.Scene.cb = FilePath("Copper Bottom", "Define file")
     bpy.types.Scene.mb = FilePath("Mask Bottom", "Define file")
@@ -38,6 +38,9 @@ class LayoutDemoPanel(Panel, ImportHelper):
     bpy.types.Scene.edg = FilePath("Edge cut/outline", "Define file")
     bpy.types.Scene.drl = FilePath("Drill", "Define file")
     bpy.types.Scene.drl2 = FilePath("Secondary Drill", "Define file")
+
+    bpy.types.Scene.placeTop = FilePath("Placement List Top", "Define file")
+    bpy.types.Scene.placeBottom = FilePath("Placement List Bottom", "Define file")
 
     def draw(self, context):
 
@@ -69,6 +72,9 @@ class LayoutDemoPanel(Panel, ImportHelper):
             col.prop(context.scene, 'edg')
             col.prop(context.scene, 'drl')
             col.prop(context.scene, 'drl2')
+
+            col.prop(context.scene, 'placeTop')
+            col.prop(context.scene, 'placeBottom')
 
         col = layout.column()
         row = layout.row()
@@ -109,7 +115,12 @@ class LayoutDemoPanel(Panel, ImportHelper):
         GeneratePCB.mb  = bpy.context.scene.mb
         GeneratePCB.pb  = bpy.context.scene.pb
         GeneratePCB.sb  = bpy.context.scene.sb
+
         GeneratePCB.edg = bpy.context.scene.edg
         GeneratePCB.drl = bpy.context.scene.drl
         GeneratePCB.drl2 = bpy.context.scene.drl2
+
+        GeneratePCB.placeTop = bpy.context.scene.placeTop
+        GeneratePCB.placeBottom = bpy.context.scene.placeBottom
+
         row.operator('pcb.generate')
