@@ -18,43 +18,6 @@ from .gerber import load_layer
 from .gerber.render import RenderSettings, theme
 from .gerber.render.cairo_backend import GerberCairoContext
 
-def RenderBounds(name, bounds, material):
-
-    if bounds is None: return
-
-    mesh_i = 0
-    mesh_verts = []
-    mesh_edges = []
-    mesh_faces = []
-
-    mesh_verts.append([bounds[0][0], bounds[1][0],0])
-    mesh_verts.append([bounds[0][1], bounds[1][0],0])
-    mesh_verts.append([bounds[0][1], bounds[1][1],0])
-    mesh_verts.append([bounds[0][0], bounds[1][1],0])
-    mesh_edges.append([mesh_i,mesh_i+1])
-    mesh_edges.append([mesh_i+1,mesh_i+2])
-    mesh_edges.append([mesh_i+2,mesh_i+3])
-    mesh_edges.append([mesh_i+3,mesh_i])
-    mesh_faces.append([mesh_i,mesh_i+1,mesh_i+2])
-    mesh_faces.append([mesh_i+2,mesh_i+3,mesh_i])
-
-    me = bpy.data.meshes.new(name)
-    me.materials.append(material)
-    me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
-    me.validate()
-    me.update()
-    TempObj = bpy.data.objects.new(name, me)
-    bpy.context.scene.collection.objects.link(TempObj)
-
-    TempObj.select_set(True)
-    bpy.context.view_layer.objects.active = TempObj
-
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.uv.cube_project(cube_size=1, scale_to_bounds=True)
-    bpy.ops.object.mode_set(mode='OBJECT')
-    return TempObj
-
-
 def RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, radius, Xax, Yax):
     # sin rotation is 2*PI = 6.283
     CircleResolution = 4
@@ -232,6 +195,83 @@ def BooleanCut(source, cutter):
     bpy.ops.object.modifier_apply(modifier="BOOLEAN")
     bpy.data.objects.remove(cutter)
 
+def mil_to_meters(input):
+    # mil = 1/1000 cal
+    # 100 mils = 2.54 mm
+    # 1 mil = 0.0254 mm = 0.0000254 m
+    return float(float(input)*0.0000254)
+
+def mm_to_meters(input):
+    return float(float(input)*0.001)
+
+### Test functions above
+
+
+
+# Blender UI context
+
+def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
+
+        def draw(self, context):
+            self.layout.label(text=message)
+
+        bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
+
+def ChangeArea(area_type, space_type):
+    for area in bpy.context.screen.areas: 
+        if area.type == area_type:
+            space = area.spaces.active
+            if space.type == area_type:
+                space.shading.type = space_type
+
+# Utils
+
+def MoveUp(obj, times=1, distance = 0.0001):
+    if obj is None: return
+    for x in range(times):
+        obj.location += mathutils.Vector((0,0,distance))
+
+def MoveDown(obj, times=1, distance = 0.0001):
+    MoveUp(obj, times, -distance)
+
+# Generating Functions:
+
+def RenderBounds(name, bounds, material):
+
+    if bounds is None: return
+
+    mesh_i = 0
+    mesh_verts = []
+    mesh_edges = []
+    mesh_faces = []
+
+    mesh_verts.append([bounds[0][0], bounds[1][0],0])
+    mesh_verts.append([bounds[0][1], bounds[1][0],0])
+    mesh_verts.append([bounds[0][1], bounds[1][1],0])
+    mesh_verts.append([bounds[0][0], bounds[1][1],0])
+    mesh_edges.append([mesh_i,mesh_i+1])
+    mesh_edges.append([mesh_i+1,mesh_i+2])
+    mesh_edges.append([mesh_i+2,mesh_i+3])
+    mesh_edges.append([mesh_i+3,mesh_i])
+    mesh_faces.append([mesh_i,mesh_i+1,mesh_i+2])
+    mesh_faces.append([mesh_i+2,mesh_i+3,mesh_i])
+
+    me = bpy.data.meshes.new(name)
+    me.materials.append(material)
+    me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
+    me.validate()
+    me.update()
+    TempObj = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(TempObj)
+
+    TempObj.select_set(True)
+    bpy.context.view_layer.objects.active = TempObj
+
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.uv.cube_project(cube_size=1, scale_to_bounds=True)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    return TempObj
+
 def RenderOutline(name, layer, material, offset, scaler):
     if layer is None: return
 
@@ -265,83 +305,6 @@ def RenderOutline(name, layer, material, offset, scaler):
     
     return MeshObj
 
-def mil_to_meters(input):
-    # mil = 1/1000 cal
-    # 100 mils = 2.54 mm
-    # 1 mil = 0.0254 mm = 0.0000254 m
-    return float(float(input)*0.0000254)
-
-def mm_to_meters(input):
-    return float(float(input)*0.001)
-
-### Test functions above
-
-def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
-
-        def draw(self, context):
-            self.layout.label(text=message)
-
-        bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
-
-def ChangeArea(area_type, space_type):
-    for area in bpy.context.screen.areas: 
-        if area.type == area_type:
-            space = area.spaces.active
-            if space.type == area_type:
-                space.shading.type = space_type
-
-def MoveUp(obj, times=1, distance = 0.0001):
-    if obj is None: return
-    for x in range(times):
-        obj.location += mathutils.Vector((0,0,distance))
-
-def MoveDown(obj, times=1, distance = 0.0001):
-    MoveUp(obj, times, -distance)
-
-def RenderPCB(GERBER_FOLDER, OUTPUT_FOLDER, w, h):
-    
-
-    # MATERIALS = os.path.abspath(os.path.join(os.path.dirname(__file__),'materials'))
-    # white_mat = bpy.data.materials.get("White")
-    # RenderOutline("name", pcb.outline_layer, material=white_mat)
-    
-
-    # Render PCB top view
-    top_layer_name = 'pcb_top'
-    
-    layers_to_render = pcb.top_layers
-    if pcb.outline_layer is not None:
-        layers_to_render.insert(0, pcb.outline_layer)
-    
-    ctx.render_layers(layers_to_render, os.path.join(OUTPUT_FOLDER, top_layer_name+'.png'), theme.THEMES['default'], max_width=w, max_height=h)
-    # Import image as plane
-    #bpy.ops.import_image.to_plane(files=[{"name":top_layer_name+'.png'}], directory=OUTPUT_FOLDER, relative=False)
-    # Move the plane to eliminate z-fight
-    #top_layer = bpy.data.objects[top_layer_name]
-    #MoveUp(top_layer)
-
-    # Render PCB bottom view
-    
-    name = 'pcb_bottom'
-    ctx.render_layers(pcb.bottom_layers, os.path.join(OUTPUT_FOLDER, name+'.png'), theme.THEMES['default'], max_width=w, max_height=h)
-
-    mat = bpy.data.materials.new(name = top_layer_name)
-    mat.use_nodes = True
-    bsdf = mat.node_tree.nodes["Principled BSDF"]
-    texImage = mat.node_tree.nodes.new('ShaderNodeTexImage')
-    texImage.image = bpy.data.images.load(os.path.join(OUTPUT_FOLDER, top_layer_name+'.png'))
-    mat.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
-    mesh = RenderOutline(
-        "outline",
-        pcb.outline_layer,
-        mat,
-        -mathutils.Vector((ctx.origin_in_inch[0], ctx.origin_in_inch[1], 0)),
-         mathutils.Vector((100, 100, 0))
-         )
-    ChangeArea('VIEW_3D', 'MATERIAL')
-
-
-
 def CreateModel(name, source_folder, ctx, pcb_instance=None):
 
     mat = bpy.data.materials.new(name = name)
@@ -368,6 +331,8 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None):
                     )
     return mesh
 
+# Cairo-based rendering
+
 def CreateImage(name, layers, ctx, GERBER_FOLDER, OUTPUT_FOLDER, w=512, h=512, pcb_instance=None):
      
     layers_to_render = layers
@@ -376,21 +341,6 @@ def CreateImage(name, layers, ctx, GERBER_FOLDER, OUTPUT_FOLDER, w=512, h=512, p
             layers_to_render.insert(0, pcb_instance.outline_layer)
 
     ctx.render_layers(layers_to_render, os.path.join(OUTPUT_FOLDER, name+'.png'), theme.THEMES['default'], max_width=w, max_height=h)
-
-def RenderFromFiles(name, GERBER_FOLDER, OUTPUT_FOLDER, layers, w=800, h=600):
-
-    layers_files = []
-    for layer in layers:
-        if layer is "" or None: continue
-        layers_files.append(load_layer(os.path.join(GERBER_FOLDER, layer)))
-
-    ctx = GerberCairoContext()
-
-    ctx.render_layers(layers_files, os.path.join(OUTPUT_FOLDER, name +'.png',), theme.THEMES['default'], max_width=w, max_height=h)
-    ctx.dump(os.path.join(OUTPUT_FOLDER, name+'.png'))
-
-    # Import image as plane
-    bpy.ops.import_image.to_plane(files=[{"name":name+'.png'}], directory=OUTPUT_FOLDER, relative=False)
 
 class GeneratePCB(Operator):
     bl_idname = "pcb.generate"
@@ -444,7 +394,8 @@ class GeneratePCB(Operator):
                 MoveUp(Top_layer)
                 Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx)
                 MoveDown(Bottom_layer)
-
+                
+                ChangeArea('VIEW_3D', 'MATERIAL')
                 return {'FINISHED'}
 
 
@@ -471,7 +422,4 @@ class GeneratePCB(Operator):
         #ShowMessageBox("Some files might be overridden in folder: "+self.OUTPUT_FOLDER, "Warning", 'IMPORT')
 
         #Render(self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
-
-        #RenderFromFiles(self.GERBER_FOLDER, [self.cu, self.mu, self.pu, self.su], copperBottom = self.cb, maskBottom = self.mb, pasteBottom = self.pb, silkBottom = self.sb, edge = self.edg, drill = self.drl)
         
-        #CairoExample_FilesIntoLayers(self.GERBER_FOLDER, self.OUTPUT_FOLDER)
