@@ -1,2 +1,5 @@
-# FreePCB-Blender
-Blender addon for visualization of printed circuit board (PCB) projects created in FreePCB
+[![Awesome](https://awesome.re/badge.svg)](https://awesome.re) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/adammak23/FreePCB-Blender/blob/master/LICENSE)
+[![AWESOME CHEATSHEETS LOGO](_design/Logo2.png)]()
+
+PCB-Blender
+Blender addon for visualization of printed circuit board (PCB) projects created in FreePCB, KiCad, more to be added...
