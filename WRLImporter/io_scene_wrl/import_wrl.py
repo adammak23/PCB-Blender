@@ -2699,7 +2699,7 @@ def appearance_CreateMaterial(vrmlname, mat, ancestry, is_vcol):
     # texture is applied later, in appearance_Create().
     # All values between 0.0 and 1.0, defaults from VRML docs.
     bpymat = bpy.data.materials.new(vrmlname)
-
+    # TODO: Change material creation (for now every region has thier own material - which is terrible)
     diff_color = mat.getFieldAsFloatTuple('diffuseColor', [0.5, 0.5, 0.5, 1], ancestry)
     
     if(len(diff_color) == 3):
@@ -3603,7 +3603,6 @@ def load_web3d(
 
 
 def MergeMeshes(name):
-    print("Begin Merge")
     objects = []
     for ob in bpy.data.objects:
         if ob.name.startswith("Shape_IndexedFaceSet"):
@@ -3618,6 +3617,10 @@ def MergeMeshes(name):
     bpy.ops.mesh.remove_doubles()
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.shade_smooth()
+    bpy.context.view_layer.objects.active = None
+    ob.select_set(False)
+
+    bpy.ops.outliner.orphans_purge()
     
 
 
@@ -3646,10 +3649,13 @@ def load(context,
          ):
 
     # loadWithProfiler(operator, context, filepath, global_matrix)
-    load_web3d(context, filepath,
-               PREF_FLAT=True,
-               PREF_CIRCLE_DIV=16,
-               global_matrix=global_matrix,
-               )
+    if filepath.endswith('.wrl'):
+        load_web3d(context, filepath, PREF_FLAT=True, PREF_CIRCLE_DIV=16, global_matrix=global_matrix,)
+    else:
+        file_list = sorted(os.listdir(filepath))
+        wrl_list = [item for item in file_list if item.endswith('.wrl')]
+        for item in wrl_list:
+            path_to_file = os.path.join(filepath, item)
+            load_web3d(context, path_to_file, PREF_FLAT=True, PREF_CIRCLE_DIV=16, global_matrix=global_matrix,)
 
     return {'FINISHED'}

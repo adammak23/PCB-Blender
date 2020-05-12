@@ -67,7 +67,7 @@ class ImportWRL(bpy.types.Operator, ImportHelper):
                                         from_up=self.axis_up,
                                         ).to_4x4()
         keywords["global_matrix"] = global_matrix
-
+        
         return import_wrl.load(context, **keywords)
 
     def draw(self, context):
@@ -101,7 +101,7 @@ class WRL_PT_import_transform(bpy.types.Panel):
 
 def menu_func_import(self, context):
     self.layout.operator(ImportWRL.bl_idname,
-                         text="WRL Extensible 3D (.x3d/.wrl)0")
+                         text="WRL Extensible 3D (.vrml2/.wrl)")
 
 classes = (
     ImportWRL,
