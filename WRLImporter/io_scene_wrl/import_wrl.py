@@ -2043,6 +2043,9 @@ def importMesh_IndexedFaceSet(geom, ancestry):
         t_min = mins[t_axis]
         dt = deltas[t_axis]
 
+        if ds == 0: ds = 1
+        if dt == 0: dt = 1
+
         def generatePointCoords(pt):
             return (pt[s_axis] - s_min) / ds, (pt[t_axis] - t_min) / dt
         loops = [co for f in faces
@@ -2696,28 +2699,21 @@ def appearance_CreateMaterial(vrmlname, mat, ancestry, is_vcol):
     # texture is applied later, in appearance_Create().
     # All values between 0.0 and 1.0, defaults from VRML docs.
     bpymat = bpy.data.materials.new(vrmlname)
-    #return  # XXX For now...
-    #bpymat.ambient = mat.getFieldAsFloat('ambientIntensity', 0.2, ancestry)
+
     diff_color = mat.getFieldAsFloatTuple('diffuseColor', [0.5, 0.5, 0.5, 1], ancestry)
     
     if(len(diff_color) == 3):
         # .wrl does not have alpha, we need to add 4th element
-        diff_color = diff_color+[1]
+        diff_color = diff_color + [1]
     bpymat.diffuse_color = diff_color
 
-    # NOTE - blender doesn't support emmisive color
-    # Store in mirror color and approximate with emit.
-    #emit = mat.getFieldAsFloatTuple('emissiveColor', [0.0, 0.0, 0.0], ancestry)
-    #bpymat.mirror_color = emit
-    #bpymat.emit = (emit[0] + emit[1] + emit[2]) / 3.0
-
-    # = mat.getFieldAsFloat('shininess', 0.2, ancestry)
-    #bpymat.specular_hardness = int(1 + (510 * shininess))
-    # 0-1 -> 1-511
     bpymat.specular_color = mat.getFieldAsFloatTuple('specularColor', [0.0, 0.0, 0.0], ancestry)
-    #bpymat.alpha = 1.0 - mat.getFieldAsFloat('transparency', 0.0, ancestry)
-    #if bpymat.alpha < 0.999:
-    #    bpymat.use_transparency = True
+
+    # TODO: Add transparency (It's usually not needed)
+    # bpymat.alpha = 1.0 - mat.getFieldAsFloat('transparency', 0.0, ancestry)
+    # if bpymat.alpha < 0.999:
+    #     bpymat.use_transparency = True
+
     if False and is_vcol:
         bpymat.use_vertex_color_paint = True
     return bpymat
@@ -3156,7 +3152,7 @@ def importShape(bpycollection, node, ancestry, global_matrix):
                 ancestry, global_matrix)
     else:
         print('\tImportX3D warning: unsupported type "%s"' % geom_spec)
-
+            
 
 # -----------------------------------------------------------------------------------
 # Lighting
@@ -3533,6 +3529,7 @@ def load_web3d(
         elif spec == 'Viewpoint':
             importViewpoint(bpycollection, node, ancestry, global_matrix)
         elif spec == 'Transform':
+            print("Transform")
             # Only use transform nodes when we are not importing a flat object hierarchy
             if PREF_FLAT == False:
                 importTransform(bpycollection, node, ancestry, global_matrix)
@@ -3601,6 +3598,27 @@ def load_web3d(
         # update deps
         bpycontext.view_layer.update()
         del child_dict
+
+    MergeMeshes(os.path.splitext(os.path.basename(filepath))[0])
+
+
+def MergeMeshes(name):
+    print("Begin Merge")
+    objects = []
+    for ob in bpy.data.objects:
+        if ob.name.startswith("Shape_IndexedFaceSet"):
+            bpy.context.view_layer.objects.active = ob
+            break
+
+    ob.select_set(True)
+    ob.name = name
+    ob.data.name = name
+    bpy.ops.object.join()
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.remove_doubles()
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.shade_smooth()
+    
 
 
 def load_with_profiler(

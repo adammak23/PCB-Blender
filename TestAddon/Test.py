@@ -222,7 +222,7 @@ def read_csv(file_csv):
         reader = csv.reader(filter(lambda row: row[0] != '#', fobj))
         layout_table = list(reader)
 
-    required = list(col[1] for col in layout_table)
+    required = list(col[2] for col in layout_table)
 
     print(required)
 
@@ -263,7 +263,7 @@ def read_csv(file_csv):
         if side == "bottom":
             z = -1.6
             yrot = 180 / 57.2957795
-        loc = tuple(float(val) for val in (x, y, z))
+        loc = tuple(float(val)/100 for val in (x, y, z))
         frot = float(rot)
         try:
             if rotations[id]:
@@ -461,8 +461,8 @@ class GeneratePCB(Operator):
 
     def execute(self, context):
 
-        read_csv(self.placeTop)
-        return {'FINISHED'}
+        #read_csv(self.placeTop)
+        # return {'FINISHED'}
 
         if(str(self.OUTPUT_FOLDER) == ""):
             ShowMessageBox("Please enter path to output folder", "Error", 'ERROR')

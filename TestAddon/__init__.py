@@ -25,8 +25,11 @@ bl_info = {
 import bpy
 from . test_panel import LayoutDemoPanel
 from . Test import GeneratePCB
-import addon_utils
-addon_utils.enable("io_import_images_as_planes", default_set = True, persistent = True)
+#from . wrl_importer import GenerateBlendfiles
+#from . mass_wrl_importer_panel import WrlImporterPanel
+#import addon_utils
+#addon_utils.enable("io_import_images_as_planes", default_set = True, persistent = True)
+#GenerateBlendfiles, WrlImporterPanel
 classes = (LayoutDemoPanel, GeneratePCB)
 
 register, unregister = bpy.utils.register_classes_factory(classes)
