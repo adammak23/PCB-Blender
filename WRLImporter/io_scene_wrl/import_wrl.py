@@ -2841,6 +2841,14 @@ def appearance_MakeDescCacheKey(material, tex_node):
     mat_desc = material.desc() if material else "Default"
     tex_desc = tex_node.desc() if tex_node else "Default"
 
+    # .wrl Appearance node structure:
+    # ('material', 'DEF', 'Name_of_the_material', 'Material')
+    # For caching we only care about Material name
+    if mat_desc is None:
+        if material.reference is not None:
+            if material.reference.id is not None and len(material.reference.id) >= 3:
+                mat_desc = material.reference.id[2]
+
     if not((tex_node and tex_desc is None) or
            (material and mat_desc is None)):
         # desc not available (in VRML)
@@ -2859,8 +2867,10 @@ def appearance_Create(vrmlname, material, tex_node, ancestry, node, is_vcol):
     tex_has_alpha = False
 
     if material:
+        print(vrmlname, " Creare ____from: ", material)
         bpymat = appearance_CreateMaterial(vrmlname, material, ancestry, is_vcol)
     else:
+        print(vrmlname, " Creare ____DEFAULT")
         bpymat = appearance_CreateDefaultMaterial()
 
     if tex_node:  # Texture caching inside there
@@ -2936,17 +2946,19 @@ def importShape_LoadAppearance(vrmlname, appr, ancestry, node, is_vcol):
     tex_node = appr.getChildBySpec(('ImageTexture', 'PixelTexture'))
     # Other texture nodes are: MovieTexture, MultiTexture
     material = appr.getChildBySpec('Material')
+    
     # We're ignoring FillProperties, LineProperties, and shaders
-
     # Check the USE-based material cache for textureless materials
     if material and material.reference and not tex_node and material.getRealNode().parsed:
         return appearance_ExpandCachedMaterial(material.getRealNode().parsed)
 
     # Now the description-based caching
     cache_key = appearance_MakeDescCacheKey(material, tex_node)
+    print("Cache Key: ",cache_key)
 
     if cache_key and cache_key in material_cache:
         bpymat = material_cache[cache_key]
+        print("Cache material found!: " , bpymat)
         # Still want to make the material available for USE-based reuse
         if appr.canHaveReferences():
             appr.parsed = bpymat
