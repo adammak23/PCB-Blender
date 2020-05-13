@@ -1893,6 +1893,15 @@ def importMesh_IndexedFaceSet(geom, ancestry):
     coord = geom.getChildBySpec('Coordinate')
     if coord.reference:
         points = coord.getRealNode().parsed
+        # TODO: weirdly nested .wrl files cause points to be null here
+# --------------------#
+
+
+
+
+
+
+
         # We need unflattened coord array here, while
         # importMesh_ReadVertices uses flattened. Can't cache both :(
         # TODO: resolve that somehow, so that vertex set can be effectively
@@ -2698,6 +2707,15 @@ def appearance_CreateMaterial(vrmlname, mat, ancestry, is_vcol):
     # Given an X3D material, creates a Blender material.
     # texture is applied later, in appearance_Create().
     # All values between 0.0 and 1.0, defaults from VRML docs.
+
+    # .wrl Appearance node structure:
+    # ('material', 'DEF', 'Name_of_the_material', 'Material')
+    # For caching we only care about Material name
+
+    if mat.reference is not None:
+        if mat.reference.id is not None and len(mat.reference.id) >= 3:
+            vrmlname = mat.reference.id[2]
+
     bpymat = bpy.data.materials.new(vrmlname)
     # TODO: Change material creation (for now every region has thier own material - which is terrible)
     diff_color = mat.getFieldAsFloatTuple('diffuseColor', [0.5, 0.5, 0.5, 1], ancestry)
@@ -2867,10 +2885,8 @@ def appearance_Create(vrmlname, material, tex_node, ancestry, node, is_vcol):
     tex_has_alpha = False
 
     if material:
-        print(vrmlname, " Creare ____from: ", material)
         bpymat = appearance_CreateMaterial(vrmlname, material, ancestry, is_vcol)
     else:
-        print(vrmlname, " Creare ____DEFAULT")
         bpymat = appearance_CreateDefaultMaterial()
 
     if tex_node:  # Texture caching inside there
@@ -2954,11 +2970,9 @@ def importShape_LoadAppearance(vrmlname, appr, ancestry, node, is_vcol):
 
     # Now the description-based caching
     cache_key = appearance_MakeDescCacheKey(material, tex_node)
-    print("Cache Key: ",cache_key)
 
     if cache_key and cache_key in material_cache:
         bpymat = material_cache[cache_key]
-        print("Cache material found!: " , bpymat)
         # Still want to make the material available for USE-based reuse
         if appr.canHaveReferences():
             appr.parsed = bpymat
@@ -3033,7 +3047,8 @@ def importShape_ProcessObject(
             bpydata.use_auto_smooth = True
 
         # Only ever 1 material per shape
-        if bpymat:
+
+        if bpymat is not None:
             bpydata.materials.append(bpymat)
 
         if bpydata.uv_layers:
@@ -3660,6 +3675,7 @@ def load(context,
          global_matrix=None
          ):
 
+    material_cache.clear()
     # loadWithProfiler(operator, context, filepath, global_matrix)
     if filepath.endswith('.wrl'):
         load_web3d(context, filepath, PREF_FLAT=True, PREF_CIRCLE_DIV=16, global_matrix=global_matrix,)
