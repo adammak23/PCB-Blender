@@ -1894,13 +1894,6 @@ def importMesh_IndexedFaceSet(geom, ancestry):
     if coord.reference:
         points = coord.getRealNode().parsed
         # TODO: weirdly nested .wrl files cause points to be null here
-# --------------------#
-
-
-
-
-
-
 
         # We need unflattened coord array here, while
         # importMesh_ReadVertices uses flattened. Can't cache both :(
