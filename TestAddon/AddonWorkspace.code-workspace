@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "WRLImporter",
+			"path": "..\\WRLImporter"
+		},
+		{
+			"path": "..\\BlenderMultipleImport"
+		}
+	]
+}

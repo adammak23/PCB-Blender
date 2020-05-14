@@ -216,7 +216,7 @@ def read_csv(file_csv):
     
     objects = None
 
-    component_root = os.path.abspath(os.path.dirname('components/'))
+    component_root = os.path.abspath(os.path.dirname('models/'))
     print(component_root)
     with open(file_csv, newline='', encoding='ISO-8859-15') as fobj:
         reader = csv.reader(filter(lambda row: row[0] != '#', fobj))
