@@ -212,25 +212,31 @@ def mm_to_meters(input):
 def deselectAll():
     bpy.ops.object.select_all(action='DESELECT')
 
-def read_csv(file_csv):
+def read_csv(file_csv, program = 'AUTO'):
     
     objects = None
 
-    component_root = os.path.abspath(os.path.dirname('models/'))
-    print(component_root)
+    directory = 'testmodels'+os.sep
+    if program == 'AUTO':
+        pass
+    else:
+        directory = directory + program + os.sep
+
+    component_root = os.path.abspath(os.path.dirname(directory))
+
     with open(file_csv, newline='', encoding='ISO-8859-15') as fobj:
         reader = csv.reader(filter(lambda row: row[0] != '#', fobj))
         layout_table = list(reader)
 
     required = list(col[2] for col in layout_table)
 
-    print(required)
-
     compfiles = []
-    for compfile in os.listdir(component_root):
-        #print(compfile)
-        if compfile.lower().endswith('.blend'):
-            compfiles.append(component_root + os.sep + compfile)
+
+    import glob
+    for root, dirs, files in os.walk(component_root):
+        for f in files:
+            if f.lower().endswith('.blend'):
+                compfiles.append((root + os.sep + f))
 
     for compfile in compfiles:
         #print("Loading models from " + compfile + "\n")
@@ -279,13 +285,13 @@ def read_csv(file_csv):
         zrot = tuple(float(val) for val in (0, yrot, frot))
 
         oname = id + " - " + name
-        # for ob in bpy.data.objects:
-        #     if ob.name.startswith(id + " - "):
-        #         bpy.context.view_layer.objects.active = ob
-        #         ob.select_set(True)
-        #         bpy.ops.object.delete()
+        for ob in bpy.data.objects:
+            if ob.name.startswith(id + " - "):
+                bpy.context.view_layer.objects.active = ob
+                ob.select_set(True)
+                bpy.ops.object.delete()
         
-        mesh = bpy.data.meshes.get(name)
+        mesh = bpy.data.meshes.get(value)
         dupli = objects_data.new(oname, mesh)
         dupli.location = loc
         dupli.rotation_euler = zrot
@@ -368,8 +374,11 @@ def RenderOutline(name, layer, material, offset, scaler):
     for primitive in layer.primitives:
 
         if(type(primitive) == gerber.primitives.Line):
-
-            vec1 = [(primitive.start[0] + offset[0])/scaler[0], (primitive.start[1] + offset[1])/scaler[1],0]
+            
+            if offset is None:
+                vec1 = [(primitive.start[0])/scaler[0], (primitive.start[1])/scaler[1],0]
+            else:
+                vec1 = [(primitive.start[0] + offset[0])/scaler[0], (primitive.start[1] + offset[1])/scaler[1],0]
             mesh_verts.append(vec1)
             mesh_i+=1
 
@@ -406,7 +415,7 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None):
                 "outline",
                 pcb_instance.outline_layer,
                 mat,
-                -mathutils.Vector((ctx.origin_in_inch[0], ctx.origin_in_inch[1], 0)),
+                None, #-mathutils.Vector((ctx.origin_in_inch[0], ctx.origin_in_inch[1], 0))
                 mathutils.Vector((100, 100, 0)))
         else:
             mesh = RenderBounds(
@@ -458,11 +467,12 @@ class GeneratePCB(Operator):
     drl2 = None
     placeTop = None
     placeBottom = None
+    placeProgram = None
 
     def execute(self, context):
 
-        #read_csv(self.placeTop)
-        # return {'FINISHED'}
+        read_csv(self.placeTop, self.placeProgram)
+        return {'CANCELLED'}
 
         if(str(self.OUTPUT_FOLDER) == ""):
             ShowMessageBox("Please enter path to output folder", "Error", 'ERROR')

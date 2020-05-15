@@ -20,7 +20,7 @@ class LayoutDemoPanel(Panel, ImportHelper):
     bl_context = "scene"
 
     bpy.types.Scene.gerber_folder = FilePath("Gerber folder", "Define file path to gerber folder")
-    bpy.types.Scene.output_path = FilePath("Output folder", "Define output file path, images will be saved there")
+    bpy.types.Scene.output_path = FilePath("Output folder", "Define output file path, PCB images will be saved there")
     bpy.types.Scene.width = Float("Width","Max image resolution [Width]",1024)
     bpy.types.Scene.height = Float("Height","Max image resolution [Height]",1024)
     bpy.types.Scene.expand = bpy.props.BoolProperty(default=False)
@@ -39,8 +39,11 @@ class LayoutDemoPanel(Panel, ImportHelper):
     bpy.types.Scene.drl = FilePath("Drill", "Define file")
     bpy.types.Scene.drl2 = FilePath("Secondary Drill", "Define file")
 
-    bpy.types.Scene.placeTop = FilePath("Placement List Top", "Define file")
-    bpy.types.Scene.placeBottom = FilePath("Placement List Bottom", "Define file")
+    bpy.types.Scene.placeTop = FilePath("Placement List Top (.csv)", "Define file")
+    bpy.types.Scene.placeBottom = FilePath("Placement List Bottom (.csv)", "Define file")
+
+    Program = [("KICAD", "KiCad", "", 1),("GEDA", "gEDA", "", 2),("AUTO", "Auto Detect", "This might take long time to generate", "TIME", 3)]
+    bpy.types.Scene.PickAndPlaceProgram = EnumProperty(name = "Program", description = "Program which generated Pick and Place file", items = Program, default = "AUTO")
 
     def draw(self, context):
 
@@ -73,8 +76,10 @@ class LayoutDemoPanel(Panel, ImportHelper):
             col.prop(context.scene, 'drl')
             col.prop(context.scene, 'drl2')
 
-            col.prop(context.scene, 'placeTop')
-            col.prop(context.scene, 'placeBottom')
+
+        col.prop(context.scene, 'placeTop')
+        col.prop(context.scene, 'placeBottom')
+        col.prop(context.scene, 'PickAndPlaceProgram')
 
         col = layout.column()
         row = layout.row()
@@ -122,5 +127,6 @@ class LayoutDemoPanel(Panel, ImportHelper):
 
         GeneratePCB.placeTop = bpy.context.scene.placeTop
         GeneratePCB.placeBottom = bpy.context.scene.placeBottom
+        GeneratePCB.placeProgram = bpy.context.scene.PickAndPlaceProgram
 
         row.operator('pcb.generate')
