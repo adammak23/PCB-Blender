@@ -8,6 +8,9 @@ Blender addon for visualization of printed circuit board (PCB) projects created 
 
 TODO:
 - FreeCAD support
+- Documentation
+- Comment code some more
+- describe + doc for gerber and models imported from geda, kicad
 
 
 less importand todo's:
