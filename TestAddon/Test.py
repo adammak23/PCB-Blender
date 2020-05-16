@@ -216,6 +216,7 @@ def deselectAll():
 
 def read_csv(file_csv, program = 'AUTO'):
     
+    # For reading placement files
     objects = None
 
     directory = 'models'+os.sep
@@ -230,10 +231,15 @@ def read_csv(file_csv, program = 'AUTO'):
         reader = csv.reader(filter(lambda row: row[0] != '#', fobj))
         layout_table = list(reader)
 
-    required = list(col[2] for col in layout_table)
-
+    # Truncate required names to 63 letters because it's max name length in Blender
+    required = list((col[2])[:63] for col in layout_table)
+    # Remove "Package" element from list, sometimes it's in description of columns in placement file (first row) 
+    if "Package" in required:
+        required.remove("Package")
     compfiles = []
 
+    # Recursively search folders in {addon folder}/models/ or models/{specified program folder}
+    # for .blend files to append them
     import glob
     for root, dirs, files in os.walk(component_root):
         for f in files:
@@ -241,17 +247,18 @@ def read_csv(file_csv, program = 'AUTO'):
                 compfiles.append((root + os.sep + f))
 
     for compfile in compfiles:
-        # Loading models from compfile
+        # Loading models from .blends by mesh name
+        # Later can be changed to scene object, for now models are single-mesh
         with bpy.data.libraries.load(compfile, link=True) as (data_from, data_to):
             found = [value for value in data_from.meshes if value in required]
-            for f in found:
-                print("    Found: " + f + "\n")
             data_to.meshes = found
             required = [value for value in required if value not in data_from.meshes]
             
     print("\nMissing components:\n")
     for missing in required:
         print("    " + missing + "\n")
+    
+    # TODO: for each missing try to find with similar name, maybe keyword_keyword2_kw3_kw4... etc?
             
     objects_data  = bpy.data.objects
     objects_scene = bpy.context.scene.objects
@@ -295,6 +302,7 @@ def read_csv(file_csv, program = 'AUTO'):
         dupli = objects_data.new(oname, mesh)
         dupli.location = loc
         dupli.rotation_euler = zrot
+        dupli.scale = mathutils.Vector((0.0254,0.0254,0.0254))
         bpy.context.scene.collection.objects.link(dupli)
         
         objects.append(oname)
