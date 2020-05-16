@@ -5,8 +5,12 @@
 
 PCB-Blender
 Blender addon for visualization of printed circuit board (PCB) projects created in gEDA PCB, KiCad...
+
 TODO:
 - FreeCAD support
+
+
+less importand todo's:
 - Decrease filezise by instanced mesh (a lot of models have multiple repeating elements), potential solutions:
 	- a lot of manual work;
 	- super smart importer that recognizes similarities;
