@@ -1,17 +1,19 @@
 import os
 import sys
 import math
-from pprint import pprint
+
+# Gerber reader
 from . import gerber
 from .gerber import PCB
+
+# Blender core
 import bpy
 import bmesh
 import mathutils
 from bpy.types import Operator
-from bpy.props import StringProperty
 
-# TODO: Saving timestamp in filename
-#from datetime import datetime
+# TODO: Saving timestamp in filename so they will not override in output folder
+# from datetime import datetime
 
 # Cairo rendering
 from .gerber import load_layer
@@ -216,7 +218,7 @@ def read_csv(file_csv, program = 'AUTO'):
     
     objects = None
 
-    directory = 'testmodels'+os.sep
+    directory = 'models'+os.sep
     if program == 'AUTO':
         pass
     else:
@@ -239,10 +241,8 @@ def read_csv(file_csv, program = 'AUTO'):
                 compfiles.append((root + os.sep + f))
 
     for compfile in compfiles:
-        #print("Loading models from " + compfile + "\n")
+        # Loading models from compfile
         with bpy.data.libraries.load(compfile, link=True) as (data_from, data_to):
-            #for value in data_from.meshes:
-            #    print(value)
             found = [value for value in data_from.meshes if value in required]
             for f in found:
                 print("    Found: " + f + "\n")
@@ -299,7 +299,7 @@ def read_csv(file_csv, program = 'AUTO'):
         
         objects.append(oname)
 
-# Blender UI context
+# Blender UI utils
 
 def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
 
@@ -315,7 +315,7 @@ def ChangeArea(area_type, space_type):
             if space.type == area_type:
                 space.shading.type = space_type
 
-# Utils
+# Move Utils
 
 def MoveUp(obj, times=1, distance = 0.0001):
     if obj is None: return
@@ -471,8 +471,8 @@ class GeneratePCB(Operator):
 
     def execute(self, context):
 
-        read_csv(self.placeTop, self.placeProgram)
-        return {'CANCELLED'}
+        # Placement list
+        read_csv(self.placeTop, self.placeProgram)         
 
         if(str(self.OUTPUT_FOLDER) == ""):
             ShowMessageBox("Please enter path to output folder", "Error", 'ERROR')
@@ -528,13 +528,9 @@ class GeneratePCB(Operator):
             Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
             MoveDown(Bottom_layer)
 
-            # Placement list
-            #ReadPlacement(self.PlaceTop, self.placeBottom)
-
             ChangeArea('VIEW_3D', 'MATERIAL')
             return {'FINISHED'}
 
         #ShowMessageBox("Some files might be overridden in folder: "+self.OUTPUT_FOLDER, "Warning", 'IMPORT')
 
-        #Render(self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
         
