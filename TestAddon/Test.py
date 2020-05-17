@@ -234,8 +234,8 @@ def read_csv(file_csv, program = 'AUTO'):
     # Truncate required names to 63 letters because it's max name length in Blender
     required = list((col[2])[:63] for col in layout_table)
     # Remove "Package" element from list, sometimes it's in description of columns in placement file (first row) 
-    if "Package" in required:
-        required.remove("Package")
+    if 'Package' in required:
+        required.remove('Package')
     compfiles = []
 
     # Recursively search folders in {addon folder}/models/ or models/{specified program folder}
@@ -253,13 +253,38 @@ def read_csv(file_csv, program = 'AUTO'):
             found = [value for value in data_from.meshes if value in required]
             data_to.meshes = found
             required = [value for value in required if value not in data_from.meshes]
-            
-    print("\nMissing components:\n")
+
+
+    #For each missing model try to find another with similar name (with most fitting keywords)
+    #Every component is usually formed as follows: Type_(Subtype_)Dimensions_(AddiotionalDimensions_)(Rotation_)(AdditionalAttributes)
+    separator = '_'
     for missing in required:
-        print("    " + missing + "\n")
-    
-    # TODO: for each missing try to find with similar name, maybe keyword_keyword2_kw3_kw4... etc?
-            
+        #print("Attempting to search: ", missing)
+        separatedList = missing.split(separator)
+
+        for compfile in compfiles:
+            found = False
+            with bpy.data.libraries.load(compfile, link=True) as (data_from, data_to):
+                i = 0
+                while i < len(separatedList)-1:
+                    # Search models with names starting with most keywords possible
+                    newSearch = separator.join(separatedList[:len(separatedList)-i])
+                    newFound = [value for value in data_from.meshes if value.startswith(newSearch)]
+                    if len(newFound) > 0:
+                        elementFound = min(newFound, key=len)
+                        requested  = separator.join(separatedList)
+                        print("Found: ", elementFound, " similar to requested: ", requested)
+                        data_to.meshes.append(elementFound)
+                        for col in layout_table:
+                            if col[2] == requested:
+                                col[2] = elementFound
+                        found = True
+                        break
+                    else:
+                        i+=1
+            if found:
+                break
+                
     objects_data  = bpy.data.objects
     objects_scene = bpy.context.scene.objects
 
@@ -269,11 +294,11 @@ def read_csv(file_csv, program = 'AUTO'):
 
     for id, name, value, x, y, rot, side in layout_table:
 
-        if id == "(unknown)" or id == "Ref":
+        if id == '(unknown)' or id == 'Ref':
             continue
         z = 0
         yrot = 0
-        if side == "bottom":
+        if side == 'bottom':
             z = -1.6
             yrot = 180 / 57.2957795
         loc = tuple(float(val)/100 for val in (x, y, z))
@@ -291,9 +316,9 @@ def read_csv(file_csv, program = 'AUTO'):
         frot = frot / 57.2957795
         zrot = tuple(float(val) for val in (0, yrot, frot))
 
-        oname = id + " - " + name
+        oname = id + ' - ' + name
         for ob in bpy.data.objects:
-            if ob.name.startswith(id + " - "):
+            if ob.name.startswith(id + ' - '):
                 bpy.context.view_layer.objects.active = ob
                 ob.select_set(True)
                 bpy.ops.object.delete()
@@ -336,9 +361,9 @@ def MoveDown(obj, times=1, distance = 0.0001):
 # Generating Functions:
 
 def RenderBounds(name, bounds, material):
-
+    print("rendering bounds")
     if bounds is None: return
-
+    print("rendering 2")
     mesh_i = 0
     mesh_verts = []
     mesh_edges = []
@@ -433,17 +458,9 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None):
                     )
     return mesh
 
-def ReadPlacement(top,bottom=None):
-    with open(top, newline='') as csvfile:
-        placement = csv.reader(csvfile, delimiter=' ', quotechar='|')
-        for row in placement:
-            print(', '.join(row))
-
-    return {'FINISHED'}
-
 # Cairo-based rendering
 
-def CreateImage(name, layers, ctx, GERBER_FOLDER, OUTPUT_FOLDER, w=512, h=512, pcb_instance=None):
+def CreateImage(name, layers, ctx, OUTPUT_FOLDER, w=512, h=512, pcb_instance=None):
      
     layers_to_render = layers
     if(pcb_instance is not None):
@@ -480,7 +497,8 @@ class GeneratePCB(Operator):
     def execute(self, context):
 
         # Placement list
-        read_csv(self.placeTop, self.placeProgram)         
+        if(self.placeTop is not ''): read_csv(self.placeTop, self.placeProgram)    
+        if(self.placeBottom is not ''): read_csv(self.placeBottom, self.placeProgram)       
 
         if(str(self.OUTPUT_FOLDER) == ""):
             ShowMessageBox("Please enter path to output folder", "Error", 'ERROR')
@@ -497,17 +515,18 @@ class GeneratePCB(Operator):
                 bottom_layers = []
                 for stringlayer in string_up_layers:
                     if(stringlayer is not None and stringlayer is not ""):
-                        up_layers.append(load_layer(os.path.join(self.GERBER_FOLDER, stringlayer)))
+                        up_layers.append(load_layer(stringlayer))
                 for stringlayer in string_bottom_layers:
                     if(stringlayer is not None and stringlayer is not ""):
-                        bottom_layers.append(load_layer(os.path.join(self.GERBER_FOLDER, stringlayer)))
+                        bottom_layers.append(load_layer(stringlayer))
 
                 # Render images
-                CreateImage("Top_layer", up_layers, ctx, self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
-                CreateImage("Bottom_layer", bottom_layers, ctx, self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
+                CreateImage("Top_layer", up_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
+                CreateImage("Bottom_layer", bottom_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
 
                 # Create models
                 Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx)
+                print("WTF", Top_layer)
                 MoveUp(Top_layer)
                 Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx)
                 MoveDown(Bottom_layer)
@@ -527,8 +546,8 @@ class GeneratePCB(Operator):
             # Create a new PCB instance
             pcb = PCB.from_directory(self.GERBER_FOLDER)
             # Render images
-            CreateImage("Top_layer", pcb.top_layers, ctx, self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
-            CreateImage("Bottom_layer", pcb.bottom_layers, ctx, self.GERBER_FOLDER, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
+            CreateImage("Top_layer", pcb.top_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
+            CreateImage("Bottom_layer", pcb.bottom_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
 
             # Create models
             Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)

@@ -19,10 +19,10 @@ class LayoutDemoPanel(Panel, ImportHelper):
     bl_region_type = 'WINDOW'
     bl_context = "scene"
 
-    bpy.types.Scene.gerber_folder = FilePath("Gerber folder", "Define file path to gerber folder")
+    bpy.types.Scene.gerber_folder = FilePath("", "Define file path to gerber folder")
     bpy.types.Scene.output_path = FilePath("Output folder", "Define output file path, PCB images will be saved there")
-    bpy.types.Scene.width = Float("Width","Max image resolution [Width]",1024)
-    bpy.types.Scene.height = Float("Height","Max image resolution [Height]",1024)
+    bpy.types.Scene.width = Float("Width","Max image resolution [Width]", 1024)
+    bpy.types.Scene.height = Float("Height","Max image resolution [Height]", 1024)
     bpy.types.Scene.expand = bpy.props.BoolProperty(default=False)
 
     bpy.types.Scene.cu = FilePath("Copper Top", "Define file")
@@ -39,20 +39,20 @@ class LayoutDemoPanel(Panel, ImportHelper):
     bpy.types.Scene.drl = FilePath("Drill", "Define file")
     bpy.types.Scene.drl2 = FilePath("Secondary Drill", "Define file")
 
-    bpy.types.Scene.placeTop = FilePath("Placement List Top (.csv)", "Define file")
-    bpy.types.Scene.placeBottom = FilePath("Placement List Bottom (.csv)", "Define file")
+    bpy.types.Scene.placeTop = FilePath("", "Define file")
+    bpy.types.Scene.placeBottom = FilePath("", "Define file")
 
     Program = [("KICAD", "KiCad", "", 1),("GEDA", "gEDA", "", 2),("AUTO", "Auto Detect", "This might take long time to generate", "TIME", 3)]
-    bpy.types.Scene.PickAndPlaceProgram = EnumProperty(name = "Program", description = "Program which generated Pick and Place file", items = Program, default = "AUTO")
+    bpy.types.Scene.PickAndPlaceProgram = EnumProperty(name = "", description = "Program which generated Pick and Place file", items = Program, default = "AUTO")
 
     def draw(self, context):
 
         layout = self.layout
-        split = layout.split()
-        col = layout.column()
-        row = layout.row()
+        col = layout.split(factor=0.5)
 
+        col.label(text="Gerber folder")
         col.prop(context.scene, 'gerber_folder')
+
 
         row = layout.row()
         row.prop(context.scene, "expand", icon="TRIA_DOWN" if bpy.context.scene.expand else "TRIA_RIGHT", icon_only=True, emboss=False)
@@ -76,9 +76,16 @@ class LayoutDemoPanel(Panel, ImportHelper):
             col.prop(context.scene, 'drl')
             col.prop(context.scene, 'drl2')
 
-
+        col = layout.split(factor=0.5)
+        col.label(text="Placement List Top (.csv)")
         col.prop(context.scene, 'placeTop')
+
+        col = layout.split(factor=0.5)
+        col.label(text="Placement List Bottom (.csv)")
         col.prop(context.scene, 'placeBottom')
+
+        col = layout.split(factor=0.5)
+        col.label(text="Pick And Place Program")
         col.prop(context.scene, 'PickAndPlaceProgram')
 
         col = layout.column()
@@ -89,18 +96,6 @@ class LayoutDemoPanel(Panel, ImportHelper):
 
         col = layout.column()
         col.prop(context.scene, 'output_path')
-
-
-        #col = split.column()
-        #col = layout.column()
-
-        # first_string = col.prop(context.scene, 'gerber_folder')
-        # second_string = col.prop(context.scene, 'output_path')
-
-        # col = split.column()
-        # col = split.column()
-        # width = col.prop(context.scene, 'width')
-        
         
         row = layout.row()
         if(bpy.context.scene.output_path is not ""):
