@@ -299,7 +299,7 @@ def read_csv(file_csv, program = 'AUTO'):
         z = 0
         yrot = 0
         if side == 'bottom':
-            z = -1.6
+            z = -0.16*2.54
             yrot = 180 / 57.2957795
         loc = tuple(float(val)/100 for val in (x, y, z))
         frot = float(rot)
@@ -526,10 +526,9 @@ class GeneratePCB(Operator):
 
                 # Create models
                 Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx)
-                print("WTF", Top_layer)
                 MoveUp(Top_layer)
                 Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx)
-                MoveDown(Bottom_layer)
+                MoveDown(Bottom_layer, distance=0.0016*2.54)
                 
                 # Placement list
 
@@ -553,7 +552,7 @@ class GeneratePCB(Operator):
             Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
             MoveUp(Top_layer)
             Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
-            MoveDown(Bottom_layer)
+            MoveDown(Bottom_layer, distance=0.0016*2.54)
 
             ChangeArea('VIEW_3D', 'MATERIAL')
             return {'FINISHED'}

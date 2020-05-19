@@ -77,11 +77,11 @@ class LayoutDemoPanel(Panel, ImportHelper):
             col.prop(context.scene, 'drl2')
 
         col = layout.split(factor=0.5)
-        col.label(text="Placement List Top (.csv)")
+        col.label(text="Top Placement (.csv)")
         col.prop(context.scene, 'placeTop')
 
         col = layout.split(factor=0.5)
-        col.label(text="Placement List Bottom (.csv)")
+        col.label(text="Bottom Placement (.csv)")
         col.prop(context.scene, 'placeBottom')
 
         col = layout.split(factor=0.5)
@@ -90,7 +90,7 @@ class LayoutDemoPanel(Panel, ImportHelper):
 
         col = layout.column()
         row = layout.row()
-        row.label(text="Max render resolution:")
+        row.label(text="Max resolution:")
         row.prop(context.scene, 'width')
         row.prop(context.scene, 'height')
 
