@@ -18,3 +18,7 @@ less importand todo's:
 	- a lot of manual work;
 	- super smart importer that recognizes similarities;
 	- array modifier (e.g. PinSocket 1x1 multiplied to create all other same-type sockets)
+
+Models taken from:
+- [KiCad] (https://github.com/kicad/packages3d-source)
+- [gEDA] (https://github.com/majenkotech/PCB-Blend)

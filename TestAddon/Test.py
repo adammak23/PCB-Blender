@@ -211,6 +211,10 @@ def mm_to_meters(input):
 
 ### Test functions above
 
+# Static variables
+
+
+
 def deselectAll():
     bpy.ops.object.select_all(action='DESELECT')
 
@@ -299,9 +303,9 @@ def read_csv(file_csv, program = 'AUTO'):
         z = 0
         yrot = 0
         if side == 'bottom':
-            z = -0.16*2.54
+            z = -0.16
             yrot = 180 / 57.2957795
-        loc = tuple(float(val)/100 for val in (x, y, z))
+        loc = tuple(float(val)/1000 for val in (x, y, z))
         frot = float(rot)
         try:
             if rotations[id]:
@@ -327,7 +331,7 @@ def read_csv(file_csv, program = 'AUTO'):
         dupli = objects_data.new(oname, mesh)
         dupli.location = loc
         dupli.rotation_euler = zrot
-        dupli.scale = mathutils.Vector((0.0254,0.0254,0.0254))
+        dupli.scale = mathutils.Vector((0.00254,0.00254,0.00254))
         bpy.context.scene.collection.objects.link(dupli)
         
         objects.append(oname)
@@ -347,6 +351,13 @@ def ChangeArea(area_type, space_type):
             space = area.spaces.active
             if space.type == area_type:
                 space.shading.type = space_type
+
+def ChangeClipping(amount):
+    for a in bpy.context.screen.areas:
+        if a.type == 'VIEW_3D':
+            for s in a.spaces:
+                if s.type == 'VIEW_3D':
+                    s.clip_start = amount
 
 # Move Utils
 
@@ -396,7 +407,7 @@ def RenderBounds(name, bounds, material):
     bpy.ops.object.mode_set(mode='OBJECT')
     return TempObj
 
-def RenderOutline(name, layer, material, offset, scaler):
+def RenderOutline(name, layer, material, offset, scaler, extrude=False, extrudeMat = None, extrude_amount=0.00159):
     if layer is None: return
 
     mesh_i = 0
@@ -415,24 +426,40 @@ def RenderOutline(name, layer, material, offset, scaler):
             mesh_verts.append(vec1)
             mesh_i+=1
 
-    me = bpy.data.meshes.new("outline")
+    me = bpy.data.meshes.new(name)
     me.materials.append(material)
+    if extrude:
+        me.materials.append(extrudeMat)
     me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
     me.validate()
     me.update()
-    MeshObj = bpy.data.objects.new("outline", me)
+    MeshObj = bpy.data.objects.new(name, me)
     bpy.context.scene.collection.objects.link(MeshObj)
 
     MeshObj.select_set(True)
     bpy.context.view_layer.objects.active = MeshObj
-    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.object.mode_set(mode = 'EDIT')
+    bpy.ops.mesh.select_mode(type = 'FACE')
     bpy.ops.mesh.edge_face_add()
     bpy.ops.uv.cube_project(cube_size=1, scale_to_bounds=True)
+    if extrude:
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value":(0, 0, 0.0016)})
+        bpy.ops.mesh.select_all(action='INVERT')
+
+        MeshObj.active_material_index = 1
+        bpy.ops.object.material_slot_assign()
+
+
+
+
+
+
     bpy.ops.object.mode_set(mode='OBJECT')
     
     return MeshObj
 
-def CreateModel(name, source_folder, ctx, pcb_instance=None):
+def CreateModel(name, source_folder, ctx, pcb_instance=None, extrude=False):
 
     mat = bpy.data.materials.new(name = name)
     mat.use_nodes = True
@@ -441,21 +468,35 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None):
     texImage.image = bpy.data.images.load(os.path.join(source_folder, name+'.png'))
     mat.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
 
+    extrudeMat = None
+    if extrude:
+        extrudeMat = bpy.data.materials.new(name = "ExtrudeMat")
+        extrudeMat.use_nodes = True
+        bsdf = extrudeMat.node_tree.nodes["Principled BSDF"]
+        # Base Color
+        bsdf.inputs[0].default_value = (0.350555, 0.266215, 0.0896758, 1)
+        # Subsurface factor
+        bpy.data.materials["ExtrudeMat"].node_tree.nodes["Principled BSDF"].inputs[1].default_value = 0.04
+        #extrudeMat.node_tree.links.new(bsdf.inputs['Base Color'], )
+
     mesh = None
     if(pcb_instance is not None):
         if(pcb_instance.outline_layer is not None):
             mesh = RenderOutline(
-                "outline",
+                name,
                 pcb_instance.outline_layer,
                 mat,
                 None, #-mathutils.Vector((ctx.origin_in_inch[0], ctx.origin_in_inch[1], 0))
-                mathutils.Vector((100, 100, 0)))
-        else:
-            mesh = RenderBounds(
-                    "outline",
-                    ctx.first_bounds,
-                    mat,
-                    )
+                mathutils.Vector((1000, 1000, 0)),
+                extrude = extrude,
+                extrudeMat = extrudeMat
+                )
+    else:
+        mesh = RenderBounds(
+                name,
+                ctx.first_bounds,
+                mat,
+                )
     return mesh
 
 # Cairo-based rendering
@@ -477,6 +518,7 @@ class GeneratePCB(Operator):
     OUTPUT_FOLDER = ""
     width_resolution = 1024
     height_resolution = 1024
+    units = 'metric'
 
     use_separate_files = False
     cu = None
@@ -520,19 +562,23 @@ class GeneratePCB(Operator):
                     if(stringlayer is not None and stringlayer is not ""):
                         bottom_layers.append(load_layer(stringlayer))
 
+                if len(up_layers) > 0:
+                    self.units = up_layers[0].cam_source.units
+
                 # Render images
                 CreateImage("Top_layer", up_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
                 CreateImage("Bottom_layer", bottom_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
 
                 # Create models
-                Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx)
-                MoveUp(Top_layer)
+                Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, extrude = True)
                 Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx)
-                MoveDown(Bottom_layer, distance=0.0016*2.54)
+                MoveDown(Bottom_layer, distance=0.0016)
                 
                 # Placement list
 
                 ChangeArea('VIEW_3D', 'MATERIAL')
+                ChangeClipping(0.01)
+
                 return {'FINISHED'}
 
 
@@ -545,16 +591,20 @@ class GeneratePCB(Operator):
             # Create a new PCB instance
             pcb = PCB.from_directory(self.GERBER_FOLDER)
             # Render images
+            self.units = pcb.layers[0].cam_source.units
+
             CreateImage("Top_layer", pcb.top_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
             CreateImage("Bottom_layer", pcb.bottom_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
 
             # Create models
-            Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
-            MoveUp(Top_layer)
+            Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb, extrude = True)
+            MoveDown(Top_layer, distance=0.0016)
             Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
-            MoveDown(Bottom_layer, distance=0.0016*2.54)
+            MoveDown(Bottom_layer, distance=0.0016)
 
             ChangeArea('VIEW_3D', 'MATERIAL')
+            ChangeClipping(0.01)
+
             return {'FINISHED'}
 
         #ShowMessageBox("Some files might be overridden in folder: "+self.OUTPUT_FOLDER, "Warning", 'IMPORT')
