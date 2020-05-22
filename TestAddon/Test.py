@@ -209,15 +209,10 @@ def mil_to_meters(input):
 def mm_to_meters(input):
     return float(float(input)*0.001)
 
-### Test functions above
-
-# Static variables
+############# Test functions above
 
 
-
-def deselectAll():
-    bpy.ops.object.select_all(action='DESELECT')
-
+# Reading Placement file
 def read_csv(file_csv, program = 'AUTO'):
     
     # For reading placement files
@@ -336,7 +331,10 @@ def read_csv(file_csv, program = 'AUTO'):
         
         objects.append(oname)
 
-# Blender UI utils
+# Blender utils
+
+def deselectAll():
+    bpy.ops.object.select_all(action='DESELECT')
 
 def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
 
@@ -371,7 +369,7 @@ def MoveDown(obj, times=1, distance = 0.0001):
 
 # Generating Functions:
 
-def RenderBounds(name, bounds, material):
+def RenderBounds(name, bounds, scaler, material):
     print("rendering bounds")
     if bounds is None: return
     print("rendering 2")
@@ -380,10 +378,10 @@ def RenderBounds(name, bounds, material):
     mesh_edges = []
     mesh_faces = []
 
-    mesh_verts.append([bounds[0][0], bounds[1][0],0])
-    mesh_verts.append([bounds[0][1], bounds[1][0],0])
-    mesh_verts.append([bounds[0][1], bounds[1][1],0])
-    mesh_verts.append([bounds[0][0], bounds[1][1],0])
+    mesh_verts.append([bounds[0][0]/scaler[0], bounds[1][0]/scaler[1],0])
+    mesh_verts.append([bounds[0][1]/scaler[0], bounds[1][0]/scaler[1],0])
+    mesh_verts.append([bounds[0][1]/scaler[0], bounds[1][1]/scaler[1],0])
+    mesh_verts.append([bounds[0][0]/scaler[0], bounds[1][1]/scaler[1],0])
     mesh_edges.append([mesh_i,mesh_i+1])
     mesh_edges.append([mesh_i+1,mesh_i+2])
     mesh_edges.append([mesh_i+2,mesh_i+3])
@@ -407,7 +405,7 @@ def RenderBounds(name, bounds, material):
     bpy.ops.object.mode_set(mode='OBJECT')
     return TempObj
 
-def RenderOutline(name, layer, material, offset, scaler, extrude=False, extrudeMat = None, extrude_amount=0.00159):
+def RenderOutline(name, layer, material, offset, scaler):
     if layer is None: return
 
     mesh_i = 0
@@ -428,8 +426,6 @@ def RenderOutline(name, layer, material, offset, scaler, extrude=False, extrudeM
 
     me = bpy.data.meshes.new(name)
     me.materials.append(material)
-    if extrude:
-        me.materials.append(extrudeMat)
     me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
     me.validate()
     me.update()
@@ -442,22 +438,25 @@ def RenderOutline(name, layer, material, offset, scaler, extrude=False, extrudeM
     bpy.ops.mesh.select_mode(type = 'FACE')
     bpy.ops.mesh.edge_face_add()
     bpy.ops.uv.cube_project(cube_size=1, scale_to_bounds=True)
-    if extrude:
-        bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value":(0, 0, 0.0016)})
-        bpy.ops.mesh.select_all(action='INVERT')
-
-        MeshObj.active_material_index = 1
-        bpy.ops.object.material_slot_assign()
-
-
-
-
-
-
+ 
     bpy.ops.object.mode_set(mode='OBJECT')
-    
+    deselectAll()
+
     return MeshObj
+
+def Extrude(ob, extrude_amount, material = None):
+
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value":(0, 0, extrude_amount)})
+
+    if material is not None:
+        ob.data.materials.append(material)
+        bpy.ops.mesh.select_all(action='INVERT')
+        ob.active_material_index = 1
+        bpy.ops.object.material_slot_assign()
+    
+    bpy.ops.object.mode_set(mode='OBJECT')
 
 def CreateModel(name, source_folder, ctx, pcb_instance=None, extrude=False):
 
@@ -470,14 +469,16 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None, extrude=False):
 
     extrudeMat = None
     if extrude:
-        extrudeMat = bpy.data.materials.new(name = "ExtrudeMat")
+        extrudeMat = bpy.data.materials.get("ExtrudeMat")
+        if extrudeMat is None:
+            extrudeMat = bpy.data.materials.new(name = "ExtrudeMat")
         extrudeMat.use_nodes = True
         bsdf = extrudeMat.node_tree.nodes["Principled BSDF"]
         # Base Color
         bsdf.inputs[0].default_value = (0.350555, 0.266215, 0.0896758, 1)
         # Subsurface factor
-        bpy.data.materials["ExtrudeMat"].node_tree.nodes["Principled BSDF"].inputs[1].default_value = 0.04
-        #extrudeMat.node_tree.links.new(bsdf.inputs['Base Color'], )
+        bpy.data.materials[1].node_tree.nodes["Principled BSDF"].inputs[1].default_value = 0.04
+        extrudeMat.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
 
     mesh = None
     if(pcb_instance is not None):
@@ -488,15 +489,18 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None, extrude=False):
                 mat,
                 None, #-mathutils.Vector((ctx.origin_in_inch[0], ctx.origin_in_inch[1], 0))
                 mathutils.Vector((1000, 1000, 0)),
-                extrude = extrude,
-                extrudeMat = extrudeMat
                 )
     else:
         mesh = RenderBounds(
                 name,
                 ctx.first_bounds,
+                mathutils.Vector((1000, 1000, 0)),
                 mat,
                 )
+    
+    if extrude:
+        Extrude(mesh, 0.0016, extrudeMat)
+        
     return mesh
 
 # Cairo-based rendering
@@ -571,8 +575,9 @@ class GeneratePCB(Operator):
 
                 # Create models
                 Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, extrude = True)
+                MoveDown(Top_layer, distance=0.00075)
                 Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx)
-                MoveDown(Bottom_layer, distance=0.0016)
+                MoveDown(Bottom_layer, distance=0.00085)
                 
                 # Placement list
 
@@ -598,9 +603,9 @@ class GeneratePCB(Operator):
 
             # Create models
             Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb, extrude = True)
-            MoveDown(Top_layer, distance=0.0016)
+            MoveDown(Top_layer, distance=0.00075)
             Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
-            MoveDown(Bottom_layer, distance=0.0016)
+            MoveDown(Bottom_layer, distance=0.00085)
 
             ChangeArea('VIEW_3D', 'MATERIAL')
             ChangeClipping(0.01)
