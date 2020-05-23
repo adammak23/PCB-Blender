@@ -298,7 +298,7 @@ def read_csv(file_csv, program = 'AUTO'):
         z = 0
         yrot = 0
         if side == 'bottom':
-            z = -0.16
+            z = -1.6
             yrot = 180 / 57.2957795
         loc = tuple(float(val)/1000 for val in (x, y, z))
         frot = float(rot)
@@ -332,6 +332,13 @@ def read_csv(file_csv, program = 'AUTO'):
         objects.append(oname)
 
 # Blender utils
+
+def PurgeOrphanData():
+    areaType = bpy.context.area.type
+    bpy.context.area.type = 'OUTLINER'
+    bpy.context.space_data.display_mode = 'ORPHAN_DATA'
+    bpy.ops.outliner.orphans_purge()
+    bpy.context.area.type = areaType
 
 def deselectAll():
     bpy.ops.object.select_all(action='DESELECT')
@@ -464,7 +471,7 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None, extrude=False):
     mat.use_nodes = True
     bsdf = mat.node_tree.nodes["Principled BSDF"]
     texImage = mat.node_tree.nodes.new('ShaderNodeTexImage')
-    texImage.image = bpy.data.images.load(os.path.join(source_folder, name+'.png'))
+    texImage.image = bpy.data.images.load(os.path.join(source_folder, name + '.png'))
     mat.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
 
     extrudeMat = None
@@ -477,28 +484,36 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None, extrude=False):
         # Base Color
         bsdf.inputs[0].default_value = (0.350555, 0.266215, 0.0896758, 1)
         # Subsurface factor
-        bpy.data.materials[1].node_tree.nodes["Principled BSDF"].inputs[1].default_value = 0.04
+        bsdf.inputs[1].default_value = 0.05
         extrudeMat.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
 
     mesh = None
     if(pcb_instance is not None):
         if(pcb_instance.outline_layer is not None):
+            outline = pcb_instance.outline_layer
+
             mesh = RenderOutline(
                 name,
-                pcb_instance.outline_layer,
+                outline,
                 mat,
                 None, #-mathutils.Vector((ctx.origin_in_inch[0], ctx.origin_in_inch[1], 0))
                 mathutils.Vector((1000, 1000, 0)),
                 )
+
     else:
+        bounds = ctx.first_bounds
         mesh = RenderBounds(
                 name,
-                ctx.first_bounds,
+                bounds,
                 mathutils.Vector((1000, 1000, 0)),
                 mat,
                 )
     
-    if extrude:
+    if mesh is None:
+        bounds = pcb_instance.layers[0].bounds
+        mesh = RenderBounds(name, bounds, mathutils.Vector((1000, 1000, 0)), mat)
+
+    if extrude and mesh:
         Extrude(mesh, 0.0016, extrudeMat)
         
     return mesh
@@ -575,15 +590,16 @@ class GeneratePCB(Operator):
 
                 # Create models
                 Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, extrude = True)
-                MoveDown(Top_layer, distance=0.00075)
+                MoveDown(Top_layer, distance=0.0016)
                 Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx)
-                MoveDown(Bottom_layer, distance=0.00085)
+                MoveDown(Bottom_layer, distance=0.00161)
                 
                 # Placement list
 
                 ChangeArea('VIEW_3D', 'MATERIAL')
-                ChangeClipping(0.01)
+                ChangeClipping(0.001)
 
+                #PurgeOrphanData()
                 return {'FINISHED'}
 
 
@@ -603,13 +619,14 @@ class GeneratePCB(Operator):
 
             # Create models
             Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb, extrude = True)
-            MoveDown(Top_layer, distance=0.00075)
+            MoveDown(Top_layer, distance=0.0016)
             Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
-            MoveDown(Bottom_layer, distance=0.00085)
+            MoveDown(Bottom_layer, distance=0.00161)
 
             ChangeArea('VIEW_3D', 'MATERIAL')
-            ChangeClipping(0.01)
+            ChangeClipping(0.001)
 
+            #PurgeOrphanData()
             return {'FINISHED'}
 
         #ShowMessageBox("Some files might be overridden in folder: "+self.OUTPUT_FOLDER, "Warning", 'IMPORT')
