@@ -23,111 +23,7 @@ from .gerber.render.cairo_backend import GerberCairoContext
 # Placement reading
 import csv
 
-def RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, radius, Xax, Yax):
-    # sin rotation is 2*PI = 6.283
-    CircleResolution = 4
-    first_point = mesh_i
-    for x in range(CircleResolution):
-        mesh_i+=1
-        mesh_verts.append([radius*math.cos(x*(2*math.pi/CircleResolution))+Xax, radius*math.sin(x*(2*math.pi/CircleResolution))+Yax,0])
-        if(x!=CircleResolution-1):
-            mesh_edges.append([mesh_i-1,mesh_i])
-            mesh_faces.append([mesh_i-1,mesh_i,first_point])
-    mesh_edges.append([mesh_i-1,mesh_i-CircleResolution])
-    # since in this function mesh_i is local immutable parameter we have to return it in order to change it's value
-    return mesh_i
-
-def RenderLayer(self, name, layer, material, optional_curve_thickness = 0.008):
-
-    if layer is None: return
-
-    mesh_i = 0
-    mesh_verts = []
-    mesh_edges = []
-    mesh_faces = []
-
-    curve_i = 0
-    curve_verts = []
-    curve_edges = []
-    curve_thickness = 0.001
-
-    for primitive in layer.primitives:
-
-        if(type(primitive) == gerber.primitives.Rectangle):
-            mesh_verts.append([primitive.vertices[0][0],primitive.vertices[0][1],0])
-            mesh_verts.append([primitive.vertices[1][0],primitive.vertices[1][1],0])
-            mesh_verts.append([primitive.vertices[2][0],primitive.vertices[2][1],0])
-            mesh_verts.append([primitive.vertices[3][0],primitive.vertices[3][1],0])
-            mesh_edges.append([mesh_i,mesh_i+1])
-            mesh_edges.append([mesh_i+1,mesh_i+2])
-            mesh_edges.append([mesh_i+2,mesh_i+3])
-            mesh_edges.append([mesh_i+3,mesh_i])
-            mesh_faces.append([mesh_i,mesh_i+1,mesh_i+2])
-            mesh_faces.append([mesh_i+2,mesh_i+3,mesh_i])
-            mesh_i+=4
-
-        elif(type(primitive) == gerber.primitives.Circle):
-            mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, primitive.radius, primitive._position[0], primitive._position[1])
-
-        elif(type(primitive) == gerber.primitives.Line):
-            curve_thickness = primitive.aperture.diameter
-            if(curve_thickness > 0.05):
-                mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, curve_thickness/2, primitive.start[0], primitive.start[1])
-                mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, curve_thickness/2, (primitive.start[0]+primitive.end[0])/2, (primitive.start[1]+primitive.end[1])/2)
-                mesh_i = RenderCircle(self, mesh_i, mesh_verts, mesh_edges, mesh_faces, curve_thickness/2, primitive.end[0], primitive.end[1])
-            else:
-                curve_verts.append([primitive.start[0],primitive.start[1],0])
-                curve_verts.append([primitive.end[0],primitive.end[1],0])
-                curve_edges.append([curve_i,curve_i+1])
-                curve_i+=2
-        #else (all other primitives are drills)
-
-    me = bpy.data.meshes.new("mesh")
-    me.materials.append(material)
-    me.from_pydata(mesh_verts, mesh_edges, mesh_faces)
-    me.validate()
-    me.update()
-    MeshObj = bpy.data.objects.new("mesh", me)
-    bpy.context.scene.collection.objects.link(MeshObj)
-
-    CurveObj = None
-    if(curve_i > 0):
-        cu = bpy.data.meshes.new("curve")
-        cu.from_pydata(curve_verts, curve_edges, [])
-        cu.validate()
-        cu.update()
-        CurveObj = bpy.data.objects.new("curve", cu)
-        CurveObj.data.materials.append(material)
-        bpy.context.scene.collection.objects.link(CurveObj)
-        CurveObj.select_set(True)
-        bpy.context.view_layer.objects.active = CurveObj
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.remove_doubles()
-        bpy.ops.object.mode_set(mode='OBJECT')
-        bpy.ops.object.convert(target='CURVE')
-        CurveObj.data.dimensions = '2D'
-        CurveObj.data.resolution_u = 1
-        # TODO: sort all and add multiple objects, render separate with appropriate thickness
-        # CurveObj.data.bevel_depth = curve_thickness/2
-        # For now, simplified:
-        CurveObj.data.bevel_depth = optional_curve_thickness
-        CurveObj.data.bevel_resolution = 0
-
-        bpy.ops.transform.resize(value=(1, 1, 0.01), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False)
-        bpy.ops.object.convert(target='MESH')
-    
-    if CurveObj and MeshObj:
-        bpy.ops.object.select_all(action='DESELECT')
-        CurveObj.select_set(True)
-        MeshObj.select_set(True)
-        bpy.ops.object.join()
-        CurveObj.name = name
-        bpy.ops.object.select_all(action='DESELECT')
-
-        return CurveObj
-
-    MeshObj.name = name
-    return MeshObj
+############# Test functions
 
 def CairoExample_FilesIntoLayers(GERBER_FOLDER, OUTPUT_FOLDER):
    
@@ -187,30 +83,10 @@ def CairoExample_FilesIntoLayers(GERBER_FOLDER, OUTPUT_FOLDER):
     # #ctx.dump(os.path.join(os.path.dirname(__file__), 'cairo_bottom.png'))
     # ctx.dump(os.path.join(OUTPUT_FOLDER, 'cairo_bottom.png'))
 
-def BooleanCut(source, cutter):
-    solidifymodifier = cutter.modifiers.new("SOLIDIFY", type = "SOLIDIFY")
-    solidifymodifier.offset = 0
-    bpy.context.view_layer.objects.active = cutter
-    bpy.ops.object.modifier_apply(modifier="SOLIDIFY")
-    
-    boolmod = source.modifiers.new("BOOLEAN", type = "BOOLEAN")
-    boolmod.object = cutter
-    # boolmod.operation = 'DIFFERENCE' (is default)
-    bpy.context.view_layer.objects.active = source
-    bpy.ops.object.modifier_apply(modifier="BOOLEAN")
-    bpy.data.objects.remove(cutter)
+#############
 
-def mil_to_meters(input):
-    # mil = 1/1000 cal
-    # 100 mils = 2.54 mm
-    # 1 mil = 0.0254 mm = 0.0000254 m
-    return float(float(input)*0.0000254)
-
-def mm_to_meters(input):
-    return float(float(input)*0.001)
-
-############# Test functions above
-
+# Global variables:
+units = 'metric'
 
 # Reading Placement file
 def read_csv(file_csv, program = 'AUTO'):
@@ -377,18 +253,17 @@ def MoveDown(obj, times=1, distance = 0.0001):
 # Generating Functions:
 
 def RenderBounds(name, bounds, scaler, material):
-    print("rendering bounds")
     if bounds is None: return
-    print("rendering 2")
+    print("Rendering Bounds")
     mesh_i = 0
     mesh_verts = []
     mesh_edges = []
     mesh_faces = []
 
-    mesh_verts.append([bounds[0][0]/scaler[0], bounds[1][0]/scaler[1],0])
-    mesh_verts.append([bounds[0][1]/scaler[0], bounds[1][0]/scaler[1],0])
-    mesh_verts.append([bounds[0][1]/scaler[0], bounds[1][1]/scaler[1],0])
-    mesh_verts.append([bounds[0][0]/scaler[0], bounds[1][1]/scaler[1],0])
+    mesh_verts.append([bounds[0][0]*scaler[0], bounds[1][0]*scaler[1],0])
+    mesh_verts.append([bounds[0][1]*scaler[0], bounds[1][0]*scaler[1],0])
+    mesh_verts.append([bounds[0][1]*scaler[0], bounds[1][1]*scaler[1],0])
+    mesh_verts.append([bounds[0][0]*scaler[0], bounds[1][1]*scaler[1],0])
     mesh_edges.append([mesh_i,mesh_i+1])
     mesh_edges.append([mesh_i+1,mesh_i+2])
     mesh_edges.append([mesh_i+2,mesh_i+3])
@@ -425,9 +300,9 @@ def RenderOutline(name, layer, material, offset, scaler):
         if(type(primitive) == gerber.primitives.Line):
             
             if offset is None:
-                vec1 = [(primitive.start[0])/scaler[0], (primitive.start[1])/scaler[1],0]
+                vec1 = [(primitive.start[0])*scaler[0], (primitive.start[1])*scaler[1],0]
             else:
-                vec1 = [(primitive.start[0] + offset[0])/scaler[0], (primitive.start[1] + offset[1])/scaler[1],0]
+                vec1 = [(primitive.start[0] + offset[0])*scaler[0], (primitive.start[1] + offset[1])*scaler[1],0]
             mesh_verts.append(vec1)
             mesh_i+=1
 
@@ -488,6 +363,13 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None, extrude=False):
         extrudeMat.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
 
     mesh = None
+    scaler = mathutils.Vector((1, 1, 1))
+
+    if units == "metric":
+        scaler = mathutils.Vector((.001, .001, .001))
+    if units == "inch":
+        scaler = mathutils.Vector((.0254, .0254, .0254))
+
     if(pcb_instance is not None):
         if(pcb_instance.outline_layer is not None):
             outline = pcb_instance.outline_layer
@@ -497,7 +379,7 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None, extrude=False):
                 outline,
                 mat,
                 None, #-mathutils.Vector((ctx.origin_in_inch[0], ctx.origin_in_inch[1], 0))
-                mathutils.Vector((1000, 1000, 0)),
+                scaler,
                 )
 
     else:
@@ -505,13 +387,13 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None, extrude=False):
         mesh = RenderBounds(
                 name,
                 bounds,
-                mathutils.Vector((1000, 1000, 0)),
+                scaler,
                 mat,
                 )
     
     if mesh is None:
         bounds = pcb_instance.layers[0].bounds
-        mesh = RenderBounds(name, bounds, mathutils.Vector((1000, 1000, 0)), mat)
+        mesh = RenderBounds(name, bounds, scaler, mat)
 
     if extrude and mesh:
         Extrude(mesh, 0.0016, extrudeMat)
@@ -537,7 +419,6 @@ class GeneratePCB(Operator):
     OUTPUT_FOLDER = ""
     width_resolution = 1024
     height_resolution = 1024
-    units = 'metric'
 
     use_separate_files = False
     cu = None
@@ -556,6 +437,8 @@ class GeneratePCB(Operator):
     placeProgram = None
 
     def execute(self, context):
+
+        global units
 
         # Placement list
         if(self.placeTop is not ''): read_csv(self.placeTop, self.placeProgram)    
@@ -582,7 +465,7 @@ class GeneratePCB(Operator):
                         bottom_layers.append(load_layer(stringlayer))
 
                 if len(up_layers) > 0:
-                    self.units = up_layers[0].cam_source.units
+                    units = up_layers[0].cam_source.units
 
                 # Render images
                 CreateImage("Top_layer", up_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
@@ -612,7 +495,9 @@ class GeneratePCB(Operator):
             # Create a new PCB instance
             pcb = PCB.from_directory(self.GERBER_FOLDER)
             # Render images
-            self.units = pcb.layers[0].cam_source.units
+
+            if len(pcb.layers) > 0:
+                units = pcb.layers[0].cam_source.units
 
             CreateImage("Top_layer", pcb.top_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
             CreateImage("Bottom_layer", pcb.bottom_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
