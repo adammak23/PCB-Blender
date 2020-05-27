@@ -3,7 +3,7 @@ import bpy
 from bpy.props import StringProperty, FloatProperty, EnumProperty, BoolProperty
 from bpy.types import Operator, Panel
 from bpy_extras.io_utils import ImportHelper
-from . Test import GeneratePCB
+from . PCB_Blender import GeneratePCB
 
 def FilePath(_name, _description="", _default=""):
     return StringProperty(name=_name, default = _default, description=_description, subtype = 'FILE_PATH')
