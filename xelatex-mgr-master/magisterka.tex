@@ -67,14 +67,11 @@ Produkcja przemysłowa
 \begin{figure}[!tbh]
 \centering
 \includegraphics[width=1\hsize]{fig/hokusai}
-\caption{Joel Betancourt znany jako Garabating - "Katsushika Hokusai Electronic Circuit Board"\label{RYS.2}}
+\caption{Joel Betancourt znany jako Garabating - "Katsushika Hokusai Electronic Circuit Board"\label{RYS.1}}
 \source{https://garabating.com/post/44549621917/katsushika-hokusai-electronic-circuit-board}
 \end{figure}
 
 Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod uwagę mnogość technicznej wiedzy, pomiarów i zależności takich jak optymalizacja długości ścieżek, ograniczenia mechaniczne i montażowe, itd.\footnote{https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/} Z uwagi na ilość i różnorodność ograniczeń nie jest możliwa całkowita automatyzacja sprawdzania poprawności wykonanego projektu, zatem przydatna dla projektanta okazuje się wizualizacja efektu końcowego. Jest ona także niezbędnym elementem procesu marketingowego, logistycznego czy edukacyjnego. Istnieje wiele programów do projektowania PCB jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
-
-
-
 
 
 % ROZDZIAŁ 1
@@ -82,20 +79,63 @@ Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod
 
 \chapter{Cel i zakres pracy magisterskiej}
 
-Celem niniejszej pracy jest stworzenie łatwego do rozbudowania i spójnego systemu umożliwiającego import plików projektowych używanych bezpośrednio w przemyśle PCB do programu Blender, następnie interpretację i wyświetlenie pełnowymiarowego modelu 3D płytki drukowanej która powstałaby w procesie produkcji przemysłowej.
+Celem niniejszej pracy jest stworzenie łatwego do rozbudowania i spójnego systemu umożliwiającego import plików projektowych używanych bezpośrednio w przemyśle PCB do programu Blender, następnie interpretację i wyświetlenie pełnowymiarowego modelu 3D płytki drukowanej która powstałaby w procesie produkcji przemysłowej. Dodatek powinien posiadać prosty i przejrzysty interfejs który zapewnia dostęp do wszystkich funkcjonalności, ale nie przytłacza odbiorcy nadmiarem funkcji. Pozwoli to nie tylko osobom technicznym z poza branży grafiki komputerowej na łatwy dostęp do wizualizacji i edycji swoich projektów ale także na łatwiejszą integrację projektów przemysłowych z marketingową i graficzną częścią przemysłu.
 
 \section{Wymagania funkcjonalne}
 
+Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kompatybilnym z wersją 2.8 w zwyż. Addon udostępnia użytkownikowy dodatkowe funkcjonalności z poziomu graficznego interfejsu użytkownika:
+\begin{itemize}
+\item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw\footnote{Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
+\item Wybranie plików pozycji elementów (eng. \emph{"Pick And Place"}) w formacie \emph{*.csv} 
+\item Wybranie własnej biblioteki modeli 3D
+\item Wybór końcowej rozdzielczości i miejsca zapisu plików wytworzonych w procesie renderowania
+\end{itemize}
 
-\chapter{Opis technologii wykorzystanych w pracy}
-\section{python + blender python (to, że nie da się pipa i trzeba dołączyć moduł gerber etc)}
-\section{moduły zewnętrzne pythona: cairo, wheel, gerber etc.}
-\section{opis plików projektowych PCB (gerber, excellon, placement, etc.)}
-\section{developing w VS code? fajny linker kopiujący etc?}
+\begin{figure}
+\centering
+\includegraphics[width=0.75\hsize]{fig/addon_1}
+\caption{Zainstalowany dodatek w programie Blender 2.82a\label{RYS.2}}
+\source{Opracowanie własne}
+\end{figure}
+
+\section {Opis technologii wykorzystanych w pracy}
+
+\subsection{Python}
+Python jest językiem programowania wysokiego poziomu, posiadającym aktywną społeczność i nieograniczone możliwości poprzez rozbudowę go o zewnętrzne pakiety.\footnote {https://www.python.org/about/} API Blendera jest w większości przygotowane do użycia właśnie Pythona i chociaż istnieją ograniczenia tego, co Python może zrobić w Blenderze, jest to jedyne oficjalnie wspierane rozwiązanie dzięki któremu wiele można osiągnąć bez konieczności zagłębiania się w kod C / C++ Blendera.
+\subsection {Blender 2.8}
+Darmowy program \emph{Open-source}\footnote{https://www.blender.org/about/license/} cechujący się wszechstronnością i możliwością rozbudowania go o dodatkowe biblioteki lub skrypty napisane w języku Python, które poszerzają podstawowe funkcjonalności.
+
+Dodatek do programu Blender różni się od dodatkowej biblioteki Pythona jedynie pewnymi dodatkowymi wymaganiami jak obiekt zawierający metadane, takie jak: tytuł, wersja, kategoria, autor, etc. Określa też minimalną wersję Blendera wymaganą do uruchomienia skryptu. Dodatek jest więc sposobem na enkapsulację modułu Pythona w sposób, który użytkownik może z łatwością wykorzystać.
+
+Blender ma wbudowany interpreter Pythona, który jest ładowany po uruchomieniu Blendera. Utrudnia to znacząco wykorzystanie automatycznego pobierania i instalowania zależnych od siebie pakietów, co za tym idzie, tworzony w ramach pracy system musi być niezależny aby ułatwić korzystanie z niego.
+
+\subsection{opis plików projektowych PCB (gerber, excellon, placement, etc.)}
+\subsection{developing w VS code? fajny linker kopiujący etc?}
+\subsection{moduły zewnętrzne pythona: cairo, wheel, gerber etc.}
 
 
-\chapter{Architektura zrealizowanego systemu}
-\section{Koncepcyjna struktura/podział na moduły/wzorzec projektowy?/przegląd funkcjonalności}
+% ROZDZIAŁ 2
+
+\chapter{Architektura zrealizowanego systemu/Implementacja}
+
+\section {Koncepcyjna struktura projektu}
+Może wrzucić to PO rozdziale 2? miałoby większy sens
+
+\subsection{Założenia i wymagania projektowe}
+\begin{itemize}
+\item Czytanie, interpretacja plików excellon, gerber
+\item renderowanie - cairo
+\item renderowanie modelu z wymiarów warstwy outline
+\item baza modeli do PickAndPlace (+tworzenie bazy modeli - importer *.wrl)
+\end{itemize}
+\subsection{Implementacja wzorca projektowego}
+\begin{itemize}
+\item omówienie MVVC
+\item omówienie pokrótce plików projektu, podział na moduły - interfejs, logika, init (+ importer?)
+\end{itemize}
+
+\subsection{przegląd funkcjonalności}
+
 
 
 \chapter{Szczegóły implementacyjne systemu}
@@ -103,6 +143,9 @@ Celem niniejszej pracy jest stworzenie łatwego do rozbudowania i spójnego syst
 \section{Funkcjonalność panelu}
 
 \chapter{Podsumowanie}
+
+Aplikacja,  mimo  iż  jest  dedykowana  dla  projektów stworzonych w gEDA, KiCad,  jest  o  wiele  bardziej uniwersalna, ponieważ w praktyce wystarczy dodać modele, aby uzyskać format możliwy do odczytania. Podsumowując,  w  wyniku  prac  implementacyjnych  udało  się  zrealizować projekt,  który  jest  zgodny  z  przyjętymi  wcześniej  wymaganiami  i  założeniami przedstawionymi  na  etapie  opracowywania  koncepcji  rozwiązania.  Pomijając  jedną dużą modyfikację związaną ze zmianą metodologii postępowania, projekt powstałych klas pozostał w niezmienionej formie. Warto także zaznaczyć, że przyjęta architektura realizuje   wszystkie   postawione   wymagania   funkcjonalne.   Niestety   aplikacja   nie uniknęła wad. Jedną, ale za to dość poważną, jest spore zapotrzebowanie na pamięć przy przetwarzaniu dużych plików. Jednak dla mniejszych zbiorów danych wydajność czasowa jest na akceptowalnym poziomie. W  kolejnym  rozdziale  przedstawione  zostanie  podsumowanie całokształtu prac związanych z analizą oraz implementacją omawianej aplikacji.
+
 \section{Realizacja założonych celów pracy magisterskiej}
 \section {Problemy napotkane podczas realizacji systemu}
 \section{Możliwości rozwoju systemu}
