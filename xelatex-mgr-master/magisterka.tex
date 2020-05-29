@@ -83,11 +83,10 @@ Celem niniejszej pracy jest stworzenie łatwego do rozbudowania i spójnego syst
 
 \section{Wymagania funkcjonalne}
 
-Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kompatybilnym z wersją 2.8 w zwyż. Addon udostępnia użytkownikowy dodatkowe funkcjonalności z poziomu graficznego interfejsu użytkownika:
+Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kompatybilnym z wersją 2.8 w zwyż. Wybór konkretnie tej wersji programu był podyktowany jego nową odsłoną oferującą między innymi nowy interfejs i API. Addon udostępnia użytkownikowi dodatkowe funkcjonalności z poziomu graficznego interfejsu użytkownika:
 \begin{itemize}
-\item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw\footnote{Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
-\item Wybranie plików pozycji elementów (eng. \emph{"Pick And Place"}) w formacie \emph{*.csv} 
-\item Wybranie własnej biblioteki modeli 3D
+\item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw i  plików pozycji elementów (eng. \emph{"Pick And Place"}) w formacie \emph{*.csv}\footnote{Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
+\item Wybranie wbudowanej lub własnej biblioteki modeli 3D
 \item Wybór końcowej rozdzielczości i miejsca zapisu plików wytworzonych w procesie renderowania
 \end{itemize}
 
@@ -107,7 +106,7 @@ Darmowy program \emph{Open-source}\footnote{https://www.blender.org/about/licens
 
 Dodatek do programu Blender różni się od dodatkowej biblioteki Pythona jedynie pewnymi dodatkowymi wymaganiami jak obiekt zawierający metadane, takie jak: tytuł, wersja, kategoria, autor, etc. Określa też minimalną wersję Blendera wymaganą do uruchomienia skryptu. Dodatek jest więc sposobem na enkapsulację modułu Pythona w sposób, który użytkownik może z łatwością wykorzystać.
 
-Blender ma wbudowany interpreter Pythona, który jest ładowany po uruchomieniu Blendera. Utrudnia to znacząco wykorzystanie automatycznego pobierania i instalowania zależnych od siebie pakietów, co za tym idzie, tworzony w ramach pracy system musi być niezależny aby ułatwić korzystanie z niego.
+Blender ma wbudowany interpreter Pythona, który jest ładowany po uruchomieniu programu. Utrudnia to znacząco wykorzystanie automatycznego pobierania i instalowania zależnych od siebie pakietów, co za tym idzie, tworzony w ramach pracy system, aby ułatwić korzystanie z niego, musi być niezależny od zewnętrznych, dynamicznie pobieranych bibliotek.
 
 \subsection{opis plików projektowych PCB (gerber, excellon, placement, etc.)}
 \subsection{developing w VS code? fajny linker kopiujący etc?}
