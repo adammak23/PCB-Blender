@@ -167,6 +167,12 @@ def read_csv(file_csv, program = 'AUTO'):
 
     objects = []
 
+    scaler = 0.001
+    if units == "metric":
+        scaler = 0.001
+    if units == "inch":
+        scaler = 0.0254
+
     for id, name, value, x, y, rot, side in layout_table:
 
         if id == '(unknown)' or id == 'Ref':
@@ -176,7 +182,7 @@ def read_csv(file_csv, program = 'AUTO'):
         if side == 'bottom':
             z = -1.6
             yrot = 180 / 57.2957795
-        loc = tuple(float(val)/1000 for val in (x, y, z))
+        loc = tuple(float(val) * scaler for val in (x, y, z))
         frot = float(rot)
         try:
             if rotations[id]:
