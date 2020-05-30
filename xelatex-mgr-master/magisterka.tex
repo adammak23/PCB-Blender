@@ -51,7 +51,7 @@ Istnieje wiele programów do projektowania płytek drukowanych, jednak żadne z 
 
 Obwody drukowane czy też inaczej płytki drukowane (zwane dalej "PCB", ang. Printed Circuit Board) to podstawa dla każdego modułu elektronicznego. Dzięki swojej budowie oraz dobranym częściom składowym pozwalają inżynierom z roku na rok konstruować coraz to nowocześniejsze i bardziej funkcjonalne urządzenia. PCB służy przede wszystkim do montowania wszelkich podzespołów elektronicznych oraz zapewnienia im wspólnego stabilnego połączenia.
 
-Tworzenie PCB składa się z trzech głównych etapów \cite{Abboud}: 
+Tworzenie PCB składa się z trzech głównych etapów: \cite{Abboud}
 
 \begin{itemize}
 \item
@@ -85,7 +85,7 @@ Celem niniejszej pracy jest stworzenie łatwego do rozbudowania i spójnego syst
 
 Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kompatybilnym z wersją 2.8 w zwyż. Wybór konkretnie tej wersji programu był podyktowany jego nową odsłoną oferującą między innymi nowy interfejs i API. Addon udostępnia użytkownikowi dodatkowe funkcjonalności z poziomu graficznego interfejsu użytkownika:
 \begin{itemize}
-\item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw i  plików pozycji elementów (eng. \emph{"Pick And Place"})\footnote{Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
+\item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw i  plików pozycji elementów (eng. \emph{"Pick And Place"})\footnote{~Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
 \item Wybranie wbudowanej lub własnej biblioteki modeli 3D
 \item Wybór końcowej rozdzielczości i miejsca zapisu plików wytworzonych w procesie renderowania
 \end{itemize}
@@ -100,20 +100,42 @@ Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kom
 \section {Opis technologii wykorzystanych w pracy}
 
 \subsection{Python}
-Python jest językiem programowania wysokiego poziomu, posiadającym aktywną społeczność i nieograniczone możliwości poprzez rozbudowę go o zewnętrzne pakiety.\footnote {https://www.python.org/about/} API Blendera jest w większości przygotowane do użycia właśnie Pythona i chociaż istnieją ograniczenia tego, co Python może zrobić w Blenderze, jest to jedyne oficjalnie wspierane rozwiązanie dzięki któremu wiele można osiągnąć bez konieczności zagłębiania się w kod C / C++ Blendera.
+Python jest językiem programowania wysokiego poziomu, posiadającym aktywną społeczność i nieograniczone możliwości poprzez rozbudowę go o zewnętrzne pakiety.\footnote {~https://www.python.org/about/} API Blendera jest w większości przygotowane do użycia właśnie Pythona i chociaż istnieją ograniczenia tego, co Python może zrobić w Blenderze, jest to jedyne oficjalnie wspierane rozwiązanie dzięki któremu wiele można osiągnąć bez konieczności zagłębiania się w kod C / C++ Blendera.
+
 \subsection {Blender 2.8}
-Darmowy program \emph{Open-source}\footnote{https://www.blender.org/about/license/} cechujący się wszechstronnością i możliwością rozbudowania go o dodatkowe biblioteki lub skrypty napisane w języku Python, które poszerzają podstawowe funkcjonalności.
+Darmowy program \emph{Open-source}\footnote{~https://www.blender.org/about/license/} cechujący się wszechstronnością i możliwością rozbudowania go o dodatkowe biblioteki lub skrypty napisane w języku Python, które poszerzają podstawowe funkcjonalności.
 
 Dodatek do programu Blender różni się od dodatkowej biblioteki Pythona jedynie pewnymi dodatkowymi wymaganiami jak obiekt zawierający metadane, takie jak: tytuł, wersja, kategoria, autor, etc. Określa też minimalną wersję Blendera wymaganą do uruchomienia skryptu. Dodatek jest więc sposobem na enkapsulację modułu Pythona w sposób, który użytkownik może z łatwością wykorzystać.
 
 Blender ma wbudowany interpreter Pythona, który jest ładowany po uruchomieniu programu. Utrudnia to znacząco wykorzystanie automatycznego pobierania i instalowania zależnych od siebie pakietów, co za tym idzie, tworzony w ramach pracy system, aby ułatwić korzystanie z niego, musi być niezależny od zewnętrznych, dynamicznie pobieranych bibliotek.
 
-% może coś jeszcze tu wciśnąć
+% może coś jeszcze tu wciśnąć?
 
 
-\subsection{opis plików projektowych PCB (gerber, excellon, placement, etc.)}
-\subsection{developing w VS code? fajny linker kopiujący etc?}
+\subsection{Opis plików projektowych PCB (gerber, excellon, placement, etc.)}
+
+Nowoczesne płytki drukowane są projektowane przy pomocy dedykowanego oprogramowania a ostatnim etapem produkcji dla projektanta jest wygenerowanie plików Gerber.\cite{Khandpur}
+
+% Gerber
+Format pliku Gerber jest otwartym, wektorowym standardem ASCII służącym do przesyłania danych projektowych obwodów drukowanych do przemysłu produkcji elektroniki. Wszystkie systemy do projektowania obwodów drukowanych wyprowadzają pliki Gerber i całe oprogramowanie do ich obróbki może sobie z nimi poradzić, umożliwiając profesjonalistom w dziedzinie PCB bezpieczną i wydajną wymianę danych projektowych.\cite{Williams}
+
+Pliki Gerber reprezentują między innymi warstwy miedzi, maskę lutowniczą, legendę oraz dane wiercenia i trasy. Dodatkowe atrybuty dostarczają informacji o sposobie montowania, połączeń i nazw poszczególnych elementów. Format pliku Gerber jest prosty, kompaktowy i jednoznaczny. Dzięki zastosowaniu 7-bitowych znaków ASCII jest czytelny dla człowieka i łatwy do debugowania.\footnote{~https://www.ucamco.com/en/gerber}
+
+PCB NC drill files convey PCB drilling and routing information. The NC formats were originally designed by CNC drill and route machine vendors as proprietary input formats for their equipment, and are known under their company name: Excellon, Hitachi, Sieb \& Meyer, Posalux, etc. These formats are similar as they are based on RS-274-C and related to G-code. In 1985 IPC published a generic standard NC format, IPC-NC-349. Later XNC was designed, a simple strict subset of IPC-NC-349, designed not for driving machines but for exchanging drill information between CAD and CAM. They are collectively referred to as (PCB) NC files.\cite{Charras}
+% Excellon etc
+%PCB Tools currently supports the following file formats:
+%    Gerber (RS-274X)
+%    Excellon
+%with planned support for IPC-2581, ODB++ and more.
+
+PCBs can be single-sided (one copper layer), double-sided (two copper layers on both sides of one substrate layer), or multi-layer (outer and inner layers of copper, alternating with layers of substrate).
+
+% Placement
+
+
 \subsection{moduły zewnętrzne pythona: cairo, wheel, gerber etc.}
+\subsection{developing w VS code? fajny linker kopiujący etc?}
+
 
 
 % ROZDZIAŁ 2
