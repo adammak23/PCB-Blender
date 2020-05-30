@@ -71,7 +71,7 @@ Produkcja przemysłowa
 \source{https://garabating.com/post/44549621917/katsushika-hokusai-electronic-circuit-board}
 \end{figure}
 
-Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod uwagę mnogość technicznej wiedzy, pomiarów i zależności takich jak optymalizacja długości ścieżek, ograniczenia mechaniczne i montażowe, itd.\footnote{https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/} Z uwagi na ilość i różnorodność ograniczeń nie jest możliwa całkowita automatyzacja sprawdzania poprawności wykonanego projektu, zatem przydatna dla projektanta okazuje się wizualizacja efektu końcowego. Jest ona także niezbędnym elementem procesu marketingowego, logistycznego czy edukacyjnego. Istnieje wiele programów do projektowania PCB jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
+Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod uwagę mnogość technicznej wiedzy, pomiarów i zależności takich jak optymalizacja długości ścieżek, ograniczenia mechaniczne i montażowe, itd. Nawet zastosowanie automatucznego wyznaczania ścieżek do optymalizacji nie zawsze da poprawny rezultat.\footnote{~https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/} Z uwagi na ilość i różnorodność ograniczeń nie jest możliwa całkowita automatyzacja sprawdzania poprawności wykonanego projektu, zatem przydatna dla projektanta okazuje się wizualizacja efektu końcowego. Jest ona także niezbędnym elementem procesu marketingowego, logistycznego czy edukacyjnego. Istnieje wiele programów do projektowania PCB jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
 
 
 % ROZDZIAŁ 1
@@ -85,7 +85,7 @@ Celem niniejszej pracy jest stworzenie łatwego do rozbudowania i spójnego syst
 
 Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kompatybilnym z wersją 2.8 w zwyż. Wybór konkretnie tej wersji programu był podyktowany jego nową odsłoną oferującą między innymi nowy interfejs i API. Addon udostępnia użytkownikowi dodatkowe funkcjonalności z poziomu graficznego interfejsu użytkownika:
 \begin{itemize}
-\item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw i  plików pozycji elementów (eng. \emph{"Pick And Place"})\footnote{~Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
+\item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw i  plików pozycji elementów (ang. \emph{"Pick And Place"})\footnote{~Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
 \item Wybranie wbudowanej lub własnej biblioteki modeli 3D
 \item Wybór końcowej rozdzielczości i miejsca zapisu plików wytworzonych w procesie renderowania
 \end{itemize}
@@ -112,28 +112,31 @@ Blender ma wbudowany interpreter Pythona, który jest ładowany po uruchomieniu 
 % może coś jeszcze tu wciśnąć?
 
 
-\subsection{Plików projektowe PCB\newline(Gerber, Excellon, Pick-And-Place)}
+\subsection{Pliki projektowe PCB\newline(Gerber, Excellon, Pick-And-Place)}
 
 % Gerber
 Nowoczesne płytki drukowane są projektowane przy pomocy dedykowanego oprogramowania a ostatnim etapem produkcji dla projektanta jest wygenerowanie między innymi plików Gerber.\cite{Khandpur}
 Format ten jest otwartym, wektorowym, powszechnie stosowanym standardem ASCII służącym do przesyłania danych projektowych obwodów drukowanych do przemysłu produkcji elektroniki. Wszystkie systemy do projektowania obwodów drukowanych pozwalają na eksport projektu jako pliki Gerber i każde przemysłowe oprogramowanie do ich obróbki potrafi je interpretować, umożliwiając profesjonalistom w dziedzinie PCB bezpieczną i wydajną wymianę danych projektowych.\cite{Williams}
 
-Pliki Gerber reprezentują między innymi warstwy miedzi, maskę lutowniczą, legendę oraz dane wiercenia i trasy. Dodatkowe atrybuty dostarczają informacji o sposobie montowania, połączeń i nazw poszczególnych elementów. Format pliku Gerber jest prosty, kompaktowy i jednoznaczny. Jest bazowany na języku \emph{G-code}, oznaczanym RS-274. Dzięki zastosowaniu 7-bitowych znaków ASCII jest czytelny dla człowieka i łatwy do debugowania. Obecnie używany od 2014 roku format to tzw. Rozszerzony Gerber (eng. \emph{Extended Gerber}) lub RS-274X.\footnote{~https://www.ucamco.com/en/gerber}
+Pliki Gerber reprezentują między innymi warstwy miedzi, maskę lutowniczą, legendę oraz dane wiercenia i trasy. Dodatkowe atrybuty dostarczają informacji o sposobie montowania, połączeń i nazw poszczególnych elementów. Format pliku Gerber jest prosty, kompaktowy i jednoznaczny. Jest bazowany na języku \emph{G-code}, oznaczanym RS-274. Dzięki zastosowaniu 7-bitowych znaków ASCII jest czytelny dla człowieka i łatwy do debugowania. Obecnie używany od 2014 roku format to tzw. Rozszerzony Gerber (ang. \emph{Extended Gerber}) lub RS-274X.\footnote{~https://www.ucamco.com/en/gerber}
 
 % Drill / NC / Excellon
-Kolejnym, generowanym przez projektanta płytki formatem używanym w produkcji są pliki wierceń (eng. \emph{NC / CNC drill}), pierwotnie zaprojektowane przez twórców wiercących i trasujących maszyn CNC jako zastrzeżone, dedykowane formaty wejściowe dla ich urządeń. Znane są pod nazwami takimi jak: Excellon, Hitachi, Sieb \& Meyer, Posalux, itd. Wszystkie z pośród tych formatów są podobne, ponieważ opierają się na wspomnianym wcześniej G-code. Nie są one jednak konieczne, jako że pliki Gerber mogą już zawierać informacje o wierceniach.\cite{Charras}
+Kolejnym, generowanym przez projektanta płytki formatem używanym w produkcji są pliki wierceń (ang. \emph{NC / CNC drill}), pierwotnie zaprojektowane przez twórców wiercących i trasujących maszyn CNC jako zastrzeżone, dedykowane formaty wejściowe dla ich urządeń. Znane są pod nazwami takimi jak: Excellon, Hitachi, Sieb \& Meyer, Posalux, itd.\cite{Charras} Wszystkie z pośród tych formatów są podobne, ponieważ opierają się na wspomnianym wcześniej G-code. Rodzaje wierceń w PCB dzielą się na otwory zwykłe - NPTH (ang. \emph{Not Plated Through Hole}) i pokryte miedzią - PTH (ang. \emph{Plated Through Hole}).\cite{voldman} Stosowanie innego standardu nie jest jednak konieczne, jako że z czasem formaty te zmieniły swoje zastosowanie i obecnie powszechnie stosowaną praktyką jest generowanie tych plików w formacie Gerber.
+
+\newpage
 
 % Placement
 Ostatnim i dosyć kluczowym elementem są pliki wskazujące elementy rozmieszczane na płytce. Jest to prosty format nazywany \emph {Pick-And-Place, Placement list, X-Y file, Mount SMD}  i składa się z kilku wartości:
 \begin{itemize}
-\item \emph{Ref / Designator} - Oznaczenie typu elementu
+\item \emph{Ref / Designator} - Indeks elementu na płytce i w projekcie
+\item \emph{Value} - Wartość elementu (np. pojemność, rezystancja, napięcie)
 \item Pozycja podana we współrzędnych kartezjańskich
 \item \emph{Footprint / Package} - Nazwa elementu, zazwyczaj zawiera także informację o jego wymiarach
 \item Rotacja elementu
 \item Informacja czy objekt znajduje się na wierzchniej czy też dolnej stronie płytki
 \item Ewentualne komentarze i dodatkowe informacje
 \end{itemize}
-Plik zawiera zazwyczaj tylko opis elementów montowanych za pomocą technologii montażu powierzchniowego - SMT (eng. \emph{Surface Mount Technology}), powszechnie stosowanego przemysłowo. Nie jest to jednak format ściśle ustandaryzowany i każdy producent może zarządać innego układu opisu elementów.\cite {prasad} Na szczęście każdy program do tworzenia PCB posiana eksporter do generowania tychże plików. Dodatkowo są one proste w zapisie i z łatwością edytowalne przez człowieka.
+Plik zawiera zazwyczaj tylko opis elementów montowanych za pomocą technologii montażu powierzchniowego - SMT (ang. \emph{Surface Mount Technology}), powszechnie stosowanego przemysłowo. Nie jest to jednak format ściśle ustandaryzowany i każdy producent może zarządać innego układu opisu elementów.\cite {prasad} Na szczęście każdy program do tworzenia PCB posiana eksporter do generowania tychże plików. Dodatkowo są one proste w zapisie i z łatwością edytowalne przez człowieka.
 
 
 
