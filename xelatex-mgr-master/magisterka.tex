@@ -112,26 +112,32 @@ Blender ma wbudowany interpreter Pythona, który jest ładowany po uruchomieniu 
 % może coś jeszcze tu wciśnąć?
 
 
-\subsection{Opis plików projektowych PCB (gerber, excellon, placement, etc.)}
-
-Nowoczesne płytki drukowane są projektowane przy pomocy dedykowanego oprogramowania a ostatnim etapem produkcji dla projektanta jest wygenerowanie plików Gerber.\cite{Khandpur}
+\subsection{Plików projektowe PCB\newline(Gerber, Excellon, Pick-And-Place)}
 
 % Gerber
-Format pliku Gerber jest otwartym, wektorowym standardem ASCII służącym do przesyłania danych projektowych obwodów drukowanych do przemysłu produkcji elektroniki. Wszystkie systemy do projektowania obwodów drukowanych wyprowadzają pliki Gerber i całe oprogramowanie do ich obróbki może sobie z nimi poradzić, umożliwiając profesjonalistom w dziedzinie PCB bezpieczną i wydajną wymianę danych projektowych.\cite{Williams}
+Nowoczesne płytki drukowane są projektowane przy pomocy dedykowanego oprogramowania a ostatnim etapem produkcji dla projektanta jest wygenerowanie między innymi plików Gerber.\cite{Khandpur}
+Format ten jest otwartym, wektorowym, powszechnie stosowanym standardem ASCII służącym do przesyłania danych projektowych obwodów drukowanych do przemysłu produkcji elektroniki. Wszystkie systemy do projektowania obwodów drukowanych pozwalają na eksport projektu jako pliki Gerber i każde przemysłowe oprogramowanie do ich obróbki potrafi je interpretować, umożliwiając profesjonalistom w dziedzinie PCB bezpieczną i wydajną wymianę danych projektowych.\cite{Williams}
 
-Pliki Gerber reprezentują między innymi warstwy miedzi, maskę lutowniczą, legendę oraz dane wiercenia i trasy. Dodatkowe atrybuty dostarczają informacji o sposobie montowania, połączeń i nazw poszczególnych elementów. Format pliku Gerber jest prosty, kompaktowy i jednoznaczny. Dzięki zastosowaniu 7-bitowych znaków ASCII jest czytelny dla człowieka i łatwy do debugowania.\footnote{~https://www.ucamco.com/en/gerber}
+Pliki Gerber reprezentują między innymi warstwy miedzi, maskę lutowniczą, legendę oraz dane wiercenia i trasy. Dodatkowe atrybuty dostarczają informacji o sposobie montowania, połączeń i nazw poszczególnych elementów. Format pliku Gerber jest prosty, kompaktowy i jednoznaczny. Jest bazowany na języku \emph{G-code}, oznaczanym RS-274. Dzięki zastosowaniu 7-bitowych znaków ASCII jest czytelny dla człowieka i łatwy do debugowania. Obecnie używany od 2014 roku format to tzw. Rozszerzony Gerber (eng. \emph{Extended Gerber}) lub RS-274X.\footnote{~https://www.ucamco.com/en/gerber}
 
-PCB NC drill files convey PCB drilling and routing information. The NC formats were originally designed by CNC drill and route machine vendors as proprietary input formats for their equipment, and are known under their company name: Excellon, Hitachi, Sieb \& Meyer, Posalux, etc. These formats are similar as they are based on RS-274-C and related to G-code. In 1985 IPC published a generic standard NC format, IPC-NC-349. Later XNC was designed, a simple strict subset of IPC-NC-349, designed not for driving machines but for exchanging drill information between CAD and CAM. They are collectively referred to as (PCB) NC files.\cite{Charras}
-% Excellon etc
-%PCB Tools currently supports the following file formats:
-%    Gerber (RS-274X)
-%    Excellon
-%with planned support for IPC-2581, ODB++ and more.
-
-PCBs can be single-sided (one copper layer), double-sided (two copper layers on both sides of one substrate layer), or multi-layer (outer and inner layers of copper, alternating with layers of substrate).
+% Drill / NC / Excellon
+Kolejnym, generowanym przez projektanta płytki formatem używanym w produkcji są pliki wierceń (eng. \emph{NC / CNC drill}), pierwotnie zaprojektowane przez twórców wiercących i trasujących maszyn CNC jako zastrzeżone, dedykowane formaty wejściowe dla ich urządeń. Znane są pod nazwami takimi jak: Excellon, Hitachi, Sieb \& Meyer, Posalux, itd. Wszystkie z pośród tych formatów są podobne, ponieważ opierają się na wspomnianym wcześniej G-code. Nie są one jednak konieczne, jako że pliki Gerber mogą już zawierać informacje o wierceniach.\cite{Charras}
 
 % Placement
+Ostatnim i dosyć kluczowym elementem są pliki wskazujące elementy rozmieszczane na płytce. Jest to prosty format nazywany \emph {Pick-And-Place, Placement list, X-Y file, Mount SMD}  i składa się z kilku wartości:
+\begin{itemize}
+\item \emph{Ref / Designator} - Oznaczenie typu elementu
+\item Pozycja podana we współrzędnych kartezjańskich
+\item \emph{Footprint / Package} - Nazwa elementu, zazwyczaj zawiera także informację o jego wymiarach
+\item Rotacja elementu
+\item Informacja czy objekt znajduje się na wierzchniej czy też dolnej stronie płytki
+\item Ewentualne komentarze i dodatkowe informacje
+\end{itemize}
+Plik zawiera zazwyczaj tylko opis elementów montowanych za pomocą technologii montażu powierzchniowego - SMT (eng. \emph{Surface Mount Technology}), powszechnie stosowanego przemysłowo. Nie jest to jednak format ściśle ustandaryzowany i każdy producent może zarządać innego układu opisu elementów.\cite {prasad} Na szczęście każdy program do tworzenia PCB posiana eksporter do generowania tychże plików. Dodatkowo są one proste w zapisie i z łatwością edytowalne przez człowieka.
 
+
+
+%PCBs can be single-sided (one copper layer), double-sided (two copper layers on both sides of one substrate layer), or multi-layer (outer and inner layers of copper, alternating with layers of substrate). (źródło>?)
 
 \subsection{moduły zewnętrzne pythona: cairo, wheel, gerber etc.}
 \subsection{developing w VS code? fajny linker kopiujący etc?}
@@ -139,6 +145,21 @@ PCBs can be single-sided (one copper layer), double-sided (two copper layers on 
 
 
 % ROZDZIAŁ 2
+%przegląd krytyczny literatury - analiza krytyczna dotychczasowych badań/rozwiązań z zakresu tematu?
+
+%interpretacja Gerber (RS-274X) i Excellon, interpretacja kształtów i rysowanie za pomoca krzywych, renderowanie obrazu płytki
+%PCB Tools currently supports the following file formats:
+%    Gerber (RS-274X)
+%    Excellon
+%with planned support for IPC-2581, ODB++ and more.
+%https://pcb-tools.readthedocs.io/en/latest/about.html
+
+%(placement files) ładowanie komponentów i linkowanie plików pomysł wzięty z: https://github.com/majenkotech/PCB-Blend
+
+%Eagle2Blender, wymaga dotatkowych narzędzi, znikoma dokumentacja
+%https://bitbucket.org/hyOzd/pcb2blender/src/master/
+
+
 
 \chapter{Architektura zrealizowanego systemu/Implementacja}
 
