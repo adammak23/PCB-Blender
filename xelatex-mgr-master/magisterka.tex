@@ -39,6 +39,7 @@
 \begin{abstract}
 Istnieje wiele programów do projektowania płytek drukowanych, jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
 \end{abstract}
+% opisać więcej? jeżeli tak to każdy rozdział?
 
 % słowa kluczowe
 \keywords{wizualizacja, grafika, 3D, Blender, Python, PCB}
@@ -66,12 +67,12 @@ Produkcja przemysłowa
 
 \begin{figure}[!tbh]
 \centering
-\includegraphics[width=1\hsize]{fig/hokusai}
+\includegraphics[width=0.9\hsize]{fig/hokusai}
 \caption{Joel Betancourt znany jako Garabating - "Katsushika Hokusai Electronic Circuit Board"\label{RYS.1}}
 \source{https://garabating.com/post/44549621917/katsushika-hokusai-electronic-circuit-board}
 \end{figure}
 
-Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod uwagę mnogość technicznej wiedzy, pomiarów i zależności takich jak optymalizacja długości ścieżek, ograniczenia mechaniczne i montażowe, itd. Nawet zastosowanie automatucznego wyznaczania ścieżek do optymalizacji nie zawsze da poprawny rezultat.\footnote{~https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/} Z uwagi na ilość i różnorodność ograniczeń nie jest możliwa całkowita automatyzacja sprawdzania poprawności wykonanego projektu, zatem przydatna dla projektanta okazuje się wizualizacja efektu końcowego. Jest ona także niezbędnym elementem procesu marketingowego, logistycznego czy edukacyjnego. Istnieje wiele programów do projektowania PCB jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
+Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod uwagę mnogość technicznej wiedzy, pomiarów i zależności takich jak: optymalizacja długości ścieżek oraz ich szerokość, ochrona miejsc narażonych na dużą temperaturę, ograniczenia mechaniczne i montażowe, itd. Nawet zastosowanie automatucznego wyznaczania ścieżek do optymalizacji nie zawsze da poprawny rezultat.\footnote{~https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/} Z uwagi na ilość i różnorodność ograniczeń nie jest możliwa całkowita automatyzacja sprawdzania poprawności wykonanego projektu, zatem przydatna dla projektanta okazuje się wizualizacja efektu końcowego. Jest ona także niezbędnym elementem procesu marketingowego, logistycznego czy edukacyjnego. Istnieje wiele programów do projektowania PCB jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
 
 
 % ROZDZIAŁ 1
@@ -112,18 +113,18 @@ Blender ma wbudowany interpreter Pythona, który jest ładowany po uruchomieniu 
 % może coś jeszcze tu wciśnąć?
 
 
-\subsection{Pliki projektowe PCB\newline(Gerber, Excellon, Pick-And-Place)}
+\subsection{Pliki projektowe PCB\newline(Gerber, Drill, Pick-And-Place)}
 
 % Gerber
 Nowoczesne płytki drukowane są projektowane przy pomocy dedykowanego oprogramowania a ostatnim etapem produkcji dla projektanta jest wygenerowanie między innymi plików Gerber.\cite{Khandpur}
 Format ten jest otwartym, wektorowym, powszechnie stosowanym standardem ASCII służącym do przesyłania danych projektowych obwodów drukowanych do przemysłu produkcji elektroniki. Wszystkie systemy do projektowania obwodów drukowanych pozwalają na eksport projektu jako pliki Gerber i każde przemysłowe oprogramowanie do ich obróbki potrafi je interpretować, umożliwiając profesjonalistom w dziedzinie PCB bezpieczną i wydajną wymianę danych projektowych.\cite{Williams}
 
+Płytki drukowane mogą być jednostronne (jedna warstwa miedzi), dwustronne (dwie warstwy miedzi po obu stronach warstwy podłoża) lub wielowarstwowe (zewnętrzna i wewnętrzna warstwa miedzi, naprzemiennie z warstwami podłoża).\cite{schroeder}
+
 Pliki Gerber reprezentują między innymi warstwy miedzi, maskę lutowniczą, legendę oraz dane wiercenia i trasy. Dodatkowe atrybuty dostarczają informacji o sposobie montowania, połączeń i nazw poszczególnych elementów. Format pliku Gerber jest prosty, kompaktowy i jednoznaczny. Jest bazowany na języku \emph{G-code}, oznaczanym RS-274. Dzięki zastosowaniu 7-bitowych znaków ASCII jest czytelny dla człowieka i łatwy do debugowania. Obecnie używany od 2014 roku format to tzw. Rozszerzony Gerber (ang. \emph{Extended Gerber}) lub RS-274X.\footnote{~https://www.ucamco.com/en/gerber}
 
 % Drill / NC / Excellon
 Kolejnym, generowanym przez projektanta płytki formatem używanym w produkcji są pliki wierceń (ang. \emph{NC / CNC drill}), pierwotnie zaprojektowane przez twórców wiercących i trasujących maszyn CNC jako zastrzeżone, dedykowane formaty wejściowe dla ich urządeń. Znane są pod nazwami takimi jak: Excellon, Hitachi, Sieb \& Meyer, Posalux, itd.\cite{Charras} Wszystkie z pośród tych formatów są podobne, ponieważ opierają się na wspomnianym wcześniej G-code. Rodzaje wierceń w PCB dzielą się na otwory zwykłe - NPTH (ang. \emph{Not Plated Through Hole}) i pokryte miedzią - PTH (ang. \emph{Plated Through Hole}).\cite{voldman} Stosowanie innego standardu nie jest jednak konieczne, jako że z czasem formaty te zmieniły swoje zastosowanie i obecnie powszechnie stosowaną praktyką jest generowanie tych plików w formacie Gerber.
-
-\newpage
 
 % Placement
 Ostatnim i dosyć kluczowym elementem są pliki wskazujące elementy rozmieszczane na płytce. Jest to prosty format nazywany \emph {Pick-And-Place, Placement list, X-Y file, Mount SMD}  i składa się z kilku wartości:
@@ -136,15 +137,19 @@ Ostatnim i dosyć kluczowym elementem są pliki wskazujące elementy rozmieszcza
 \item Informacja czy objekt znajduje się na wierzchniej czy też dolnej stronie płytki
 \item Ewentualne komentarze i dodatkowe informacje
 \end{itemize}
-Plik zawiera zazwyczaj tylko opis elementów montowanych za pomocą technologii montażu powierzchniowego - SMT (ang. \emph{Surface Mount Technology}), powszechnie stosowanego przemysłowo. Nie jest to jednak format ściśle ustandaryzowany i każdy producent może zarządać innego układu opisu elementów.\cite {prasad} Na szczęście każdy program do tworzenia PCB posiana eksporter do generowania tychże plików. Dodatkowo są one proste w zapisie i z łatwością edytowalne przez człowieka.
+Plik zawiera opis elementów montowanych za pomocą technologii montażu przewlekanego - THT (eng. \emph{Through-hole technology}) oraz powierzchniowego - SMT (ang. \emph{Surface Mount Technology}), powszechnie stosowanego przemysłowo.\cite {prasad} Nie jest to jednak format ściśle ustandaryzowany i przy masowej produkcji każdy producent musi manualnie zweryfikować opisy elementów. Na szczęście każdy program do tworzenia PCB posiana eksporter do generowania tychże plików. Dodatkowo są one proste w zapisie i z łatwością edytowalne przez człowieka.
+% angielskie skróty powinny być wielkimi literami czy może nie?
 
-
-
-%PCBs can be single-sided (one copper layer), double-sided (two copper layers on both sides of one substrate layer), or multi-layer (outer and inner layers of copper, alternating with layers of substrate). (źródło>?)
-
-\subsection{moduły zewnętrzne pythona: cairo, wheel, gerber etc.}
-\subsection{developing w VS code? fajny linker kopiujący etc?}
-
+\subsection{Środowisko Visual Studio Code}
+developing w VS code
+fajny linker zamiast kopiowania
+debuggowanie
+If the selected Blender executable does not use its own Python version, no packages will be installed by default. This is to make sure that the extension does not interfere with another package manager.
+\subsection{Pliki VRML i X3D}
+bazy modeli
+format\cite{VRML}
+http://www.graphics.stanford.edu/courses/cs248-98-fall/Assignments/Assignment3/VRML2_Specification/
+% niedziałający importer w Blenderze przy implementacji w rozdziale 2
 
 
 % ROZDZIAŁ 2
@@ -168,7 +173,7 @@ Plik zawiera zazwyczaj tylko opis elementów montowanych za pomocą technologii 
 
 \section {Koncepcyjna struktura projektu}
 Może wrzucić to PO rozdziale 2? miałoby większy sens
-
+\subsection{moduły zewnętrzne pythona: cairo, wheel, gerber etc.}
 \subsection{Założenia i wymagania projektowe}
 \begin{itemize}
 \item Czytanie, interpretacja plików excellon, gerber
