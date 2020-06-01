@@ -24,6 +24,7 @@ class LayoutDemoPanel(Panel, ImportHelper):
     bpy.types.Scene.width = Float("Width","Max image resolution [Width]", 1024)
     bpy.types.Scene.height = Float("Height","Max image resolution [Height]", 1024)
     bpy.types.Scene.expand = bpy.props.BoolProperty(default=False)
+    bpy.types.Scene.model_folder = FilePath("", "Define file path to Your own models library")
 
     bpy.types.Scene.cu = FilePath("Copper Top", "Define file")
     bpy.types.Scene.mu = FilePath("Mask Top", "Define file")
@@ -42,7 +43,12 @@ class LayoutDemoPanel(Panel, ImportHelper):
     bpy.types.Scene.placeTop = FilePath("", "Define file")
     bpy.types.Scene.placeBottom = FilePath("", "Define file")
 
-    Program = [("KICAD", "KiCad", "", 1),("GEDA", "gEDA", "", 2),("AUTO", "Auto Detect", "This might take long time to generate", "TIME", 3)]
+    Program = [
+        ("KICAD", "KiCad", "", 1),
+        ("GEDA", "gEDA", "", 2),
+        ("AUTO", "Auto Detect", "This might take long time to generate", "TIME", 3),
+        ("SELF", "Select folder", "Select my own models library folder (only .blend files are supported!)","PACKAGE", 4)
+        ]
     bpy.types.Scene.PickAndPlaceProgram = EnumProperty(name = "", description = "Program which generated Pick and Place file", items = Program, default = "AUTO")
 
     def draw(self, context):
@@ -87,6 +93,9 @@ class LayoutDemoPanel(Panel, ImportHelper):
         col = layout.split(factor=0.5)
         col.label(text="Pick And Place Program")
         col.prop(context.scene, 'PickAndPlaceProgram')
+        if bpy.context.scene.PickAndPlaceProgram == 'SELF':
+            col = layout.column()
+            col.prop(context.scene, 'model_folder')
 
         col = layout.column()
         row = layout.row()
@@ -123,5 +132,6 @@ class LayoutDemoPanel(Panel, ImportHelper):
         GeneratePCB.placeTop = bpy.context.scene.placeTop
         GeneratePCB.placeBottom = bpy.context.scene.placeBottom
         GeneratePCB.placeProgram = bpy.context.scene.PickAndPlaceProgram
+        GeneratePCB.model_folder = bpy.context.scene.model_folder
 
-        row.operator('pcb.generate')
+        row.operator('pcb.generate', icon = 'SYSTEM')

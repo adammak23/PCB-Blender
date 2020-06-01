@@ -89,7 +89,7 @@ def CairoExample_FilesIntoLayers(GERBER_FOLDER, OUTPUT_FOLDER):
 units = 'metric'
 
 # Reading Placement file
-def read_csv(file_csv, program = 'AUTO'):
+def read_csv(file_csv, program = 'AUTO', folder = None):
     
     # For reading placement files
     objects = None
@@ -97,6 +97,8 @@ def read_csv(file_csv, program = 'AUTO'):
     directory = 'models'+os.sep
     if program == 'AUTO':
         pass
+    elif program == 'SELF':
+        directory = folder + os.sep
     else:
         directory = directory + program + os.sep
 
@@ -419,7 +421,7 @@ def CreateImage(name, layers, ctx, OUTPUT_FOLDER, w=512, h=512, pcb_instance=Non
 
 class GeneratePCB(Operator):
     bl_idname = "pcb.generate"
-    bl_label = "Render"
+    bl_label = "Generate"
     bl_description = "Warning: Files in Output folder might be overriden"
     GERBER_FOLDER = ""
     OUTPUT_FOLDER = ""
@@ -441,14 +443,19 @@ class GeneratePCB(Operator):
     placeTop = None
     placeBottom = None
     placeProgram = None
+    model_folder = None
 
     def execute(self, context):
 
         global units
 
+        if(self.placeProgram == 'SELF' and self.model_folder == None):
+            ShowMessageBox("Please enter path to Your models library", "Error", 'ERROR')
+            return {'CANCELLED'}
+
         # Placement list
-        if(self.placeTop is not ''): read_csv(self.placeTop, self.placeProgram)    
-        if(self.placeBottom is not ''): read_csv(self.placeBottom, self.placeProgram)       
+        if(self.placeTop is not ''): read_csv(self.placeTop, self.placeProgram, self.model_folder)    
+        if(self.placeBottom is not ''): read_csv(self.placeBottom, self.placeProgram, self.model_folder)       
 
         if(str(self.OUTPUT_FOLDER) == ""):
             ShowMessageBox("Please enter path to output folder", "Error", 'ERROR')
