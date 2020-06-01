@@ -12,7 +12,7 @@
 % \setmainfont[Numbers=OldStyle,Mapping=tex-text]{Minion Pro}
 % \setsansfont[Numbers=OldStyle,Mapping=tex-text]{Myriad Pro}
 %\setmonofont[Scale=0.75]{Monaco}
-
+\usepackage{marginnote}
 % Opcjonalnie identyfikator dokumentu
 % drukowany tylko z włączoną opcją 'brudnopis':
 \wersja   {wersja wstępna [\ymdtoday]}
@@ -38,8 +38,9 @@
 % streszczenie
 \begin{abstract}
 Istnieje wiele programów do projektowania płytek drukowanych, jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
+\marginnote {opisać więcej? jeżeli tak to każdy rozdział?}
 \end{abstract}
-% opisać więcej? jeżeli tak to każdy rozdział?
+
 
 % słowa kluczowe
 \keywords{wizualizacja, grafika, 3D, Blender, Python, PCB}
@@ -100,17 +101,17 @@ Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kom
 
 \section {Opis technologii wykorzystanych w pracy}
 
+% Python
 \subsection{Python}
 Python jest językiem programowania wysokiego poziomu, posiadającym aktywną społeczność i nieograniczone możliwości poprzez rozbudowę go o zewnętrzne pakiety.\footnote {~https://www.python.org/about/} API Blendera jest w większości przygotowane do użycia właśnie Pythona i chociaż istnieją ograniczenia tego, co Python może zrobić w Blenderze, jest to jedyne oficjalnie wspierane rozwiązanie dzięki któremu wiele można osiągnąć bez konieczności zagłębiania się w kod C / C++ Blendera.
 
+% Blender
 \subsection {Blender 2.8}
 Darmowy program \emph{Open-source}\footnote{~https://www.blender.org/about/license/} cechujący się wszechstronnością i możliwością rozbudowania go o dodatkowe biblioteki lub skrypty napisane w języku Python, które poszerzają podstawowe funkcjonalności.
 
 Dodatek do programu Blender różni się od dodatkowej biblioteki Pythona jedynie pewnymi dodatkowymi wymaganiami jak obiekt zawierający metadane, takie jak: tytuł, wersja, kategoria, autor, etc. Określa też minimalną wersję Blendera wymaganą do uruchomienia skryptu. Dodatek jest więc sposobem na enkapsulację modułu Pythona w sposób, który użytkownik może z łatwością wykorzystać.
 
 Blender ma wbudowany interpreter Pythona, który jest ładowany po uruchomieniu programu. Utrudnia to znacząco wykorzystanie automatycznego pobierania i instalowania zależnych od siebie pakietów, co za tym idzie, tworzony w ramach pracy system, aby ułatwić korzystanie z niego, musi być niezależny od zewnętrznych, dynamicznie pobieranych bibliotek.
-
-% może coś jeszcze tu wciśnąć?
 
 
 \subsection{Pliki projektowe PCB\newline(Gerber, Drill, Pick-And-Place)}
@@ -138,18 +139,16 @@ Ostatnim i dosyć kluczowym elementem są pliki wskazujące elementy rozmieszcza
 \item Ewentualne komentarze i dodatkowe informacje
 \end{itemize}
 Plik zawiera opis elementów montowanych za pomocą technologii montażu przewlekanego - THT (eng. \emph{Through-hole technology}) oraz powierzchniowego - SMT (ang. \emph{Surface Mount Technology}), powszechnie stosowanego przemysłowo.\cite {prasad} Nie jest to jednak format ściśle ustandaryzowany i przy masowej produkcji każdy producent musi manualnie zweryfikować opisy elementów. Na szczęście każdy program do tworzenia PCB posiana eksporter do generowania tychże plików. Dodatkowo są one proste w zapisie i z łatwością edytowalne przez człowieka.
-% angielskie skróty powinny być wielkimi literami czy może nie?
+
+% WRL
+\subsection{Pliki VRML i X3D}
+Format \emph{.wrl} zwany VRML (ang. \emph {Virtual Reality Modeling Language}) Powstały w 1994 roku stał się pierwszym internetowym formatem 3D, został później zastąpiony przez format X3D.\cite{vrml} Jego ówczesna powszechność sprawiła, że wiele programów przemysłowych tworzonych w latach dziewięćdziesiątych posiada bazy modeli w tym właśnie formacie. Więcej o wykorzystaniu tego standardu w rozdziale \ref{bazamodeli}.
+%http://www.graphics.stanford.edu/courses/cs248-98-fall/Assignments/Assignment3/VRML2_Specification/
 
 \subsection{Środowisko Visual Studio Code}
-developing w VS code
-fajny linker zamiast kopiowania
-debuggowanie
-If the selected Blender executable does not use its own Python version, no packages will be installed by default. This is to make sure that the extension does not interfere with another package manager.
-\subsection{Pliki VRML i X3D}
-bazy modeli
-format\cite{VRML}
-http://www.graphics.stanford.edu/courses/cs248-98-fall/Assignments/Assignment3/VRML2_Specification/
-% niedziałający importer w Blenderze przy implementacji w rozdziale 2
+Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadzanych co roku przez serwis StackOverflow\footnote{https://insights.stackoverflow.com/survey/2018/\#development-environments-and-tools}\footnote{https://insights.stackoverflow.com/survey/2019\#development-environments-and-tools} cieszy się coraz większą popularnością. Wybór tego środowiska nie był jednak dyktowany jego popularnością lecz nowymi możliwościami otwierającymi się dzięki instalowaniu w nim rozszerzeń.\footnote{https://code.visualstudio.com/docs/editor/extension-gallery} Dodatek stworzony przez Jacques Lucke\footnote{https://marketplace.visualstudio.com/items?itemName=JacquesLucke.blender-development} na potrzeby rozwoju addonów \marginnote{czy mogę tu użyć słowa "addonów" czy jest to potoczny/angielszczyzm?} do programu Blender pozwala między innymi na automatyzację procesu aktualizowania tworzonego addonu przez tworzenie skrótu w wewnętrznych folderach Blendera co znacznie przyśpiesza pracę nad systemem. Ponadto posiada ułatwienia takie jak debugowanie w konsoli, tworzenie odpowiednich struktur i przydatne komendy. Sposób działania dodatku ma na celu także upewnienie się, że rozszerzenie nie koliduje z innym menedżerem pakietów Pythona.
+
+\marginnote {co z tymi footnote'ami? zmniejszyć font? czy mogą takie być?}
 
 
 % ROZDZIAŁ 2
@@ -168,8 +167,7 @@ http://www.graphics.stanford.edu/courses/cs248-98-fall/Assignments/Assignment3/V
 %https://bitbucket.org/hyOzd/pcb2blender/src/master/
 
 
-
-\chapter{Architektura zrealizowanego systemu/Implementacja}
+\chapter{Architektura zrealizowanego systemu}
 
 \section {Koncepcyjna struktura projektu}
 Może wrzucić to PO rozdziale 2? miałoby większy sens
@@ -179,7 +177,22 @@ Może wrzucić to PO rozdziale 2? miałoby większy sens
 \item Czytanie, interpretacja plików excellon, gerber
 \item renderowanie - cairo
 \item renderowanie modelu z wymiarów warstwy outline
+\subsection{baza modeli}
+\label{bazamodeli}
+% niedziałający importer w Blenderze przy implementacji w rozdziale 2
 \item baza modeli do PickAndPlace (+tworzenie bazy modeli - importer *.wrl)
+https://kicad.github.io/packages3d/
+%All Parts in this repository are licensed under CC-BY 3.0 http://creativecommons.org/licenses/by/3.0/
+Aby zrealizować założenia pracy, wymagana była baza modeli podzespołów elektronicznych montowanych na PCB. Z uwagi na mnogość producentów, rodzajów i typów podzespołów oraz fakt, że każdy program służący do projektowania może oznaczać je inaczej, optymalnym rozwiązaniem wydaje się udostępnienie użytkownikowi podstawowej bazy modeli. Ponadto zastozowanie szukania modeli częściowo dopasowanych nazwą. Z uwagi na fakt, że niemożliwym jest obsługa wszystkich wyjątków, koniecznością staje się umożliwienie użytkownikowi kożystanie z własnych modeli.
+
+% inne bazy modeli:
+% BARDZO DUŻO, ale trzeba by bylo pobierać wszystko skryptem
+% https://grabcad.com/
+% https://www.3dcontentcentral.com/
+% https://www.digikey.com/en/resources/3d-models
+% https://www.te.com/
+% https://www.traceparts.com/en
+
 \end{itemize}
 \subsection{Implementacja wzorca projektowego}
 \begin{itemize}
