@@ -6,11 +6,8 @@
 PCB-Blender
 Blender addon for visualization of printed circuit board (PCB) projects created in gEDA PCB, KiCad...
 
-TODO:
-- FreeCAD support
-- Documentation
-- Comment code some more
-- describe + doc for gerber and models imported from geda, kicad
+Links to gEDA, KiCad and some Eagle .blend models packages:
+[My Google Drive](https://drive.google.com/drive/folders/1vVREEy2yFZxJN8ogHBjQFaNlgMFhQrmn?usp=sharing)
 
 
 less importand todo's:
@@ -20,5 +17,5 @@ less importand todo's:
 	- array modifier (e.g. PinSocket 1x1 multiplied to create all other same-type sockets)
 
 Models taken from:
-- [KiCad] (https://github.com/kicad/packages3d-source)
-- [gEDA] (https://github.com/majenkotech/PCB-Blend)
+- [KiCad](https://github.com/kicad/packages3d-source)
+- [gEDA](https://github.com/majenkotech/PCB-Blend)
