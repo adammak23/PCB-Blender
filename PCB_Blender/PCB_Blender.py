@@ -103,6 +103,7 @@ def read_csv(file_csv, program = 'AUTO', folder = None):
         directory = directory + program + os.sep
 
     component_root = os.path.abspath(os.path.dirname(directory))
+    print(component_root)
 
     with open(file_csv, newline='', encoding='ISO-8859-15') as fobj:
         reader = csv.reader(filter(lambda row: row[0] != '#', fobj))

@@ -90,6 +90,7 @@ Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kom
 \item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw i  plików pozycji elementów (ang. \emph{"Pick And Place"})\footnote{~Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
 \item Wybranie wbudowanej lub własnej biblioteki modeli 3D
 \item Wybór końcowej rozdzielczości i miejsca zapisu plików wytworzonych w procesie renderowania
+\item Przycisk tworzący model 3D płytki na podstawie wybranych plików
 \end{itemize}
 
 \begin{figure}
@@ -142,17 +143,35 @@ Plik zawiera opis elementów montowanych za pomocą technologii montażu przewle
 
 % WRL
 \subsection{Pliki VRML i X3D}
-Format \emph{.wrl} zwany VRML (ang. \emph {Virtual Reality Modeling Language}) Powstały w 1994 roku stał się pierwszym internetowym formatem 3D, został później zastąpiony przez format X3D.\cite{vrml} Jego ówczesna powszechność sprawiła, że wiele programów przemysłowych tworzonych w latach dziewięćdziesiątych posiada bazy modeli w tym właśnie formacie. Więcej o wykorzystaniu tego standardu w rozdziale \ref{bazamodeli}.
-%http://www.graphics.stanford.edu/courses/cs248-98-fall/Assignments/Assignment3/VRML2_Specification/
+Format \emph{.wrl} zwany VRML (ang. \emph {Virtual Reality Modeling Language}) powstały w 1994 roku, stał się pierwszym internetowym formatem 3D, został później zastąpiony przez format X3D.\cite{vrml} Jego ówczesna powszechność sprawiła, że wiele programów przemysłowych tworzonych w latach dziewięćdziesiątych posiada bazy modeli w tym właśnie formacie. Więcej o praktycznym wykorzystaniu tego standardu w rozdziale \ref{bazamodeli}.
+
+% specyfikacja formatu VRML:
+% http://www.graphics.stanford.edu/courses/cs248-98-fall/Assignments/Assignment3/VRML2_Specification/
 
 \subsection{Środowisko Visual Studio Code}
-Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadzanych co roku przez serwis StackOverflow\footnote{https://insights.stackoverflow.com/survey/2018/\#development-environments-and-tools}\footnote{https://insights.stackoverflow.com/survey/2019\#development-environments-and-tools} cieszy się coraz większą popularnością. Wybór tego środowiska nie był jednak dyktowany jego popularnością lecz nowymi możliwościami otwierającymi się dzięki instalowaniu w nim rozszerzeń.\footnote{https://code.visualstudio.com/docs/editor/extension-gallery} Dodatek stworzony przez Jacques Lucke\footnote{https://marketplace.visualstudio.com/items?itemName=JacquesLucke.blender-development} na potrzeby rozwoju addonów \marginnote{czy mogę tu użyć słowa "addonów" czy jest to potoczny/angielszczyzm?} do programu Blender pozwala między innymi na automatyzację procesu aktualizowania tworzonego addonu przez tworzenie skrótu w wewnętrznych folderach Blendera co znacznie przyśpiesza pracę nad systemem. Ponadto posiada ułatwienia takie jak debugowanie w konsoli, tworzenie odpowiednich struktur i przydatne komendy. Sposób działania dodatku ma na celu także upewnienie się, że rozszerzenie nie koliduje z innym menedżerem pakietów Pythona.
+Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadzanych co roku przez serwis StackOverflow\footnote{https://insights.stackoverflow.com/survey/2018/\#development-environments-and-tools}$^{,}$\footnote{https://insights.stackoverflow.com/survey/2019\#development-environments-and-tools} cieszy się coraz większym uznaniem. Wybór tego środowiska nie był jednak dyktowany jego popularnością lecz nowymi możliwościami otwierającymi się dzięki instalowaniu w nim rozszerzeń.\footnote{https://code.visualstudio.com/docs/editor/extension-gallery} Dodatek stworzony przez Jacques Lucke na potrzeby rozwoju addonów \marginnote{czy mogę tu użyć słowa "addonów" czy jest to potoczny/angielszczyzm?} do programu Blender pozwala między innymi na automatyzację procesu aktualizowania tworzonego addonu przez tworzenie skrótu w wewnętrznych folderach Blendera, co znacznie przyśpiesza pracę nad systemem. Ponadto posiada ułatwienia takie jak debugowanie w konsoli, tworzenie odpowiednich struktur i przydatne komendy. Sposób działania dodatku ma na celu także upewnienie się, że rozszerzenie nie koliduje z innym menedżerem pakietów Pythona.\footnote{https://marketplace.visualstudio.com/items?itemName=JacquesLucke.blender-development} 
 
 \marginnote {co z tymi footnote'ami? zmniejszyć font? czy mogą takie być?}
 
 
 % ROZDZIAŁ 2
-%przegląd krytyczny literatury - analiza krytyczna dotychczasowych badań/rozwiązań z zakresu tematu?
+
+% Czy i gdzie to dać?
+% przegląd krytyczny literatury - analiza krytyczna dotychczasowych badań/rozwiązań z zakresu tematu?
+% majenkotech i Eagle2Blender oba bardzo specyficzne do gEDA i Eagle nieposiadające interfejsu, niewygodne do użycia, wymagają dotatkowych narzędzi, znikoma dokumentacja
+%https://bitbucket.org/hyOzd/pcb2blender/src/master/
+% https://github.com/majenkotech/PCB-Blend
+
+\chapter{Architektura zrealizowanego systemu}
+W tym rozdziale zostanie omówiony sposób implementacji systemu i jego kluczowe funkcjonalności.
+
+% moduły zewnętrzne pythona: cairo, gerber etc.
+% (+ importer?)
+\section{Założenia i wymagania projektowe}
+Jako, że addon musi posiadać interfejs, musi być podzielony na moduły odpowiedzialne za logikę i renderowanie interfejsu. System został zaimplementowany w oparciu o wzorzec MVVC z uwagi na to, że jest to struktura zalecana i logicznie wynikająca ze sposobu używania API Blendera. Więcej o implementacji wzorca w podrozdziale \ref{mvc}.
+System powinien spełniać wszystkie poniższe wymagania.
+\begin{itemize}
+\item Czytanie, interpretacja plików excellon, gerber
 
 %interpretacja Gerber (RS-274X) i Excellon, interpretacja kształtów i rysowanie za pomoca krzywych, renderowanie obrazu płytki
 %PCB Tools currently supports the following file formats:
@@ -160,28 +179,15 @@ Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadz
 %    Excellon
 %with planned support for IPC-2581, ODB++ and more.
 %https://pcb-tools.readthedocs.io/en/latest/about.html
-
+\item renderowanie - cairo
+\item renderowanie modelu z wymiarów warstwy outline/jakiejkolwiek innej warstwy jeżeli nie ma
+\item czytanie pliku placement (.csv), cache, smart search
 %(placement files) ładowanie komponentów i linkowanie plików pomysł wzięty z: https://github.com/majenkotech/PCB-Blend
 
-%Eagle2Blender, wymaga dotatkowych narzędzi, znikoma dokumentacja
-%https://bitbucket.org/hyOzd/pcb2blender/src/master/
-
-
-\chapter{Architektura zrealizowanego systemu}
-
-\section {Koncepcyjna struktura projektu}
-Może wrzucić to PO rozdziale 2? miałoby większy sens
-\subsection{moduły zewnętrzne pythona: cairo, wheel, gerber etc.}
-\subsection{Założenia i wymagania projektowe}
-\begin{itemize}
-\item Czytanie, interpretacja plików excellon, gerber
-\item renderowanie - cairo
-\item renderowanie modelu z wymiarów warstwy outline
-\subsection{baza modeli}
-\label{bazamodeli}
 % niedziałający importer w Blenderze przy implementacji w rozdziale 2
-\item baza modeli do PickAndPlace (+tworzenie bazy modeli - importer *.wrl)
-https://kicad.github.io/packages3d/
+\item baza modeli do PickAndPlace (+tworzenie bazy modeli - importer *.wrl) https://kicad.github.io/packages3d/
+\item musi w miarę mało ważyć więc baza modeli będzie osobno
+
 %All Parts in this repository are licensed under CC-BY 3.0 http://creativecommons.org/licenses/by/3.0/
 Aby zrealizować założenia pracy, wymagana była baza modeli podzespołów elektronicznych montowanych na PCB. Z uwagi na mnogość producentów, rodzajów i typów podzespołów oraz fakt, że każdy program służący do projektowania może oznaczać je inaczej, optymalnym rozwiązaniem wydaje się udostępnienie użytkownikowi podstawowej bazy modeli. Ponadto zastozowanie szukania modeli częściowo dopasowanych nazwą. Z uwagi na fakt, że niemożliwym jest obsługa wszystkich wyjątków, koniecznością staje się umożliwienie użytkownikowi kożystanie z własnych modeli.
 
@@ -194,13 +200,18 @@ Aby zrealizować założenia pracy, wymagana była baza modeli podzespołów ele
 % https://www.traceparts.com/en
 
 \end{itemize}
-\subsection{Implementacja wzorca projektowego}
+
+\section {Struktura projektu}
+\subsection{przegląd funkcjonalności}
+\subsection{Implementacja wzorca projektowego} \label{mvc}
 \begin{itemize}
 \item omówienie MVVC
-\item omówienie pokrótce plików projektu, podział na moduły - interfejs, logika, init (+ importer?)
+\item omówienie pokrótce plików projektu, podział na moduły - interfejs, logika, init
+\item klas
 \end{itemize}
+\subsection{baza modeli} \label{bazamodeli}
+importer?
 
-\subsection{przegląd funkcjonalności}
 
 
 
@@ -210,6 +221,7 @@ Aby zrealizować założenia pracy, wymagana była baza modeli podzespołów ele
 
 \chapter{Podsumowanie}
 
+W efekcie końcowym zostały utworzone \emph{de facto} 2 addony.
 Aplikacja,  mimo  iż  jest  dedykowana  dla  projektów stworzonych w gEDA, KiCad,  jest  o  wiele  bardziej uniwersalna, ponieważ w praktyce wystarczy dodać modele, aby uzyskać format możliwy do odczytania. Podsumowując,  w  wyniku  prac  implementacyjnych  udało  się  zrealizować projekt,  który  jest  zgodny  z  przyjętymi  wcześniej  wymaganiami  i  założeniami przedstawionymi  na  etapie  opracowywania  koncepcji  rozwiązania.  Pomijając  jedną dużą modyfikację związaną ze zmianą metodologii postępowania, projekt powstałych klas pozostał w niezmienionej formie. Warto także zaznaczyć, że przyjęta architektura realizuje   wszystkie   postawione   wymagania   funkcjonalne.   Niestety   aplikacja   nie uniknęła wad. Jedną, ale za to dość poważną, jest spore zapotrzebowanie na pamięć przy przetwarzaniu dużych plików. Jednak dla mniejszych zbiorów danych wydajność czasowa jest na akceptowalnym poziomie. W  kolejnym  rozdziale  przedstawione  zostanie  podsumowanie całokształtu prac związanych z analizą oraz implementacją omawianej aplikacji.
 
 \section{Realizacja założonych celów pracy magisterskiej}

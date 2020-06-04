@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Adam Makiewicz",
     "description" : "Addon for generating models of PCB from Gerber files together with models library for placement files",
     "blender" : (2, 82, 0),
-    "version" : (0, 1, 37),
+    "version" : (0, 1, 38),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
