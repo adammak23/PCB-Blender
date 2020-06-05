@@ -85,7 +85,7 @@ Celem niniejszej pracy jest stworzenie łatwego do rozbudowania i spójnego syst
 
 \section{Wymagania funkcjonalne}
 
-Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kompatybilnym z wersją 2.8 w zwyż. Wybór konkretnie tej wersji programu był podyktowany jego nową odsłoną oferującą między innymi nowy interfejs i API. Addon udostępnia użytkownikowi dodatkowe funkcjonalności z poziomu graficznego interfejsu użytkownika:
+Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kompatybilnym z wersją 2.8 w zwyż. Wybór konkretnie tej wersji programu był podyktowany jego nową odsłoną oferującą między innymi nowy interfejs i API. Addon udostępnia użytkownikowi dodatkowe funkcjonalności z poziomu graficznego interfejsu programu. Następujące wymagania zostały sformułowane z punktu widzenia użytkownika.
 \begin{itemize}
 \item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw i  plików pozycji elementów (ang. \emph{"Pick And Place"})\footnote{~Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
 \item Wybranie wbudowanej lub własnej biblioteki modeli 3D
@@ -154,6 +154,15 @@ Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadz
 \marginnote {co z tymi footnote'ami? zmniejszyć font? czy mogą takie być?}
 
 
+
+% sformułowanie problemu
+
+% Główna struktura interfejsu API Blendera:
+% https://airplanes3d.net/downloads/pydev2/pydev-blender-en.pdf strona 43
+
+
+
+
 % ROZDZIAŁ 2
 
 % Czy i gdzie to dać?
@@ -168,10 +177,12 @@ W tym rozdziale zostanie omówiony sposób implementacji systemu i jego kluczowe
 % moduły zewnętrzne pythona: cairo, gerber etc.
 % (+ importer?)
 \section{Założenia i wymagania projektowe}
-Jako, że addon musi posiadać interfejs, musi być podzielony na moduły odpowiedzialne za logikę i renderowanie interfejsu. System został zaimplementowany w oparciu o wzorzec MVVC z uwagi na to, że jest to struktura zalecana i logicznie wynikająca ze sposobu używania API Blendera. Więcej o implementacji wzorca w podrozdziale \ref{mvc}.
-System powinien spełniać wszystkie poniższe wymagania.
+W przypadku tak rozległych możliwości rozwoju systemu, konieczne jest właściwe zdefiniowanie wymagań i dążenie do ich realizacji.
+Jako, że addon musi posiadać interfejs, implementacja przy pomocy API Blendera wymaga, by był podzielony na moduły odpowiedzialne za logikę i renderowanie interfejsu. System został zaimplementowany w oparciu o wzorzec MVP z uwagi na to, że jest to struktura logicznie wynikająca ze sposobu używania API Blendera. Więcej o implementacji wzorca w podrozdziale \ref{mvp}.
+System powinien posiadać wszystkie następujące funkcjonalności:
+
 \begin{itemize}
-\item Czytanie, interpretacja plików excellon, gerber
+\item Czytanie i interpretacja plików Gerber (RS-274X)
 
 %interpretacja Gerber (RS-274X) i Excellon, interpretacja kształtów i rysowanie za pomoca krzywych, renderowanie obrazu płytki
 %PCB Tools currently supports the following file formats:
@@ -179,17 +190,26 @@ System powinien spełniać wszystkie poniższe wymagania.
 %    Excellon
 %with planned support for IPC-2581, ODB++ and more.
 %https://pcb-tools.readthedocs.io/en/latest/about.html
-\item renderowanie - cairo
-\item renderowanie modelu z wymiarów warstwy outline/jakiejkolwiek innej warstwy jeżeli nie ma
-\item czytanie pliku placement (.csv), cache, smart search
+
+\item Tworzenie modelu płytki zgodnego z rzeczywistymi wymiarami
+% konwersja z mil/mm
+% renderowanie modelu z wymiarów warstwy outline/jakiejkolwiek innej warstwy jeżeli nie ma
+\item Czytanie pliku placement w formacie .csv i wczytywanie odpowiednich modeli podzespołów z bazy modeli
+% cache, smart search
 %(placement files) ładowanie komponentów i linkowanie plików pomysł wzięty z: https://github.com/majenkotech/PCB-Blend
 
+\item Udostępnianie użytkownikowi możliwości użycia dostarczonej lub własnej bazy modeli podzespołów
+%  tworzenie bazy modeli - importer *.wrl
+% https://kicad.github.io/packages3d/
+% działanie w przypadku braku modeli
 % niedziałający importer w Blenderze przy implementacji w rozdziale 2
-\item baza modeli do PickAndPlace (+tworzenie bazy modeli - importer *.wrl) https://kicad.github.io/packages3d/
-\item musi w miarę mało ważyć więc baza modeli będzie osobno
-
+% musi w miarę mało ważyć więc baza modeli będzie osobno
 %All Parts in this repository are licensed under CC-BY 3.0 http://creativecommons.org/licenses/by/3.0/
-Aby zrealizować założenia pracy, wymagana była baza modeli podzespołów elektronicznych montowanych na PCB. Z uwagi na mnogość producentów, rodzajów i typów podzespołów oraz fakt, że każdy program służący do projektowania może oznaczać je inaczej, optymalnym rozwiązaniem wydaje się udostępnienie użytkownikowi podstawowej bazy modeli. Ponadto zastozowanie szukania modeli częściowo dopasowanych nazwą. Z uwagi na fakt, że niemożliwym jest obsługa wszystkich wyjątków, koniecznością staje się umożliwienie użytkownikowi kożystanie z własnych modeli.
+
+\newpage
+\end{itemize}
+
+%Aby zrealizować założenia pracy, wymagana była baza modeli podzespołów elektronicznych montowanych na PCB. Z uwagi na mnogość producentów, rodzajów i typów podzespołów oraz fakt, że każdy program służący do projektowania może oznaczać je inaczej, optymalnym rozwiązaniem wydaje się udostępnienie użytkownikowi podstawowej bazy modeli. Ponadto zastozowanie szukania modeli częściowo dopasowanych nazwą. Z uwagi na fakt, że niemożliwym jest obsługa wszystkich wyjątków, koniecznością staje się umożliwienie użytkownikowi kożystanie z własnych modeli.
 
 % inne bazy modeli:
 % BARDZO DUŻO, ale trzeba by bylo pobierać wszystko skryptem
@@ -199,20 +219,27 @@ Aby zrealizować założenia pracy, wymagana była baza modeli podzespołów ele
 % https://www.te.com/
 % https://www.traceparts.com/en
 
-\end{itemize}
 
 \section {Struktura projektu}
-\subsection{przegląd funkcjonalności}
-\subsection{Implementacja wzorca projektowego} \label{mvc}
+\subsection{Implementacja wzorca projektowego} \label{mvp}
+MVP (ang. \emph{Model–view–presenter}) jest wzorcem architektury oprogramowania opierającym się na trzech głównych założeniach:\cite{mvp}
 \begin{itemize}
-\item omówienie MVVC
-\item omówienie pokrótce plików projektu, podział na moduły - interfejs, logika, init
-\item klas
+\item Model reprezentuje dane które są przetwarzane i wysyłane do prezentera
+\item Widok (\emph{View}) wyświetla dane uzyskane z prezentera i przekazuje dane wejściowe wprowadzane przez użytkownika do prezentera
+\item Prezenter jest wywoływany z Widoku aby wyświetlać dane pobrane z Modelu i przetwarzać dane wejściowe
 \end{itemize}
+W tym przypadku modelem jest logika modułu, widokiem - klasa odpowiedzialna za renderowanie i odbieranie danych wejściowych a Prezenter to API Blendera.
+
+
+%\begin{itemize}
+%\item omówienie MVP, może nie MVP tylko coś innego?...
+%\item omówienie pokrótce plików projektu, podział na moduły - interfejs, logika, init
+%\item klasy blednera etc
+%\end{itemize}
 \subsection{baza modeli} \label{bazamodeli}
 importer?
 
-
+\section{Implementacja funkcjonalności}
 
 
 \chapter{Szczegóły implementacyjne systemu}
