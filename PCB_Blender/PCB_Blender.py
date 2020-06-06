@@ -12,8 +12,8 @@ import bmesh
 import mathutils
 from bpy.types import Operator
 
-# TODO: Saving timestamp in filename so they will not override in output folder
-# from datetime import datetime
+# Saving timestamp in filename so they will not override in output folder
+import time
 
 # Cairo rendering
 from .gerber import load_layer
@@ -22,68 +22,6 @@ from .gerber.render.cairo_backend import GerberCairoContext
 
 # Placement reading
 import csv
-
-############# Test functions
-
-def CairoExample_FilesIntoLayers(GERBER_FOLDER, OUTPUT_FOLDER):
-   
-    from .gerber import load_layer
-    from .gerber.render import RenderSettings, theme
-    from .gerber.render.cairo_backend import GerberCairoContext
-    # Open the gerber files
-    copper = load_layer(os.path.join(GERBER_FOLDER, 'proste1-F_Cu.gbr'))
-    mask = load_layer(os.path.join(GERBER_FOLDER, 'proste1-F_Mask.gbr'))
-    paste = load_layer(os.path.join(GERBER_FOLDER, 'proste1-F_Paste.gbr'))
-    silk = load_layer(os.path.join(GERBER_FOLDER, 'proste1-F_SilkS.gbr'))
-    drill = load_layer(os.path.join(GERBER_FOLDER, 'proste1-PTH.drl'))
-    outline = load_layer(os.path.join(GERBER_FOLDER, 'proste1-Edge_Cuts.gbr'))
-
-    # Create a new drawing context
-    ctx = GerberCairoContext()
-
-    ctx.render_layer(outline)
-
-    # Draw the copper layer. render_layer() uses the default color scheme for the
-    # layer, based on the layer type. Copper layers are rendered as
-    ctx.render_layer(copper)
-
-    ctx.render_layer(paste)
-    # Draw the soldermask layer
-    ctx.render_layer(mask)
-
-
-    # The default style can be overridden by passing a RenderSettings instance to
-    # render_layer().
-    # First, create a settings object:
-    our_settings = RenderSettings(color=theme.COLORS['white'], alpha=0.85)
-
-    # Draw the silkscreen layer, and specify the rendering settings to use
-    ctx.render_layer(silk, settings=our_settings)
-
-    # Draw the drill layer
-    ctx.render_layer(drill)
-
-    # Write output to png file
-    #ctx.dump(os.path.join(os.path.dirname(__file__), 'cairo_example.png'))
-    ctx.dump(os.path.join(OUTPUT_FOLDER, 'cairo_example2.png'))
-
-    # # Load the bottom layers
-    # copper = load_layer(os.path.join(GERBER_FOLDER, 'bottom_copper.GBL'))
-    # mask = load_layer(os.path.join(GERBER_FOLDER, 'bottom_mask.GBS'))
-
-    # # Clear the drawing
-    # ctx.clear()
-
-    # # Render bottom layers
-    # ctx.render_layer(copper)
-    # ctx.render_layer(mask)
-    # ctx.render_layer(drill)
-
-    # # Write png file
-    # #ctx.dump(os.path.join(os.path.dirname(__file__), 'cairo_bottom.png'))
-    # ctx.dump(os.path.join(OUTPUT_FOLDER, 'cairo_bottom.png'))
-
-#############
 
 # Global variables:
 units = 'metric'
@@ -103,7 +41,6 @@ def read_csv(file_csv, program = 'AUTO', folder = None):
         directory = directory + program + os.sep
 
     component_root = os.path.abspath(os.path.dirname(directory))
-    print(component_root)
 
     with open(file_csv, newline='', encoding='ISO-8859-15') as fobj:
         reader = csv.reader(filter(lambda row: row[0] != '#', fobj))
@@ -120,11 +57,18 @@ def read_csv(file_csv, program = 'AUTO', folder = None):
     # for .blend files to append them
     import glob
     for root, dirs, files in os.walk(component_root):
+        i = 0.0
         for f in files:
+            UpdateProgress(i/len(files))
+            i += 1.0
+            
             if f.lower().endswith('.blend'):
                 compfiles.append((root + os.sep + f))
 
+    i = 0.0
     for compfile in compfiles:
+        UpdateProgress(i/len(compfiles))
+        i += 1.0
         # Loading models from .blends by mesh name
         # Later can be changed to scene object, for now models are single-mesh
         with bpy.data.libraries.load(compfile, link=True) as (data_from, data_to):
@@ -132,11 +76,12 @@ def read_csv(file_csv, program = 'AUTO', folder = None):
             data_to.meshes = found
             required = [value for value in required if value not in data_from.meshes]
 
-
     #For each missing model try to find another with similar name (with most fitting keywords)
     #Every component is usually formed as follows: Type_(Subtype_)Dimensions_(AddiotionalDimensions_)(Rotation_)(AdditionalAttributes)
     separator = '_'
+    
     for missing in required:
+
         #print("Attempting to search: ", missing)
         separatedList = missing.split(separator)
 
@@ -217,6 +162,15 @@ def read_csv(file_csv, program = 'AUTO', folder = None):
         objects.append(oname)
 
 # Blender utils
+
+def RegisterProgress():
+    bpy.context.window_manager.progress_begin(0, 1000)
+    
+def UpdateProgress(num):
+    bpy.context.window_manager.progress_update(num*10)
+
+def EndProgress():
+    bpy.context.window_manager.progress_end()
 
 def PurgeOrphanData():
     areaType = bpy.context.area.type
@@ -417,8 +371,9 @@ def CreateImage(name, layers, ctx, OUTPUT_FOLDER, w=512, h=512, pcb_instance=Non
     if(pcb_instance is not None):
         if pcb_instance.outline_layer is not None:
             layers_to_render.insert(0, pcb_instance.outline_layer)
-
-    ctx.render_layers(layers_to_render, os.path.join(OUTPUT_FOLDER, name+'.png'), theme.THEMES['default'], max_width=w, max_height=h)
+    FileName = name + time.strftime("%Y-%m-%d_%H%M%S")
+    ctx.render_layers(layers_to_render, os.path.join(OUTPUT_FOLDER, FileName +'.png'), theme.THEMES['default'], max_width=w, max_height=h)
+    return FileName
 
 class GeneratePCB(Operator):
     bl_idname = "pcb.generate"
@@ -448,20 +403,24 @@ class GeneratePCB(Operator):
 
     def execute(self, context):
 
+        RegisterProgress()
+        UpdateProgress(0)
+
         global units
 
-        if(self.placeProgram == 'SELF' and self.model_folder == None):
+        if(self.placeProgram == 'SELF' and self.model_folder == ""):
             ShowMessageBox("Please enter path to Your models library", "Error", 'ERROR')
             return {'CANCELLED'}
 
         # Placement list
         if(self.placeTop is not ''): read_csv(self.placeTop, self.placeProgram, self.model_folder)    
+        UpdateProgress(33)
         if(self.placeBottom is not ''): read_csv(self.placeBottom, self.placeProgram, self.model_folder)       
+        UpdateProgress(66)
 
         if(str(self.OUTPUT_FOLDER) == ""):
             ShowMessageBox("Please enter path to output folder", "Error", 'ERROR')
             return {'CANCELLED'}
-
         if(self.use_separate_files is not None):
             if(self.use_separate_files):
                 # Create a new drawing context
@@ -482,16 +441,16 @@ class GeneratePCB(Operator):
                     units = up_layers[0].cam_source.units
 
                 # Render images
-                CreateImage("Top_layer", up_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
-                CreateImage("Bottom_layer", bottom_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
-
+                Top_layer_FileName = CreateImage("Top_layer", up_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
+                UpdateProgress(75)
+                Bottom_layer_FileName = CreateImage("Bottom_layer", bottom_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
+                UpdateProgress(85)
                 # Create models
-                Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, extrude = True)
+                Top_layer = CreateModel(Top_layer_FileName, self.OUTPUT_FOLDER, ctx, extrude = True)
                 MoveDown(Top_layer, distance=0.0016)
-                Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx)
+                Bottom_layer = CreateModel(Bottom_layer_FileName, self.OUTPUT_FOLDER, ctx)
                 MoveDown(Bottom_layer, distance=0.00161)
-                
-                # Placement list
+                UpdateProgress(95)
 
                 ChangeArea('VIEW_3D', 'MATERIAL')
                 ChangeClipping(0.001)
@@ -512,22 +471,25 @@ class GeneratePCB(Operator):
 
             if len(pcb.layers) > 0:
                 units = pcb.layers[0].cam_source.units
-
-            CreateImage("Top_layer", pcb.top_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
-            CreateImage("Bottom_layer", pcb.bottom_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
-
+            
+            Top_layer_FileName = CreateImage("Top_layer", pcb.top_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
+            UpdateProgress(75)
+            Bottom_layer_FileName = CreateImage("Bottom_layer", pcb.bottom_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
+            UpdateProgress(85)
             # Create models
-            Top_layer = CreateModel("Top_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb, extrude = True)
+            Top_layer = CreateModel(Top_layer_FileName, self.OUTPUT_FOLDER, ctx, pcb_instance = pcb, extrude = True)
             MoveDown(Top_layer, distance=0.0016)
-            Bottom_layer = CreateModel("Bottom_layer", self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
+            Bottom_layer = CreateModel(Bottom_layer_FileName, self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
             MoveDown(Bottom_layer, distance=0.00161)
-
+            UpdateProgress(95)
+            
             ChangeArea('VIEW_3D', 'MATERIAL')
             ChangeClipping(0.001)
 
             #PurgeOrphanData()
             return {'FINISHED'}
 
+        EndProgress()
         #ShowMessageBox("Some files might be overridden in folder: "+self.OUTPUT_FOLDER, "Warning", 'IMPORT')
 
         

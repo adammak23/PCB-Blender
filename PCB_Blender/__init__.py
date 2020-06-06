@@ -15,7 +15,7 @@ bl_info = {
     "name" : "PCB-Blender",
     "author" : "Adam Makiewicz",
     "description" : "Addon for generating models of PCB from Gerber files together with models library for placement files",
-    "blender" : (2, 82, 0),
+    "blender" : (2, 80, 0),
     "version" : (0, 1, 38),
     "location" : "",
     "warning" : "",
@@ -23,9 +23,9 @@ bl_info = {
 }
 
 import bpy
-from . PCB_Blender_panel import LayoutDemoPanel
+from . PCB_Blender_panel import PCB_LayoutPanel
 from . PCB_Blender import GeneratePCB
 
-classes = (LayoutDemoPanel, GeneratePCB)
+classes = (PCB_LayoutPanel, GeneratePCB)
 
 register, unregister = bpy.utils.register_classes_factory(classes)

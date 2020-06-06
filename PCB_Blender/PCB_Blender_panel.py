@@ -11,7 +11,7 @@ def FilePath(_name, _description="", _default=""):
 def Float(_name, _description="", _default=""):
     return FloatProperty(name=_name, default = _default, description=_description)
 
-class LayoutDemoPanel(Panel, ImportHelper):
+class PCB_LayoutPanel(Panel, ImportHelper):
     """Creates a Panel in the scene context of the properties editor"""
     bl_label = "PCB Renderer"
     bl_idname = "SCENE_PT_layout"
@@ -44,12 +44,12 @@ class LayoutDemoPanel(Panel, ImportHelper):
     bpy.types.Scene.placeBottom = FilePath("", "Define file")
 
     Program = [
-        ("KICAD", "KiCad", "", 1),
-        ("GEDA", "gEDA", "", 2),
-        ("AUTO", "Auto Detect", "This might take long time to generate", "TIME", 3),
+        ("KICAD", "KiCad", "Make sure you downloaded models and placed them in this addon folder\models\KICAD", 1),
+        ("GEDA", "gEDA", "Make sure you downloaded models and placed them in this addon folder\models\GEDA", 2),
+        ("AUTO", "Auto Detect", "Make sure you downloaded models and placed them in this addon folder\models", "TIME", 3),
         ("SELF", "Select folder", "Select my own models library folder (only .blend files are supported!)","PACKAGE", 4)
         ]
-    bpy.types.Scene.PickAndPlaceProgram = EnumProperty(name = "", description = "Program which generated Pick and Place file", items = Program, default = "AUTO")
+    bpy.types.Scene.PickAndPlaceProgram = EnumProperty(name = "", description = "Program which generated Pick and Place file", items = Program, default = "SELF")
 
     def draw(self, context):
 
@@ -91,7 +91,7 @@ class LayoutDemoPanel(Panel, ImportHelper):
         col.prop(context.scene, 'placeBottom')
 
         col = layout.split(factor=0.5)
-        col.label(text="Pick And Place Program")
+        col.label(text="Models database")
         col.prop(context.scene, 'PickAndPlaceProgram')
         if bpy.context.scene.PickAndPlaceProgram == 'SELF':
             col = layout.column()
