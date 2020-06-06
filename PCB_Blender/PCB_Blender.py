@@ -375,7 +375,7 @@ def CreateImage(name, layers, ctx, OUTPUT_FOLDER, w=512, h=512, pcb_instance=Non
     ctx.render_layers(layers_to_render, os.path.join(OUTPUT_FOLDER, FileName +'.png'), theme.THEMES['default'], max_width=w, max_height=h)
     return FileName
 
-class GeneratePCB(Operator):
+class PCB_Generate(Operator):
     bl_idname = "pcb.generate"
     bl_label = "Generate"
     bl_description = "Warning: Files in Output folder might be overriden"

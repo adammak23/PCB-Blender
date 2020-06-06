@@ -3,7 +3,7 @@ import bpy
 from bpy.props import StringProperty, FloatProperty, EnumProperty, BoolProperty
 from bpy.types import Operator, Panel
 from bpy_extras.io_utils import ImportHelper
-from . PCB_Blender import GeneratePCB
+from . PCB_Blender import PCB_Generate
 
 def FilePath(_name, _description="", _default=""):
     return StringProperty(name=_name, default = _default, description=_description, subtype = 'FILE_PATH')
@@ -19,29 +19,30 @@ class PCB_LayoutPanel(Panel, ImportHelper):
     bl_region_type = 'WINDOW'
     bl_context = "scene"
 
-    bpy.types.Scene.gerber_folder = FilePath("", "Define file path to gerber folder")
-    bpy.types.Scene.output_path = FilePath("Output folder", "Define output file path, PCB images will be saved there")
-    bpy.types.Scene.width = Float("Width","Max image resolution [Width]", 1024)
-    bpy.types.Scene.height = Float("Height","Max image resolution [Height]", 1024)
-    bpy.types.Scene.expand = bpy.props.BoolProperty(default=False)
-    bpy.types.Scene.model_folder = FilePath("", "Define file path to Your own models library")
+    scene = bpy.types.Scene
+    scene.gerber_folder = FilePath("", "Define file path to gerber folder")
+    scene.output_path = FilePath("Output folder", "Define output file path, PCB images will be saved there")
+    scene.width = Float("Width","Max image resolution [Width]", 1024)
+    scene.height = Float("Height","Max image resolution [Height]", 1024)
+    scene.expand = bpy.props.BoolProperty(default=False)
+    scene.model_folder = FilePath("", "Define file path to Your own models library")
 
-    bpy.types.Scene.cu = FilePath("Copper Top", "Define file")
-    bpy.types.Scene.mu = FilePath("Mask Top", "Define file")
-    bpy.types.Scene.pu = FilePath("Paste Top", "Define file")
-    bpy.types.Scene.su = FilePath("Silk Top", "Define file")
+    scene.cu = FilePath("Copper Top", "Define file")
+    scene.mu = FilePath("Mask Top", "Define file")
+    scene.pu = FilePath("Paste Top", "Define file")
+    scene.su = FilePath("Silk Top", "Define file")
 
-    bpy.types.Scene.cb = FilePath("Copper Bottom", "Define file")
-    bpy.types.Scene.mb = FilePath("Mask Bottom", "Define file")
-    bpy.types.Scene.pb = FilePath("Paste Bottom", "Define file")
-    bpy.types.Scene.sb = FilePath("Silk Bottom", "Define file")
+    scene.cb = FilePath("Copper Bottom", "Define file")
+    scene.mb = FilePath("Mask Bottom", "Define file")
+    scene.pb = FilePath("Paste Bottom", "Define file")
+    scene.sb = FilePath("Silk Bottom", "Define file")
 
-    bpy.types.Scene.edg = FilePath("Edge cut/outline", "Define file")
-    bpy.types.Scene.drl = FilePath("Drill", "Define file")
-    bpy.types.Scene.drl2 = FilePath("Secondary Drill", "Define file")
+    scene.edg = FilePath("Edge cut/outline", "Define file")
+    scene.drl = FilePath("Drill", "Define file")
+    scene.drl2 = FilePath("Secondary Drill", "Define file")
 
-    bpy.types.Scene.placeTop = FilePath("", "Define file")
-    bpy.types.Scene.placeBottom = FilePath("", "Define file")
+    scene.placeTop = FilePath("", "Define file")
+    scene.placeBottom = FilePath("", "Define file")
 
     Program = [
         ("KICAD", "KiCad", "Make sure you downloaded models and placed them in this addon folder\models\KICAD", 1),
@@ -49,7 +50,7 @@ class PCB_LayoutPanel(Panel, ImportHelper):
         ("AUTO", "Auto Detect", "Make sure you downloaded models and placed them in this addon folder\models", "TIME", 3),
         ("SELF", "Select folder", "Select my own models library folder (only .blend files are supported!)","PACKAGE", 4)
         ]
-    bpy.types.Scene.PickAndPlaceProgram = EnumProperty(name = "", description = "Program which generated Pick and Place file", items = Program, default = "SELF")
+    scene.PickAndPlaceProgram = EnumProperty(name = "", description = "Program which generated Pick and Place file", items = Program, default = "SELF")
 
     def draw(self, context):
 
@@ -110,28 +111,28 @@ class PCB_LayoutPanel(Panel, ImportHelper):
         if(bpy.context.scene.output_path is not ""):
             col.label(text="Some files might be overridden in folder: "+bpy.context.scene.output_path, icon='FILE_TICK')
         
-        GeneratePCB.width_resolution = bpy.context.scene.width
-        GeneratePCB.height_resolution = bpy.context.scene.height
-        GeneratePCB.GERBER_FOLDER = bpy.context.scene.gerber_folder
-        GeneratePCB.OUTPUT_FOLDER = bpy.context.scene.output_path
+        PCB_Generate.width_resolution = bpy.context.scene.width
+        PCB_Generate.height_resolution = bpy.context.scene.height
+        PCB_Generate.GERBER_FOLDER = bpy.context.scene.gerber_folder
+        PCB_Generate.OUTPUT_FOLDER = bpy.context.scene.output_path
 
-        GeneratePCB.use_separate_files = bpy.context.scene.expand
-        GeneratePCB.cu  = bpy.context.scene.cu
-        GeneratePCB.mu  = bpy.context.scene.mu
-        GeneratePCB.pu  = bpy.context.scene.pu
-        GeneratePCB.su  = bpy.context.scene.su
-        GeneratePCB.cb  = bpy.context.scene.cb
-        GeneratePCB.mb  = bpy.context.scene.mb
-        GeneratePCB.pb  = bpy.context.scene.pb
-        GeneratePCB.sb  = bpy.context.scene.sb
+        PCB_Generate.use_separate_files = bpy.context.scene.expand
+        PCB_Generate.cu  = bpy.context.scene.cu
+        PCB_Generate.mu  = bpy.context.scene.mu
+        PCB_Generate.pu  = bpy.context.scene.pu
+        PCB_Generate.su  = bpy.context.scene.su
+        PCB_Generate.cb  = bpy.context.scene.cb
+        PCB_Generate.mb  = bpy.context.scene.mb
+        PCB_Generate.pb  = bpy.context.scene.pb
+        PCB_Generate.sb  = bpy.context.scene.sb
 
-        GeneratePCB.edg = bpy.context.scene.edg
-        GeneratePCB.drl = bpy.context.scene.drl
-        GeneratePCB.drl2 = bpy.context.scene.drl2
+        PCB_Generate.edg = bpy.context.scene.edg
+        PCB_Generate.drl = bpy.context.scene.drl
+        PCB_Generate.drl2 = bpy.context.scene.drl2
 
-        GeneratePCB.placeTop = bpy.context.scene.placeTop
-        GeneratePCB.placeBottom = bpy.context.scene.placeBottom
-        GeneratePCB.placeProgram = bpy.context.scene.PickAndPlaceProgram
-        GeneratePCB.model_folder = bpy.context.scene.model_folder
+        PCB_Generate.placeTop = bpy.context.scene.placeTop
+        PCB_Generate.placeBottom = bpy.context.scene.placeBottom
+        PCB_Generate.placeProgram = bpy.context.scene.PickAndPlaceProgram
+        PCB_Generate.model_folder = bpy.context.scene.model_folder
 
         row.operator('pcb.generate', icon = 'SYSTEM')

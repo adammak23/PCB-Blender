@@ -24,8 +24,8 @@ bl_info = {
 
 import bpy
 from . PCB_Blender_panel import PCB_LayoutPanel
-from . PCB_Blender import GeneratePCB
+from . PCB_Blender import PCB_Generate
 
-classes = (PCB_LayoutPanel, GeneratePCB)
+classes = (PCB_LayoutPanel, PCB_Generate)
 
 register, unregister = bpy.utils.register_classes_factory(classes)
