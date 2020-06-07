@@ -27,18 +27,16 @@ import csv
 units = 'metric'
 
 # Reading Placement file
-def read_csv(file_csv, program = 'AUTO', folder = None):
+def read_csv(file_csv, program = 'INTERNAL', folder = None):
     
     # For reading placement files
     objects = None
 
     directory = 'models'+os.sep
-    if program == 'AUTO':
+    if program == 'INTERNAL':
         pass
     elif program == 'SELF':
         directory = folder + os.sep
-    else:
-        directory = directory + program + os.sep
 
     component_root = os.path.abspath(os.path.dirname(directory))
 

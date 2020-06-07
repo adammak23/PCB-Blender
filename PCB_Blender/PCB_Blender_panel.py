@@ -45,10 +45,8 @@ class PCB_LayoutPanel(Panel, ImportHelper):
     scene.placeBottom = FilePath("", "Define file")
 
     Program = [
-        ("KICAD", "KiCad", "Make sure you downloaded models and placed them in this addon folder\models\KICAD", 1),
-        ("GEDA", "gEDA", "Make sure you downloaded models and placed them in this addon folder\models\GEDA", 2),
-        ("AUTO", "Auto Detect", "Make sure you downloaded models and placed them in this addon folder\models", "TIME", 3),
-        ("SELF", "Select folder", "Select my own models library folder (only .blend files are supported!)","PACKAGE", 4)
+        ("INTERNAL", "Internal", "Make sure you downloaded models and placed them in this addon folder\models", "PACKAGE", 1),
+        ("SELF", "Select folder", "Select my own models library folder (only .blend files are supported!)","IMPORT", 2)
         ]
     scene.PickAndPlaceProgram = EnumProperty(name = "", description = "Program which generated Pick and Place file", items = Program, default = "SELF")
 

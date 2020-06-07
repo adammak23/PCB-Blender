@@ -31,7 +31,7 @@
 \date     {2020}
 \miejsce  {Gdańsk}
 
-\opiekun  {dr P. Arłukowicz}
+\opiekun  {dr Piotr Arłukowicz}
 
 % dodatkowe polecenia
 %\renewcommand{\filename}[1]{\texttt{#1}}
@@ -40,7 +40,7 @@
 
 \begin{document}
 
-% streszczenie
+% TOOD: ZMIENIĆ STRESZCZENIE
 \begin{abstract}
 Istnieje wiele programów do projektowania płytek drukowanych, jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
 \end{abstract}
@@ -63,12 +63,12 @@ Tworzenie PCB składa się z trzech głównych etapów: \cite{Abboud}
 \item
 Logic Design - Stworzenie schematu logiki i reguł projektowych, spis użytych komponentów i ich wzajemnych połączeń
 \item
-Layout - Zaprojektowanie układu, który decyduje o fizycznym położeniu i połączeniach (tzw.  \emph{routing}) komponentów
+Layout - Zaprojektowanie układu, który decyduje o fizycznym położeniu i połączeniach (tzw. trasowanie -- \emph{routing}) komponentów
 \item
 Produkcja przemysłowa
 \end{itemize}
     
-    Najważniejszym punktem projektowania układu jest rozmieszczenie komponentów. Ten proces jest satysfakcjonującym twórczym przedsięwzięciem i prawdopodobnie jednym z najtrudniejszych aspektów procesu projektowania PCB. Wielu inżynierów uważa go za formę sztuki gdyż w przeciwieństwie do schematu, który opiera się tylko na matematyce, jest nieco bardziej płynny i elastyczny. 
+    Najważniejszym punktem projektowania układu jest rozmieszczenie komponentów. Ten proces jest satysfakcjonującym, twórczym przedsięwzięciem i prawdopodobnie jednym z najtrudniejszych aspektów procesu projektowania PCB. Wielu inżynierów uważa go za formę sztuki gdyż w przeciwieństwie do schematu, który opiera się tylko na matematyce, jest nieco bardziej płynny i elastyczny oraz pozwala na kreatywne wdrożenie swojego projektu w życie.
 
 \begin{figure}[!tbh]
 \centering
@@ -88,7 +88,7 @@ Celem niniejszej pracy jest stworzenie łatwego do rozbudowania i spójnego syst
 
 \section{Wymagania funkcjonalne}
 
-Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kompatybilnym z wersją 2.8 w zwyż. Wybór konkretnie tej wersji programu był podyktowany jego nową odsłoną oferującą między innymi nowy interfejs i API. Addon udostępnia użytkownikowi dodatkowe funkcjonalności z poziomu graficznego interfejsu programu. Następujące wymagania zostały sformułowane z punktu widzenia użytkownika.
+Zrealizowany system jest dodatkiem (ang. \emph{add-on}) do programu Blender, kompatybilnym z wersją 2.8 wzwyż. Wybór konkretnie tej wersji programu był podyktowany jego nową odsłoną oferującą między innymi nowy wygląd programu i duże zmiany w interfejsie programistycznym aplikacji (ang. \emph{API}). Wtyczka udostępnia użytkownikowi dodatkowe funkcjonalności z poziomu graficznego interfejsu programu. Następujące wymagania zostały sformułowane z punktu widzenia użytkownika.
 \begin{itemize}
 \item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw i  plików pozycji elementów (ang. \emph{"Pick And Place"})\footnote{\,Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
 \item Wybranie wbudowanej lub własnej biblioteki modeli 3D
@@ -111,27 +111,27 @@ Python jest językiem programowania wysokiego poziomu, posiadającym aktywną sp
 
 % Blender
 \subsection {Blender 2.8}
-Darmowy program \emph{Open-source}\footnote{\,\url{https://www.blender.org/about/license/}} cechujący się wszechstronnością i możliwością rozbudowania go o dodatkowe biblioteki lub skrypty napisane w języku Python, które poszerzają podstawowe funkcjonalności.
+Darmowy program \emph{Open-source}\footnote{\,\url{https://www.blender.org/about/license/}} cechujący się wszechstronnością i możliwością rozbudowania go o dodatkowe biblioteki lub skrypty napisane w języku Python, które rozszerzają podstawowe funkcjonalności.
 
-Dodatek do programu Blender różni się od dodatkowej biblioteki Pythona jedynie pewnymi dodatkowymi wymaganiami jak obiekt zawierający metadane, takie jak: tytuł, wersja, kategoria, autor, etc. Określa też minimalną wersję Blendera wymaganą do uruchomienia skryptu. Dodatek jest więc sposobem na enkapsulację modułu Pythona w sposób, który użytkownik może z łatwością wykorzystać.
+Dodatek do programu Blender różni się od dodatkowej biblioteki Pythona jedynie pewnymi dodatkowymi wymaganiami jak obiekt zawierający metadane, takie jak: nazwa, wersja, kategoria, autor, etc. Określa też minimalną wersję Blendera wymaganą do uruchomienia skryptu. Dodatek jest więc sposobem na enkapsulację modułu Pythona w sposób, który użytkownik może z łatwością wykorzystać.
 
 Blender ma wbudowany interpreter Pythona, który jest ładowany po uruchomieniu programu. Utrudnia to znacząco wykorzystanie automatycznego pobierania i instalowania zależnych od siebie pakietów, co za tym idzie, tworzony w ramach pracy system, aby ułatwić korzystanie z niego, musi być niezależny od zewnętrznych, dynamicznie pobieranych bibliotek.
 
 
-\subsection{Pliki projektowe PCB\newline(Gerber, Drill, Pick-And-Place)}
+\subsection{Pliki projektowe PCB}
 
-% Gerber
+\subsubsection {Gerber}
 Nowoczesne płytki drukowane są projektowane przy pomocy dedykowanego oprogramowania a ostatnim etapem produkcji dla projektanta jest wygenerowanie między innymi plików Gerber.\cite{Khandpur}
-Format ten jest otwartym, wektorowym, powszechnie stosowanym standardem ASCII służącym do przesyłania danych projektowych obwodów drukowanych do przemysłu produkcji elektroniki. Wszystkie systemy do projektowania obwodów drukowanych pozwalają na eksport projektu jako pliki Gerber i każde przemysłowe oprogramowanie do ich obróbki potrafi je interpretować, umożliwiając profesjonalistom w dziedzinie PCB bezpieczną i wydajną wymianę danych projektowych.\cite{Williams}
+Jest to otwarty, wektorowy, powszechnie stosowany format o standardzie ASCII, służący do przesyłania danych projektowych obwodów drukowanych do przemysłu produkcji elektroniki. Wszystkie systemy do projektowania obwodów drukowanych pozwalają na eksport projektu jako pliki Gerber i każde przemysłowe oprogramowanie do ich obróbki potrafi je interpretować, umożliwiając profesjonalistom w dziedzinie PCB bezpieczną i wydajną wymianę danych projektowych.\cite{Williams}
 
 Płytki drukowane mogą być jednostronne (jedna warstwa miedzi), dwustronne (dwie warstwy miedzi po obu stronach warstwy podłoża) lub wielowarstwowe (zewnętrzna i wewnętrzna warstwa miedzi, naprzemiennie z warstwami podłoża).\cite{schroeder}
 
 Pliki Gerber reprezentują między innymi warstwy miedzi, maskę lutowniczą, legendę oraz dane wiercenia i trasy. Dodatkowe atrybuty dostarczają informacji o sposobie montowania, połączeń i nazw poszczególnych elementów. Format pliku Gerber jest prosty, kompaktowy i jednoznaczny. Jest bazowany na języku \emph{G-code}, oznaczanym RS-274. Dzięki zastosowaniu 7-bitowych znaków ASCII jest czytelny dla człowieka i łatwy do debugowania. Obecnie używany od 2014 roku format to tzw. Rozszerzony Gerber (ang. \emph{Extended Gerber}) lub RS-274X.\footnote{\,\url{https://www.ucamco.com/en/gerber}}
 
-% Drill / NC / Excellon
+\subsubsection {Drill}
 Kolejnym, generowanym przez projektanta płytki formatem używanym w produkcji są pliki wierceń (ang. \emph{NC / CNC drill}), pierwotnie zaprojektowane przez twórców wiercących i trasujących maszyn CNC jako zastrzeżone, dedykowane formaty wejściowe dla ich urządeń. Znane są pod nazwami takimi jak: Excellon, Hitachi, Sieb \& Meyer, Posalux, itd.\cite{Charras} Wszystkie z pośród tych formatów są podobne, ponieważ opierają się na wspomnianym wcześniej G-code. Rodzaje wierceń w PCB dzielą się na otwory zwykłe - NPTH (ang. \emph{Not Plated Through Hole}) i pokryte miedzią - PTH (ang. \emph{Plated Through Hole}).\cite{voldman} Stosowanie innego standardu nie jest jednak konieczne, jako że z czasem formaty te zmieniły swoje zastosowanie i obecnie powszechnie stosowaną praktyką jest generowanie tych plików w formacie Gerber.
 
-% Placement
+\subsubsection {Placement}
 Ostatnim i dosyć kluczowym elementem są pliki wskazujące elementy rozmieszczane na płytce. Jest to prosty format nazywany \emph {Pick-And-Place, Placement list, X-Y file, Mount SMD}  i składa się z kilku wartości:
 \begin{itemize}
 \item \emph{Ref / Designator} - Indeks elementu na płytce i w projekcie
@@ -142,7 +142,7 @@ Ostatnim i dosyć kluczowym elementem są pliki wskazujące elementy rozmieszcza
 \item Informacja czy objekt znajduje się na wierzchniej czy też dolnej stronie płytki
 \item Ewentualne komentarze i dodatkowe informacje
 \end{itemize}
-Plik zawiera opis elementów montowanych za pomocą technologii montażu przewlekanego - THT (eng. \emph{Through-hole technology}) oraz powierzchniowego - SMT (ang. \emph{Surface Mount Technology}), powszechnie stosowanego przemysłowo.\cite {prasad} Nie jest to jednak format ściśle ustandaryzowany i przy masowej produkcji każdy producent musi manualnie zweryfikować opisy elementów. Na szczęście każdy program do tworzenia PCB posiana eksporter do generowania tychże plików. Dodatkowo są one proste w zapisie i z łatwością edytowalne przez człowieka.
+Plik zawiera opis elementów montowanych za pomocą technologii montażu przewlekanego - THT (ang. \emph{Through-hole technology}) oraz powierzchniowego - SMT (ang. \emph{Surface Mount Technology}), powszechnie stosowanego przemysłowo.\cite {prasad} Nie jest to jednak format ściśle ustandaryzowany i przy masowej produkcji każdy producent musi manualnie zweryfikować opisy elementów. Na szczęście każdy program do tworzenia PCB posiada eksporter do generowania tychże plików. Dodatkowo są one proste w zapisie i z łatwością edytowalne przez człowieka.
 
 % WRL
 \subsection{Pliki VRML i X3D}
@@ -191,7 +191,7 @@ System powinien implementować wszystkie następujące funkcjonalności:
 %https://pcb-tools.readthedocs.io/en/latest/about.html
 % gdzie zamieścić info o licencji?
 
-\item Tworzenie modelu płytki na podstawie otrzymanych plików  zgodnego z rzeczywistymi wymiarami
+\item Tworzenie modelu płytki na podstawie otrzymanych plików, zgodnego z rzeczywistymi wymiarami
 % brakujące pliki nie powinny psuć procesu
 % możliwość wybrania dowolnie wielu lub sprecyzowanie konkretnych plików
 % konwersja z mil/mm
@@ -204,7 +204,7 @@ System powinien implementować wszystkie następujące funkcjonalności:
 % obsługa powtarzających się elementów (cache)
 %  smart search - w przypadku nie znalezienia - w przypadku nie znalezienia w ogóle - pusty (może możliwość wyłączenia tego? ale po co jak można usunąć model po prostu...)
 
-\item Udostępnianie użytkownikowi możliwości użycia dostarczonej lub własnej bazy modeli podzespołów
+\item Udostępnienie użytkownikowi możliwości użycia dostarczonej lub własnej bazy modeli podzespołów
 % tworzenie bazy modeli - importer *.wrl
 % https://kicad.github.io/packages3d/
 % działanie w przypadku braku modeli
@@ -228,14 +228,13 @@ System powinien implementować wszystkie następujące funkcjonalności:
 
 
 \section {Struktura projektu}
-Podstawowy wybór strukturalny następującego rozwiązania jest podyktowany wymaganiami i sposobem komunikacji z API Blendera. Struktura folderów dodatku do programu Blender jest dowolna z założeniem, że w folderze głównym znajduje się plik \emph{\_\_init\_\_.py} odpowiedzialny za rejestrowanie dodatku. Jest on automatycznie wykonywany po wybraniu folderu i włączeniu addonu w sekcji "Dodatki" w programie Blender. Pozostałe elementy są pogrupowane według prostej i logicznej konwencji modułów w języku Python, zatem każdy moduł posiada swój folder, jest to jednak podyktowane tylko enkapsulacją modułów i wygodą w używaniu referencji między skryptami.
+Podstawowy wybór strukturalny następującego rozwiązania jest podyktowany wymaganiami i sposobem komunikacji z API Blendera. Struktura folderów dodatku do programu Blender jest dowolna z założeniem, że w folderze głównym znajduje się plik \emph{\_\_init\_\_.py} odpowiedzialny za rejestrowanie dodatku. Jest on automatycznie wykonywany po wybraniu folderu i włączeniu addonu w sekcji "Dodatki" w programie Blender. Pozostałe elementy są pogrupowane według konwencji modułów w języku Python, zatem każdy moduł posiada swój folder, jest to jednak podyktowane tylko enkapsulacją modułów i wygodą w używaniu referencji między skryptami.
 
 \subsection{Główna struktura interfejsu API Blendera}
-% https://airplanes3d.net/downloads/pydev2/pydev-blender-en.pdf (strona 43)
 Z poziomu kodu, API Blendera udostępnia główne moduły pod słowem kluczowym \textbf{bpy}\footnote{\,\url{https://docs.blender.org/api/current/index.html}} a jego podstawowe i główne elementy to:
 \begin{itemize}
 \item \textbf{bpy.data} -- Zapewnia dostęp do danych bieżącego pliku \emph{*.blend} (Jest to rozszerzenie używane przez program Blender). Każde z jego pól jest zbiorem obiektów danego typu (sceny, obiekty, zbiory wierzchołków, materiały, kolekcje itp.).
-\item \textbf{bpy.context} -- Zawiera wszelnie dane środowiskowe obrazujące bieżący stan programu (bieżący wybór, tryb i region edytora) oraz wiele globalnych właściwości.
+\item \textbf{bpy.context} -- Zawiera wszelkie dane środowiskowe obrazujące bieżący stan programu (bieżący wybór, tryb i region edytora) oraz wiele globalnych właściwości.
 \item \textbf{bpy.ops} -- Zawiera wszystkie \emph{Operatory} Blendera. (W API każda komenda Blendera jest zaimplementowana jako metoda klasy \emph{Operator}).
 \item \textbf{bpy.types} -- Posiada definicje wszystkich klas używanych w strukturach.
 \end{itemize}
@@ -270,9 +269,9 @@ Tak więc, przechodząc do rzeczywistego stanu rzeczy, omawiany addon o nazwie \
 \item Foldery zawierające pozostałe moduły Pythona do których odnosi się główny Operator -- \emph{PCB\_Generate}.
 \end{itemize}
 
-\subsection{baza modeli} \label{bazamodeli}
+\subsection{Baza modeli} \label{bazamodeli}
 
-Jednym z pierwszych z wyzwań podczas tworzenia dodatku był dobór zasobów w postaci modeli 3D. Aby zrealizować założenia pracy, wymagana była baza modeli podzespołów elektronicznych montowanych na PCB. Z uwagi na mnogość producentów, rodzajów i typów podzespołów oraz fakt, że każdy program służący do projektowania może oznaczać je inaczej, optymalnym rozwiązaniem wydaje się udostępnienie użytkownikowi podstawowej bazy modeli. Ponadto zastosowanie szukania modeli częściowo dopasowanych nazwą. Z uwagi na fakt, że niemożliwym jest obsługa wszystkich wyjątków, koniecznością staje się umożliwienie użytkownikowi kożystanie z własnych modeli. Istnieje wiele stron udostępniających modele 3D na zasadach komercyjnych jak i darmowych licencji. Są one często wykorzystywane przez twórców jak i programy projektowe. Oto kilka z nich zaprezentowanych w tabeli: \ref{fig:table}.
+Jednym z pierwszych z wyzwań podczas tworzenia dodatku był dobór zasobów w postaci modeli 3D. Aby zrealizować założenia pracy, wymagana była baza modeli podzespołów elektronicznych montowanych na PCB. Z uwagi na mnogość producentów, rodzajów i typów podzespołów oraz fakt, że każdy program służący do projektowania może oznaczać je inaczej, optymalnym rozwiązaniem wydaje się udostępnienie użytkownikowi podstawowej bazy modeli. Ponadto zastosowanie szukania modeli częściowo dopasowanych nazwą. Z uwagi na fakt, że niemożliwym jest obsługa wszystkich wyjątków, koniecznością staje się umożliwienie użytkownikowi kożystanie z własnych, wybranych modeli. Istnieje wiele stron udostępniających modele 3D na zasadach komercyjnych jak i darmowych licencji. Są one często wykorzystywane przez twórców jak i programy projektowe. Oto kilka z nich zaprezentowanych w tabeli: \ref{fig:table}.
 
 \begin{table}[htb]
 \begin{tabular}{|l|l|l|} \hline
@@ -294,24 +293,30 @@ Nie posiadają one jednak możliwości masowego pobierania modeli. Pomijając t�
 \chapter{Szczegóły implementacyjne systemu}
 W tym rozdziale zostanie omówiony sposób implementacji kluczowych i pobocznych funkcjonalności systemu.
 \section {Rejestrowanie addonu}
-Każdy dodatek do Blendera musi implementować metody \emph{register()} oraz \emph{unregister()}. Wprowadzone w wersji 2.8 usprawnienia znacznie ułatwiają ten proces
+Każdy dodatek do Blendera musi posiadać obiekt \emph{bl\_info} zawierający metadane addonu implementować metody \emph{register()} oraz \emph{unregister()}. Wprowadzone w wersji 2.8 usprawnienia znacznie ułatwiają ten proces. Jeżeli nie potrzebujemy dodatkowych funkcjonalności podczas rejestrowania i usuwania dodatku lub jego komponentów, możemy użyć funkcji \emph{register\_classes\_factory} z pakietu \textbf{bpy.utils}, która automatycznie je zaimplementuje.
 
-%\lstset{caption={Przykłąd implementacji funkcji, która przetwarza tensor wedle opisanego powyżej wzoru.}}
-%\begin{lstlisting}
-%# Gram Matrix
-%	 def gram(tensor):
-%	 	 _, d, h, w = tensor.size()
-%          tensor = tensor.view(d, h * w)
-%          gram = torch.mm(tensor, tensor.t())
-%          return gram
-%\end{lstlisting}
+\lstset{caption={\emph{\_\_init\_\_.py} -- Plik rejestrujący dodatek.}}
+\begin{lstlisting}
+bl_info = {
+    "name" : "PCB-Blender",
+    "author" : "Adam Makiewicz",
+    "description" : "Addon for generating models of PCB from Gerber files",
+    "blender" : (2, 80, 0),
+    "version" : (0, 1, 4),
+    "category" : "Generic",
+    "location" : "Scene Properties > PCB Renderer"
+}
 
+	import bpy
+	from . PCB_Blender_panel import PCB_LayoutPanel
+	from . PCB_Blender import PCB_Generate
 
-%\begin{equation}
-%gram\:=\:torch.mm (tensor,\:tensor.t)
-%\end{equation}
+	classes = (PCB_LayoutPanel, PCB_Generate)
+	register, unregister = bpy.utils.register_classes_factory(classes)
+\end{lstlisting}
 
-\section {interfejs}
+\section {Interfejs}
+
 \section {czytanie, interpretacja Gerbera, excellon + renderowanie? czy kolejny punkt zobaczymy}
 \section {zanim będziemy mogli wczytać plik placement musmy mieć modele - stworzenie bazy modeli, importer *.wrl\label{wrl}}
 % przejrzeć commity i wypisać funkcjonalności zaimplementowane w importerze
