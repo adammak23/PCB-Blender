@@ -4,7 +4,12 @@
 
 % install minted package to highlight source code
 % \usepackage{minted}
-
+\usepackage{listings}
+\lstset{language=Python}
+\lstset{frame=lines}
+%\lstset{caption={Insert code directly in your document}}
+\lstset{label={lst:code_direct}}
+\lstset{basicstyle=\footnotesize}
 %\defaultfontfeatures{Scale=MatchLowercase}
 %\setmainfont[Numbers=OldStyle,Ligatures=TeX]{Minion Pro}
 %\setsansfont[Numbers=OldStyle,Ligatures=TeX]{Myriad Pro}
@@ -38,12 +43,11 @@
 % streszczenie
 \begin{abstract}
 Istnieje wiele programów do projektowania płytek drukowanych, jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
-\marginnote {opisać więcej? jeżeli tak to każdy rozdział?}
 \end{abstract}
 
 
 % słowa kluczowe
-\keywords{wizualizacja, grafika, 3D, Blender, Python, PCB}
+\keywords{wizualizacja, grafika, 3D, Blender, Python, PCB, elektronika}
 
 % tytuł i spis treści
 \maketitle
@@ -73,8 +77,7 @@ Produkcja przemysłowa
 \source{https://garabating.com/post/44549621917/katsushika-hokusai-electronic-circuit-board}
 \end{figure}
 
-Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod uwagę mnogość technicznej wiedzy, pomiarów i zależności takich jak: optymalizacja długości ścieżek oraz ich szerokość, ochrona miejsc narażonych na dużą temperaturę, ograniczenia mechaniczne i montażowe, itd. Nawet zastosowanie automatucznego wyznaczania ścieżek do optymalizacji nie zawsze da poprawny rezultat.\footnote{~https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/} Z uwagi na ilość i różnorodność ograniczeń nie jest możliwa całkowita automatyzacja sprawdzania poprawności wykonanego projektu, zatem przydatna dla projektanta okazuje się wizualizacja efektu końcowego. Jest ona także niezbędnym elementem procesu marketingowego, logistycznego czy edukacyjnego. Istnieje wiele programów do projektowania PCB jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
-
+Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod uwagę mnogość technicznej wiedzy, pomiarów i zależności takich jak: optymalizacja długości ścieżek oraz ich szerokość, ochrona miejsc narażonych na dużą temperaturę, ograniczenia mechaniczne i montażowe, itd. Nawet zastosowanie automatucznego wyznaczania ścieżek do optymalizacji nie zawsze da poprawny rezultat.\footnote{\,\href{https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/}{Autodesk.com - Top 10 pcb component placement tips}} Z uwagi na ilość i różnorodność ograniczeń nie jest możliwa całkowita automatyzacja sprawdzania poprawności wykonanego projektu, zatem przydatna dla projektanta okazuje się wizualizacja efektu końcowego. Jest ona także niezbędnym elementem procesu marketingowego, logistycznego czy edukacyjnego. Istnieje wiele programów do projektowania PCB jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
 
 % ROZDZIAŁ 1
 
@@ -87,7 +90,7 @@ Celem niniejszej pracy jest stworzenie łatwego do rozbudowania i spójnego syst
 
 Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kompatybilnym z wersją 2.8 w zwyż. Wybór konkretnie tej wersji programu był podyktowany jego nową odsłoną oferującą między innymi nowy interfejs i API. Addon udostępnia użytkownikowi dodatkowe funkcjonalności z poziomu graficznego interfejsu programu. Następujące wymagania zostały sformułowane z punktu widzenia użytkownika.
 \begin{itemize}
-\item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw i  plików pozycji elementów (ang. \emph{"Pick And Place"})\footnote{~Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
+\item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw i  plików pozycji elementów (ang. \emph{"Pick And Place"})\footnote{\,Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
 \item Wybranie wbudowanej lub własnej biblioteki modeli 3D
 \item Wybór końcowej rozdzielczości i miejsca zapisu plików wytworzonych w procesie renderowania
 \item Przycisk tworzący model 3D płytki na podstawie wybranych plików
@@ -96,7 +99,7 @@ Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kom
 \begin{figure}
 \centering
 \includegraphics[width=0.75\hsize]{fig/addon_1}
-\caption{Zainstalowany dodatek w programie Blender 2.82a\label{RYS.2}}
+\caption{Zainstalowany dodatek w programie Blender 2.82a}
 \source{Opracowanie własne}
 \end{figure}
 
@@ -104,11 +107,11 @@ Zrealizowany system jest dodatkiem (tzw. \emph{add-on}) do programu Blender, kom
 
 % Python
 \subsection{Python}
-Python jest językiem programowania wysokiego poziomu, posiadającym aktywną społeczność i nieograniczone możliwości poprzez rozbudowę go o zewnętrzne pakiety.\footnote {~https://www.python.org/about/} API Blendera jest w większości przygotowane do użycia właśnie Pythona i chociaż istnieją ograniczenia tego, co Python może zrobić w Blenderze, jest to jedyne oficjalnie wspierane rozwiązanie dzięki któremu wiele można osiągnąć bez konieczności zagłębiania się w kod C / C++ Blendera.
+Python jest językiem programowania wysokiego poziomu, posiadającym aktywną społeczność i nieograniczone możliwości poprzez rozbudowę go o zewnętrzne pakiety.\footnote {\,\url{https://www.python.org/about/}} API Blendera jest w większości przygotowane do użycia właśnie Pythona i chociaż istnieją ograniczenia tego, co Python może zrobić w Blenderze, jest to jedyne oficjalnie wspierane rozwiązanie dzięki któremu wiele można osiągnąć bez konieczności zagłębiania się w kod C / C++ Blendera.
 
 % Blender
 \subsection {Blender 2.8}
-Darmowy program \emph{Open-source}\footnote{~https://www.blender.org/about/license/} cechujący się wszechstronnością i możliwością rozbudowania go o dodatkowe biblioteki lub skrypty napisane w języku Python, które poszerzają podstawowe funkcjonalności.
+Darmowy program \emph{Open-source}\footnote{\,\url{https://www.blender.org/about/license/}} cechujący się wszechstronnością i możliwością rozbudowania go o dodatkowe biblioteki lub skrypty napisane w języku Python, które poszerzają podstawowe funkcjonalności.
 
 Dodatek do programu Blender różni się od dodatkowej biblioteki Pythona jedynie pewnymi dodatkowymi wymaganiami jak obiekt zawierający metadane, takie jak: tytuł, wersja, kategoria, autor, etc. Określa też minimalną wersję Blendera wymaganą do uruchomienia skryptu. Dodatek jest więc sposobem na enkapsulację modułu Pythona w sposób, który użytkownik może z łatwością wykorzystać.
 
@@ -123,7 +126,7 @@ Format ten jest otwartym, wektorowym, powszechnie stosowanym standardem ASCII s�
 
 Płytki drukowane mogą być jednostronne (jedna warstwa miedzi), dwustronne (dwie warstwy miedzi po obu stronach warstwy podłoża) lub wielowarstwowe (zewnętrzna i wewnętrzna warstwa miedzi, naprzemiennie z warstwami podłoża).\cite{schroeder}
 
-Pliki Gerber reprezentują między innymi warstwy miedzi, maskę lutowniczą, legendę oraz dane wiercenia i trasy. Dodatkowe atrybuty dostarczają informacji o sposobie montowania, połączeń i nazw poszczególnych elementów. Format pliku Gerber jest prosty, kompaktowy i jednoznaczny. Jest bazowany na języku \emph{G-code}, oznaczanym RS-274. Dzięki zastosowaniu 7-bitowych znaków ASCII jest czytelny dla człowieka i łatwy do debugowania. Obecnie używany od 2014 roku format to tzw. Rozszerzony Gerber (ang. \emph{Extended Gerber}) lub RS-274X.\footnote{~https://www.ucamco.com/en/gerber}
+Pliki Gerber reprezentują między innymi warstwy miedzi, maskę lutowniczą, legendę oraz dane wiercenia i trasy. Dodatkowe atrybuty dostarczają informacji o sposobie montowania, połączeń i nazw poszczególnych elementów. Format pliku Gerber jest prosty, kompaktowy i jednoznaczny. Jest bazowany na języku \emph{G-code}, oznaczanym RS-274. Dzięki zastosowaniu 7-bitowych znaków ASCII jest czytelny dla człowieka i łatwy do debugowania. Obecnie używany od 2014 roku format to tzw. Rozszerzony Gerber (ang. \emph{Extended Gerber}) lub RS-274X.\footnote{\,\url{https://www.ucamco.com/en/gerber}}
 
 % Drill / NC / Excellon
 Kolejnym, generowanym przez projektanta płytki formatem używanym w produkcji są pliki wierceń (ang. \emph{NC / CNC drill}), pierwotnie zaprojektowane przez twórców wiercących i trasujących maszyn CNC jako zastrzeżone, dedykowane formaty wejściowe dla ich urządeń. Znane są pod nazwami takimi jak: Excellon, Hitachi, Sieb \& Meyer, Posalux, itd.\cite{Charras} Wszystkie z pośród tych formatów są podobne, ponieważ opierają się na wspomnianym wcześniej G-code. Rodzaje wierceń w PCB dzielą się na otwory zwykłe - NPTH (ang. \emph{Not Plated Through Hole}) i pokryte miedzią - PTH (ang. \emph{Plated Through Hole}).\cite{voldman} Stosowanie innego standardu nie jest jednak konieczne, jako że z czasem formaty te zmieniły swoje zastosowanie i obecnie powszechnie stosowaną praktyką jest generowanie tych plików w formacie Gerber.
@@ -149,16 +152,7 @@ Format \emph{.wrl} zwany VRML (ang. \emph {Virtual Reality Modeling Language}) p
 % http://www.graphics.stanford.edu/courses/cs248-98-fall/Assignments/Assignment3/VRML2_Specification/
 
 \subsection{Środowisko Visual Studio Code}
-Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadzanych co roku przez serwis StackOverflow\footnote{https://insights.stackoverflow.com/survey/2018/\#development-environments-and-tools}$^{,}$\footnote{https://insights.stackoverflow.com/survey/2019\#development-environments-and-tools} cieszy się coraz większym uznaniem. Wybór tego środowiska nie był jednak dyktowany jego popularnością lecz nowymi możliwościami otwierającymi się dzięki instalowaniu w nim rozszerzeń.\footnote{https://code.visualstudio.com/docs/editor/extension-gallery} Dodatek stworzony przez Jacques Lucke na potrzeby rozwoju addonów \marginnote{czy mogę tu użyć słowa "addonów" czy jest to potoczny/angielszczyzm?} do programu Blender pozwala między innymi na automatyzację procesu aktualizowania tworzonego addonu przez tworzenie skrótu w wewnętrznych folderach Blendera, co znacznie przyśpiesza pracę nad systemem. Ponadto posiada ułatwienia takie jak debugowanie w konsoli, tworzenie odpowiednich struktur i przydatne komendy. Sposób działania dodatku ma na celu także upewnienie się, że rozszerzenie nie koliduje z innym menedżerem pakietów Pythona.\footnote{https://marketplace.visualstudio.com/items?itemName=JacquesLucke.blender-development} 
-
-\marginnote {co z tymi footnote'ami? zmniejszyć font? czy mogą takie być?}
-
-
-
-% sformułowanie problemu
-
-% Główna struktura interfejsu API Blendera:
-% https://airplanes3d.net/downloads/pydev2/pydev-blender-en.pdf strona 43
+Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadzanych co roku przez serwis StackOverflow\footnote{\,\url{https://insights.stackoverflow.com/survey/2018/\#development-environments-and-tools}}$^{,}$\footnote{\,\url{https://insights.stackoverflow.com/survey/2019\#development-environments-and-tools}} cieszy się coraz większym uznaniem. Wybór tego środowiska nie był jednak dyktowany jego popularnością lecz nowymi możliwościami otwierającymi się dzięki instalowaniu w nim rozszerzeń.\footnote{\,\url{https://code.visualstudio.com/docs/editor/extension-gallery}} Dodatek stworzony przez Jacques Lucke na potrzeby rozwoju addonów do programu Blender pozwala między innymi na automatyzację procesu aktualizowania tworzonego addonu przez tworzenie skrótu w wewnętrznych folderach Blendera, co znacznie przyśpiesza pracę nad systemem. Ponadto posiada ułatwienia takie jak debugowanie w konsoli, tworzenie odpowiednich struktur i przydatne komendy. Sposób działania dodatku ma na celu także upewnienie się, że rozszerzenie nie koliduje z innym menedżerem pakietów Pythona.\footnote{\,\url{https://marketplace.visualstudio.com/items?itemName=JacquesLucke.blender-development}} 
 
 
 
@@ -172,45 +166,53 @@ Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadz
 % https://github.com/majenkotech/PCB-Blend
 
 \chapter{Architektura zrealizowanego systemu}
-W tym rozdziale zostanie omówiony sposób implementacji systemu i jego kluczowe funkcjonalności.
+Aby zobrazować podstawowe założenia projektu, w niniejszym rozdziale zostanie omówiona koncepcyjna struktura zrealizowanego systemu. Przedstawi ona bardziej szczegółowo mechanizmy działania najważniejszych komponentów aplikacji, a finalnie pomoże w samym procesie tworzenia oprogramowania.
+Kolejny rozdział przedstawi natomiast szczegóły implementacji każdego z przedstawionych elementów.
 
-% moduły zewnętrzne pythona: cairo, gerber etc.
-% (+ importer?)
 \section{Założenia i wymagania projektowe}
-W przypadku tak rozległych możliwości rozwoju systemu, konieczne jest właściwe zdefiniowanie wymagań i dążenie do ich realizacji.
-Jako, że addon musi posiadać interfejs, implementacja przy pomocy API Blendera wymaga, by był podzielony na moduły odpowiedzialne za logikę i renderowanie interfejsu. System został zaimplementowany w oparciu o wzorzec MVP z uwagi na to, że jest to struktura logicznie wynikająca ze sposobu używania API Blendera. Więcej o implementacji wzorca w podrozdziale \ref{mvp}.
-System powinien posiadać wszystkie następujące funkcjonalności:
+W przypadku tak rozległych możliwości rozwoju systemu, kluczowe jest właściwe zdefiniowanie wymagań projektu i dążenie do ich realizacji. Postawienie ograniczeń w kwestii wspieranych formatów na jakich działał będzie dodatek jest konieczne z uwagi na zróżnicowanie technologii używanych w procesie tworzenia PCB. Z drugiej strony nacisk na modułowość rozwiązania pozwoli później na łatwiejsze dodanie dowolnego rozszerzenia.
+System powinien implementować wszystkie następujące funkcjonalności:
 
 \begin{itemize}
+
+\item Implementacja interfejsu przy pomocy API Blendera 2.8
+% wymaga, by był podzielony na moduły odpowiedzialne za logikę i renderowanie interfejsu
+% MVP - wzorzec projektowy
+% klasy odpowiedzialne - za poszczególne rzeczy to chyba w implementacji i strukturze (next rozdział)
+
 \item Czytanie i interpretacja plików Gerber (RS-274X)
 
+% moduły zewnętrzne pythona: cairo, gerber etc.
 %interpretacja Gerber (RS-274X) i Excellon, interpretacja kształtów i rysowanie za pomoca krzywych, renderowanie obrazu płytki
 %PCB Tools currently supports the following file formats:
 %    Gerber (RS-274X)
 %    Excellon
 %with planned support for IPC-2581, ODB++ and more.
 %https://pcb-tools.readthedocs.io/en/latest/about.html
+% gdzie zamieścić info o licencji?
 
-\item Tworzenie modelu płytki zgodnego z rzeczywistymi wymiarami
+\item Tworzenie modelu płytki na podstawie otrzymanych plików  zgodnego z rzeczywistymi wymiarami
+% brakujące pliki nie powinny psuć procesu
+% możliwość wybrania dowolnie wielu lub sprecyzowanie konkretnych plików
 % konwersja z mil/mm
-% renderowanie modelu z wymiarów warstwy outline/jakiejkolwiek innej warstwy jeżeli nie ma
-\item Czytanie pliku placement w formacie .csv i wczytywanie odpowiednich modeli podzespołów z bazy modeli
-% cache, smart search
+% renderowanie modelu z wymiarów warstwy outline/jakiejkolwiek innej warstwy jeżeli nie ma w przypadku nie podania outline'a
+% wymiary, shader, przesuwanie, idk
+
+\item Czytanie i interpretacja pliku placement w formacie .csv
+
 %(placement files) ładowanie komponentów i linkowanie plików pomysł wzięty z: https://github.com/majenkotech/PCB-Blend
+% obsługa powtarzających się elementów (cache)
+%  smart search - w przypadku nie znalezienia - w przypadku nie znalezienia w ogóle - pusty (może możliwość wyłączenia tego? ale po co jak można usunąć model po prostu...)
 
 \item Udostępnianie użytkownikowi możliwości użycia dostarczonej lub własnej bazy modeli podzespołów
-%  tworzenie bazy modeli - importer *.wrl
+% tworzenie bazy modeli - importer *.wrl
 % https://kicad.github.io/packages3d/
 % działanie w przypadku braku modeli
 % niedziałający importer w Blenderze przy implementacji w rozdziale 2
 % musi w miarę mało ważyć więc baza modeli będzie osobno
 %All Parts in this repository are licensed under CC-BY 3.0 http://creativecommons.org/licenses/by/3.0/
-
-\newpage
-\end{itemize}
-
-%Aby zrealizować założenia pracy, wymagana była baza modeli podzespołów elektronicznych montowanych na PCB. Z uwagi na mnogość producentów, rodzajów i typów podzespołów oraz fakt, że każdy program służący do projektowania może oznaczać je inaczej, optymalnym rozwiązaniem wydaje się udostępnienie użytkownikowi podstawowej bazy modeli. Ponadto zastozowanie szukania modeli częściowo dopasowanych nazwą. Z uwagi na fakt, że niemożliwym jest obsługa wszystkich wyjątków, koniecznością staje się umożliwienie użytkownikowi kożystanie z własnych modeli.
-
+% gdzie zamieścić info o licencji?
+%
 % inne bazy modeli:
 % BARDZO DUŻO, ale trzeba by bylo pobierać wszystko skryptem
 % https://grabcad.com/
@@ -219,8 +221,27 @@ System powinien posiadać wszystkie następujące funkcjonalności:
 % https://www.te.com/
 % https://www.traceparts.com/en
 
+\end{itemize}
+
+
+
+
 
 \section {Struktura projektu}
+Podstawowy wybór strukturalny następującego rozwiązania jest podyktowany wymaganiami i sposobem komunikacji z API Blendera. Struktura folderów dodatku do programu Blender jest dowolna z założeniem, że w folderze głównym znajduje się plik \emph{\_\_init\_\_.py} odpowiedzialny za rejestrowanie dodatku. Jest on automatycznie wykonywany po wybraniu folderu i włączeniu addonu w sekcji "Dodatki" w programie Blender. Pozostałe elementy są pogrupowane według prostej i logicznej konwencji modułów w języku Python, zatem każdy moduł posiada swój folder, jest to jednak podyktowane tylko enkapsulacją modułów i wygodą w używaniu referencji między skryptami.
+
+\subsection{Główna struktura interfejsu API Blendera}
+% https://airplanes3d.net/downloads/pydev2/pydev-blender-en.pdf (strona 43)
+Z poziomu kodu, API Blendera udostępnia główne moduły pod słowem kluczowym \textbf{bpy}\footnote{\,\url{https://docs.blender.org/api/current/index.html}} a jego podstawowe i główne elementy to:
+\begin{itemize}
+\item \textbf{bpy.data} -- Zapewnia dostęp do danych bieżącego pliku \emph{*.blend} (Jest to rozszerzenie używane przez program Blender). Każde z jego pól jest zbiorem obiektów danego typu (sceny, obiekty, zbiory wierzchołków, materiały, kolekcje itp.).
+\item \textbf{bpy.context} -- Zawiera wszelnie dane środowiskowe obrazujące bieżący stan programu (bieżący wybór, tryb i region edytora) oraz wiele globalnych właściwości.
+\item \textbf{bpy.ops} -- Zawiera wszystkie \emph{Operatory} Blendera. (W API każda komenda Blendera jest zaimplementowana jako metoda klasy \emph{Operator}).
+\item \textbf{bpy.types} -- Posiada definicje wszystkich klas używanych w strukturach.
+\end{itemize}
+Istnieje także wiele mniejszych, pobocznych modułów i podmodułów pomocniczych. Niektóre z nich nie należą nawet do głównego modułu \textbf{bpy}. Mniejsze moduły, między innymi: bpy.props, bpy\_extras, bpy.utils, mathutils, bmesh, będą omówione w dalszej części tej pracy.
+% ew. zostaną wspomniane w rozdziale X odnośnie implementacji
+
 \subsection{Implementacja wzorca projektowego} \label{mvp}
 MVP (ang. \emph{Model–view–presenter}) jest wzorcem architektury oprogramowania opierającym się na trzech głównych założeniach:\cite{mvp}
 \begin{itemize}
@@ -228,60 +249,98 @@ MVP (ang. \emph{Model–view–presenter}) jest wzorcem architektury oprogramowa
 \item Widok (\emph{View}) wyświetla dane uzyskane z prezentera i przekazuje dane wejściowe wprowadzane przez użytkownika do prezentera
 \item Prezenter jest wywoływany z Widoku aby wyświetlać dane pobrane z Modelu i przetwarzać dane wejściowe
 \end{itemize}
-W tym przypadku modelem jest logika modułu, widokiem - klasa odpowiedzialna za renderowanie i odbieranie danych wejściowych a Prezenter to API Blendera.
+System został zaimplementowany w oparciu o ten właśnie wzorzec z uwagi na to, że jest to struktura logicznie wynikająca ze sposobu używania API Blendera.
+W tym przypadku, w dużym uproszczeniu Modelem jest logika modułu, Widokiem -- klasa odpowiedzialna za renderowanie i odbieranie danych wejściowych a Prezenter to API Blendera.
+\newline
 
 
-%\begin{itemize}
-%\item omówienie MVP, może nie MVP tylko coś innego?...
-%\item omówienie pokrótce plików projektu, podział na moduły - interfejs, logika, init
-%\item klasy blednera etc
-%\end{itemize}
+Skrypty w języku Python można zintegrować z Blenderem na następujące sposoby:
+\begin{itemize}
+\item Definiując silnik renderujący.
+\item Poprzez zdefiniowanie operatorów.
+\item Poprzez zdefiniowanie menu, nagłówków i paneli.
+\item Wstawiając nowe przyciski do istniejących menu, nagłówków i paneli.
+\end{itemize}
+W Pythonie odbywa się to poprzez zdefiniowanie klasy, która jest podklasą istniejącego typu. 
+Tak więc, przechodząc do rzeczywistego stanu rzeczy, omawiany addon o nazwie \emph{PCB-Blender} jest zdefiniowany jako folder lub skompresowane archiwum składające się z następujących elementów:
+\begin{itemize}
+\item \emph{PCB\_LayoutPanel} -- Klasa odpowiedzialna za wyświetlanie interfejsu i przekazywanie danych wybranych przez użytkownika, dziedzicząca z klas abstrakcyjnych \emph{Panel} i \emph{ImportHelper}. Wraz z klasami pomocniczymi znajduje się w pliku PCB\_Blender\_panel.py,
+\item \emph{PCB\_Generate} -- Klasa dziedzicząca z klasy \emph{Operator}, znajdująca się razem z klasami pośrednimi w pliku PCB\_Blender.py,
+\item \emph{\_\_init\_\_.py} -- Plik zawierający metadane i rejestrujący powyższe klasy,
+\item Foldery zawierające pozostałe moduły Pythona do których odnosi się główny Operator -- \emph{PCB\_Generate}.
+\end{itemize}
+
 \subsection{baza modeli} \label{bazamodeli}
-importer?
 
-\section{Implementacja funkcjonalności}
+Jednym z pierwszych z wyzwań podczas tworzenia dodatku był dobór zasobów w postaci modeli 3D. Aby zrealizować założenia pracy, wymagana była baza modeli podzespołów elektronicznych montowanych na PCB. Z uwagi na mnogość producentów, rodzajów i typów podzespołów oraz fakt, że każdy program służący do projektowania może oznaczać je inaczej, optymalnym rozwiązaniem wydaje się udostępnienie użytkownikowi podstawowej bazy modeli. Ponadto zastosowanie szukania modeli częściowo dopasowanych nazwą. Z uwagi na fakt, że niemożliwym jest obsługa wszystkich wyjątków, koniecznością staje się umożliwienie użytkownikowi kożystanie z własnych modeli. Istnieje wiele stron udostępniających modele 3D na zasadach komercyjnych jak i darmowych licencji. Są one często wykorzystywane przez twórców jak i programy projektowe. Oto kilka z nich zaprezentowanych w tabeli: \ref{fig:table}.
+
+\begin{table}[htb]
+\begin{tabular}{|l|l|l|} \hline
+Adres URL \\ \hline
+\url{https://grabcad.com/} \\ \hline
+\url{https://www.3dcontentcentral.com/} \\ \hline
+\url{https://www.digikey.com/en/resources/3d-models} \\ \hline
+\url{https://www.te.com/} \\ \hline
+\url{https://www.traceparts.com/en} \\ \hline
+\end{tabular}
+\caption{Publicznie dostępne bazy modeli podzespołów}
+\source{Opracowanie własne}
+\label{fig:table}
+\end{table}
+Nie posiadają one jednak możliwości masowego pobierania modeli. Pomijając tą niedogodność, która musiałaby być rozwiązana skryptem automatyzującym pracę, również ilość pobranych materiałów znacznie przekroczyłaby racjonalny poziom. Z pomocą przychodzi tu darmowy zbiór modeli używanych w programie KiCad\footnote{\,\url{https://kicad.github.io/packages3d/}}. Modele są dostępne między innymi w formacie \emph{*.wrl} więc można zaimportować je do Blendera. Więcej o przetwarzaniu plików \emph{*.wrl} oraz tworzeniu bazy modeli w rozdziale \ref{wrl}.
+
 
 
 \chapter{Szczegóły implementacyjne systemu}
-\section{Podstawowe komponenty}
-\section{Funkcjonalność panelu}
+W tym rozdziale zostanie omówiony sposób implementacji kluczowych i pobocznych funkcjonalności systemu.
+\section {Rejestrowanie addonu}
+Każdy dodatek do Blendera musi implementować metody \emph{register()} oraz \emph{unregister()}. Wprowadzone w wersji 2.8 usprawnienia znacznie ułatwiają ten proces
+
+%\lstset{caption={Przykłąd implementacji funkcji, która przetwarza tensor wedle opisanego powyżej wzoru.}}
+%\begin{lstlisting}
+%# Gram Matrix
+%	 def gram(tensor):
+%	 	 _, d, h, w = tensor.size()
+%          tensor = tensor.view(d, h * w)
+%          gram = torch.mm(tensor, tensor.t())
+%          return gram
+%\end{lstlisting}
+
+
+%\begin{equation}
+%gram\:=\:torch.mm (tensor,\:tensor.t)
+%\end{equation}
+
+\section {interfejs}
+\section {czytanie, interpretacja Gerbera, excellon + renderowanie? czy kolejny punkt zobaczymy}
+\section {zanim będziemy mogli wczytać plik placement musmy mieć modele - stworzenie bazy modeli, importer *.wrl\label{wrl}}
+% przejrzeć commity i wypisać funkcjonalności zaimplementowane w importerze
+\section {czytanie placement .csv i stawianie modelu}
+
+% ew .Funkcjonalność panelu
 
 \chapter{Podsumowanie}
 
+    % przypomniec cel pracy,
+    % jak zostały spełnione wymagania: implikacje, konsekwencje, walory,
+    % w jaki sposób zaimplementowana technologia rozwiązuje postawione problemy
+    % czy wszystkie problemy zostały rozwiązane,
+    % jakie nie zostały rozwiązane, dlaczego?
+
 W efekcie końcowym zostały utworzone \emph{de facto} 2 addony.
-Aplikacja,  mimo  iż  jest  dedykowana  dla  projektów stworzonych w gEDA, KiCad,  jest  o  wiele  bardziej uniwersalna, ponieważ w praktyce wystarczy dodać modele, aby uzyskać format możliwy do odczytania. Podsumowując,  w  wyniku  prac  implementacyjnych  udało  się  zrealizować projekt,  który  jest  zgodny  z  przyjętymi  wcześniej  wymaganiami  i  założeniami przedstawionymi  na  etapie  opracowywania  koncepcji  rozwiązania.  Pomijając  jedną dużą modyfikację związaną ze zmianą metodologii postępowania, projekt powstałych klas pozostał w niezmienionej formie. Warto także zaznaczyć, że przyjęta architektura realizuje   wszystkie   postawione   wymagania   funkcjonalne.   Niestety   aplikacja   nie uniknęła wad. Jedną, ale za to dość poważną, jest spore zapotrzebowanie na pamięć przy przetwarzaniu dużych plików. Jednak dla mniejszych zbiorów danych wydajność czasowa jest na akceptowalnym poziomie. W  kolejnym  rozdziale  przedstawione  zostanie  podsumowanie całokształtu prac związanych z analizą oraz implementacją omawianej aplikacji.
+%Aplikacja,  mimo  iż  jest  dedykowana  dla  projektów stworzonych w gEDA, KiCad,  jest  o  wiele  bardziej uniwersalna, ponieważ w praktyce wystarczy dodać modele, aby uzyskać format możliwy do odczytania. Podsumowując,  w  wyniku  prac  implementacyjnych  udało  się  zrealizować projekt,  który  jest  zgodny  z  przyjętymi  wcześniej  wymaganiami  i  założeniami przedstawionymi  na  etapie  opracowywania  koncepcji  rozwiązania.  Pomijając  jedną dużą modyfikację związaną ze zmianą metodologii postępowania, projekt powstałych klas pozostał w niezmienionej formie. Warto także zaznaczyć, że przyjęta architektura realizuje   wszystkie   postawione   wymagania   funkcjonalne.   Niestety   aplikacja   nie uniknęła wad. Jedną, ale za to dość poważną, jest spore zapotrzebowanie na pamięć przy przetwarzaniu dużych plików. Jednak dla mniejszych zbiorów danych wydajność czasowa jest na akceptowalnym poziomie. W  kolejnym  rozdziale  przedstawione  zostanie  podsumowanie całokształtu prac związanych z analizą oraz implementacją omawianej aplikacji.
 
 \section{Realizacja założonych celów pracy magisterskiej}
 \section {Problemy napotkane podczas realizacji systemu}
+\subsection {importer *.wrl}
 \section{Możliwości rozwoju systemu}
-\section{Wnioski?}
+\section{Wnioski}
 
-
-
-\begin{table}[!htb]
-\begin{tabular}{|l|l|l|} \hline
-Nazwa & Autor      & Adres URL \\ \hline
-\texttt{sablotron} & Ginger Alliance & \url{http://www.gingerall.com} \\ \hline
-\texttt{Xt}        & J.~Clark & \url{http://www.jclark.com} \\ \hline
-\texttt{4XSLT}     & FourThought & \url{http://www.fourthought.com} \\ \hline
-\texttt{Saxon}     & Michael Kay &  \url{http://users.iclway.co.uk/mhkay/saxon} \\ \hline
-\texttt{Xalan}     & Apache XML Project & \url{http://xml.apache.org} \\ \hline
-\end{tabular}
-\caption{Publicznie dostępne procesory XLST\label{zest:proces:xslt}}
-\source{Opracowanie własne}
-\end{table}
 
 
 % zakończenie
 \summary
-Możliwości, jakie stoją przed archiwum prac magisterskich opartych na
-XML-u, są ograniczone jedynie czasem, jaki należy poświęcić na pełną
-implementację systemu. Nie ma przeszkód technologicznych do stworzenia
-co najmniej równie doskonałego repozytorium, jak ma to miejsce w
-przypadku ETD. Jeżeli chcemy w pełni uczestniczyć w rozwoju nowej ery
-informacji, musimy szczególną uwagę przykładać do odpowiedniej
-klasyfikacji i archiwizacji danych. Sądzę, że język XML znacznie to
-upraszcza.
+%Możliwości, jakie stoją przed archiwum prac magisterskich opartych na XML-u, są ograniczone jedynie czasem, jaki należy poświęcić na pełną implementację systemu. Nie ma przeszkód technologicznych do stworzenia co najmniej równie doskonałego repozytorium, jak ma to miejsce w przypadku ETD. Jeżeli chcemy w pełni uczestniczyć w rozwoju nowej ery informacji, musimy szczególną uwagę przykładać do odpowiedniej klasyfikacji i archiwizacji danych. Sądzę, że język XML znacznie to upraszcza.
 
 % załączniki (opcjonalnie):
 %\appendix
