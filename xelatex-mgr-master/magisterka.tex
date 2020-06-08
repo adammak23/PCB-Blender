@@ -41,6 +41,8 @@
 \begin{document}
 
 % TOOD: ZMIENIĆ STRESZCZENIE
+
+%2 Kolejny rozdział przedstawi natomiast szczegóły implementacji każdego z przedstawionych elementów.
 \begin{abstract}
 Istnieje wiele programów do projektowania płytek drukowanych, jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
 \end{abstract}
@@ -167,7 +169,6 @@ Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadz
 
 \chapter{Architektura zrealizowanego systemu}
 Aby zobrazować podstawowe założenia projektu, w niniejszym rozdziale zostanie omówiona koncepcyjna struktura zrealizowanego systemu. Przedstawi ona bardziej szczegółowo mechanizmy działania najważniejszych komponentów aplikacji, a finalnie pomoże w samym procesie tworzenia oprogramowania.
-Kolejny rozdział przedstawi natomiast szczegóły implementacji każdego z przedstawionych elementów.
 
 \section{Założenia i wymagania projektowe}
 W przypadku tak rozległych możliwości rozwoju systemu, kluczowe jest właściwe zdefiniowanie wymagań projektu i dążenie do ich realizacji. Postawienie ograniczeń w kwestii wspieranych formatów na jakich działał będzie dodatek jest konieczne z uwagi na zróżnicowanie technologii używanych w procesie tworzenia PCB. Z drugiej strony nacisk na modułowość rozwiązania pozwoli później na łatwiejsze dodanie dowolnego rozszerzenia.
@@ -176,9 +177,6 @@ System powinien implementować wszystkie następujące funkcjonalności:
 \begin{itemize}
 
 \item Implementacja interfejsu przy pomocy API Blendera 2.8
-% wymaga, by był podzielony na moduły odpowiedzialne za logikę i renderowanie interfejsu
-% MVP - wzorzec projektowy
-% klasy odpowiedzialne - za poszczególne rzeczy to chyba w implementacji i strukturze (next rozdział)
 
 \item Czytanie i interpretacja plików Gerber (RS-274X)
 
@@ -261,7 +259,7 @@ Skrypty w języku Python można zintegrować z Blenderem na następujące sposob
 \item Wstawiając nowe przyciski do istniejących menu, nagłówków i paneli.
 \end{itemize}
 W Pythonie odbywa się to poprzez zdefiniowanie klasy, która jest podklasą istniejącego typu. 
-Tak więc, przechodząc do rzeczywistego stanu rzeczy, omawiany addon o nazwie \emph{PCB-Blender} jest zdefiniowany jako folder lub skompresowane archiwum składające się z następujących elementów:
+Tak więc, przechodząc do rzeczywistego stanu rzeczy, omawiany addon o nazwie \emph{PCB-Blender} jest zdefiniowany jako skompresowane archiwum składające się z następujących elementów:
 \begin{itemize}
 \item \emph{PCB\_LayoutPanel} -- Klasa odpowiedzialna za wyświetlanie interfejsu i przekazywanie danych wybranych przez użytkownika, dziedzicząca z klas abstrakcyjnych \emph{Panel} i \emph{ImportHelper}. Wraz z klasami pomocniczymi znajduje się w pliku PCB\_Blender\_panel.py,
 \item \emph{PCB\_Generate} -- Klasa dziedzicząca z klasy \emph{Operator}, znajdująca się razem z klasami pośrednimi w pliku PCB\_Blender.py,
@@ -293,20 +291,19 @@ Nie posiadają one jednak możliwości masowego pobierania modeli. Pomijając t�
 \chapter{Szczegóły implementacyjne systemu}
 W tym rozdziale zostanie omówiony sposób implementacji kluczowych i pobocznych funkcjonalności systemu.
 \section {Rejestrowanie addonu}
-Każdy dodatek do Blendera musi posiadać obiekt \emph{bl\_info} zawierający metadane addonu implementować metody \emph{register()} oraz \emph{unregister()}. Wprowadzone w wersji 2.8 usprawnienia znacznie ułatwiają ten proces. Jeżeli nie potrzebujemy dodatkowych funkcjonalności podczas rejestrowania i usuwania dodatku lub jego komponentów, możemy użyć funkcji \emph{register\_classes\_factory} z pakietu \textbf{bpy.utils}, która automatycznie je zaimplementuje.
+Każdy dodatek do Blendera musi posiadać obiekt \emph{bl\_info}, zawierający metadane addonu oraz implementować metody \emph{register()} oraz \emph{unregister()}. Wprowadzone w wersji 2.8 API usprawnienia znacznie ułatwiają ten proces. Jeżeli nie potrzebujemy dodatkowych funkcjonalności podczas rejestrowania i usuwania dodatku lub jego komponentów, możemy użyć funkcji \emph{register\_classes\_factory} z pakietu \textbf{bpy.utils}, która automatycznie je zaimplementuje.
 
 \lstset{caption={\emph{\_\_init\_\_.py} -- Plik rejestrujący dodatek.}}
 \begin{lstlisting}
 bl_info = {
-    "name" : "PCB-Blender",
-    "author" : "Adam Makiewicz",
-    "description" : "Addon for generating models of PCB from Gerber files",
-    "blender" : (2, 80, 0),
-    "version" : (0, 1, 4),
-    "category" : "Generic",
-    "location" : "Scene Properties > PCB Renderer"
+	"name" : "PCB-Blender",
+	"author" : "Adam Makiewicz",
+	"description" : "Addon for generating models of PCB from Gerber files",
+	"blender" : (2, 80, 0),
+	"version" : (0, 1, 4),
+	"category" : "Generic",
+	"location" : "Scene Properties > PCB Renderer"
 }
-
 	import bpy
 	from . PCB_Blender_panel import PCB_LayoutPanel
 	from . PCB_Blender import PCB_Generate
@@ -315,9 +312,42 @@ bl_info = {
 	register, unregister = bpy.utils.register_classes_factory(classes)
 \end{lstlisting}
 
-\section {Interfejs}
+\section {Implementacja interfejsu}
+
+Klasa \emph{PCB\_LayoutPanel} dostarcza całą funkcjonalność renderowania interfejsu dzięki dziedziczeniu z klasy bazowej \emph{Panel}. Właściwości takie jak nazwa, miejsce wyświetlania się panelu, typ regionu itp. muszą być zdefiniowane w odpowiednim formacie. Dzięki temu są one automatycznie interpretowane przez API i poprawnie wyświetlane. Właściwości klasy zaczynają się od przedrostka \emph{bl\_}, jest to konwencja używana do odróżnienia wbudowanych właściwości klas Blendera od tych, które zostają dodane przez programistę.
+
+\lstset{caption={Przykład właściwości panelu z pliku \emph{PCB\_Blender\_panel.py}}}
+\begin{lstlisting}
+	bl_label = "PCB Renderer"
+	bl_idname = "SCENE_PT_layout"
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = "scene"
+\end{lstlisting}
+
+Oprócz posiadania statycznych właściwości, klasa powinna przechowywać i przekazywać dynamiczne zmienne. Aby dodać zmienną do zarejestrowanej klasy należy użyć jednej z Definicji Właściwości (ang. \emph{Property Definition}) z modułu \textbf{bpy.props}. Moduł ten definiuje właściwości rozszerzające wewnętrzne dane Blendera. Wynik tych funkcji służy do przypisywania właściwości do klas zarejestrowanych w Blenderze i nie można ich używać bezpośrednio. Są to między innymi \emph{StringProperty, FloatProperty, EnumProperty, BoolProperty} lub dowolne ich zestawienie jako jedna strukturalna zmienna. Funkcje wymagają każdorazowego zdefiniowania nazwy, opisu, wartości domyślnej, podtypu itp. więc aby uniknąć redundancji kodu zostały stworzone funkcje pomocnicze, przedstawione we fragmencie kodu \ref{Listing3}.
+
+% trzeba chyba dopisać coś do powyższego fragmentu, albo dać \newpage bo fragment koru przechodzi przez 2 strony...
+
+\lstset{caption={Funkcje pomocnicze tworzące zmienną o tym samym typie lecz innym zastosowaniu -- ścieżki pliku i ścieżka folderu}\label{Listing3}}
+\begin{lstlisting}
+def FilePath(_name, _description="", _default=""):
+	return StringProperty(name=_name, default = _default,
+	description=_description, subtype = 'FILE_PATH')
+    
+def DirPath(_name, _description="", _default=""):
+	return StringProperty(name=_name, default = _default,
+	description=_description, subtype = 'DIR_PATH')
+\end{lstlisting}
+
+
+Oprócz zmiennych, aby poprawnie zaimplementować dany interfejs, klasa musi zawierać też funkcję \emph{draw()} odpowiedzialną za rozmieszczenie elementów renderowanych w panelu.
 
 \section {czytanie, interpretacja Gerbera, excellon + renderowanie? czy kolejny punkt zobaczymy}
+% funkcja wykonania (execute),  pobiera instancję operatora i bieżący kontekst. 
+%informacje o środowisku wywoływanego operatora - bieżący wybór, aktywny obiekt itp. - są przekazywane do funkcji execute () w argumencie kontekstowym
+% dziedziczenie (implementowanie) klasy Operator
+%API Blendera wymaga od klasy operatora implementacji ściśle zdefiniowanych metod. Jest to rodzaj „umowy” pomiędzy skryptem a systemem rdzenia Blendera. Zgadzamy się na wdrożenie wymaganych funkcji w swojej klasie. Blender zgadza się wywoływać je w ściśle określonych okolicznościach. W programowaniu obiektowym taka lista zakontraktowanych funkcji i właściwości nazywa się „interfejsem”. Aby trochę pomóc w jego implementacji, Blender API dostarcza klasę bazową dla operatorów pochodnych, o nazwie bpy.types.Operator. W żargonie programowania obiektowego Operatoris jest tak zwaną „klasą abstrakcyjną”. Po prostu zapewnia domyślne, puste implementacje wszystkich metod wymaganych przez interfejs. Nasza klasa operatora dziedziczy tę domyślną treść z bazy (bpy.types.Operator).
 \section {zanim będziemy mogli wczytać plik placement musmy mieć modele - stworzenie bazy modeli, importer *.wrl\label{wrl}}
 % przejrzeć commity i wypisać funkcjonalności zaimplementowane w importerze
 \section {czytanie placement .csv i stawianie modelu}

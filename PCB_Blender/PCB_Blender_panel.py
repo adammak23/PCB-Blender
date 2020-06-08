@@ -8,6 +8,9 @@ from . PCB_Blender import PCB_Generate
 def FilePath(_name, _description="", _default=""):
     return StringProperty(name=_name, default = _default, description=_description, subtype = 'FILE_PATH')
     
+def DirPath(_name, _description="", _default=""):
+    return StringProperty(name=_name, default = _default, description=_description, subtype = 'DIR_PATH')
+
 def Float(_name, _description="", _default=""):
     return FloatProperty(name=_name, default = _default, description=_description)
 
@@ -20,12 +23,12 @@ class PCB_LayoutPanel(Panel):
     bl_context = "scene"
 
     scene = bpy.types.Scene
-    scene.gerber_folder = FilePath("", "Define file path to gerber folder")
-    scene.output_path = FilePath("Output folder", "Define output file path, PCB images will be saved there")
+    scene.gerber_folder = DirPath("", "Define file path to gerber folder")
+    scene.output_path = DirPath("Output folder", "Define output file path, PCB images will be saved there")
     scene.width = Float("Width","Max image resolution [Width]", 1024)
     scene.height = Float("Height","Max image resolution [Height]", 1024)
     scene.expand = bpy.props.BoolProperty(default=False)
-    scene.model_folder = FilePath("", "Define file path to Your own models library")
+    scene.model_folder = DirPath("", "Define file path to Your own models library")
 
     scene.cu = FilePath("Copper Top", "Define file")
     scene.mu = FilePath("Mask Top", "Define file")
