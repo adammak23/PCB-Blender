@@ -406,7 +406,7 @@ class PCB_Generate(Operator):
 
         global units
 
-        if(self.placeProgram == 'SELF' and self.model_folder == ""):
+        if(self.placeProgram == 'SELF' and self.model_folder == "" and (self.placeTop != "" or self.placeBottom != "")):
             ShowMessageBox("Please enter path to Your models library", "Error", 'ERROR')
             return {'CANCELLED'}
 

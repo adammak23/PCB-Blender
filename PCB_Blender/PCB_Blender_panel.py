@@ -11,7 +11,7 @@ def FilePath(_name, _description="", _default=""):
 def Float(_name, _description="", _default=""):
     return FloatProperty(name=_name, default = _default, description=_description)
 
-class PCB_LayoutPanel(Panel, ImportHelper):
+class PCB_LayoutPanel(Panel):
     """Creates a Panel in the scene context of the properties editor"""
     bl_label = "PCB Renderer"
     bl_idname = "SCENE_PT_layout"
@@ -56,11 +56,11 @@ class PCB_LayoutPanel(Panel, ImportHelper):
         col = layout.split(factor=0.5)
 
         col.label(text="Gerber folder")
-        col.prop(context.scene, 'gerber_folder')
+        col.prop(context.scene, "gerber_folder")
 
 
         row = layout.row()
-        row.prop(context.scene, "expand", icon="TRIA_DOWN" if bpy.context.scene.expand else "TRIA_RIGHT", icon_only=True, emboss=False)
+        row.prop(context.scene, "expand", icon="TRIA_DOWN" if context.scene.expand else "TRIA_RIGHT", icon_only=True, emboss=False)
         row.label(text="Or select individually specific files:")
 
         if bpy.context.scene.expand:
@@ -106,31 +106,31 @@ class PCB_LayoutPanel(Panel, ImportHelper):
         col.prop(context.scene, 'output_path')
         
         row = layout.row()
-        if(bpy.context.scene.output_path is not ""):
-            col.label(text="Some files might be overridden in folder: "+bpy.context.scene.output_path, icon='FILE_TICK')
+        if(context.scene.output_path is not ""):
+            col.label(text="Some files might be overridden in folder: "+ context.scene.output_path, icon='FILE_TICK')
         
-        PCB_Generate.width_resolution = bpy.context.scene.width
-        PCB_Generate.height_resolution = bpy.context.scene.height
-        PCB_Generate.GERBER_FOLDER = bpy.context.scene.gerber_folder
-        PCB_Generate.OUTPUT_FOLDER = bpy.context.scene.output_path
+        PCB_Generate.width_resolution = context.scene.width
+        PCB_Generate.height_resolution = context.scene.height
+        PCB_Generate.GERBER_FOLDER = context.scene.gerber_folder
+        PCB_Generate.OUTPUT_FOLDER = context.scene.output_path
 
-        PCB_Generate.use_separate_files = bpy.context.scene.expand
-        PCB_Generate.cu  = bpy.context.scene.cu
-        PCB_Generate.mu  = bpy.context.scene.mu
-        PCB_Generate.pu  = bpy.context.scene.pu
-        PCB_Generate.su  = bpy.context.scene.su
-        PCB_Generate.cb  = bpy.context.scene.cb
-        PCB_Generate.mb  = bpy.context.scene.mb
-        PCB_Generate.pb  = bpy.context.scene.pb
-        PCB_Generate.sb  = bpy.context.scene.sb
+        PCB_Generate.use_separate_files = context.scene.expand
+        PCB_Generate.cu  = context.scene.cu
+        PCB_Generate.mu  = context.scene.mu
+        PCB_Generate.pu  = context.scene.pu
+        PCB_Generate.su  = context.scene.su
+        PCB_Generate.cb  = context.scene.cb
+        PCB_Generate.mb  = context.scene.mb
+        PCB_Generate.pb  = context.scene.pb
+        PCB_Generate.sb  = context.scene.sb
 
-        PCB_Generate.edg = bpy.context.scene.edg
-        PCB_Generate.drl = bpy.context.scene.drl
-        PCB_Generate.drl2 = bpy.context.scene.drl2
+        PCB_Generate.edg = context.scene.edg
+        PCB_Generate.drl = context.scene.drl
+        PCB_Generate.drl2 = context.scene.drl2
 
-        PCB_Generate.placeTop = bpy.context.scene.placeTop
-        PCB_Generate.placeBottom = bpy.context.scene.placeBottom
-        PCB_Generate.placeProgram = bpy.context.scene.PickAndPlaceProgram
-        PCB_Generate.model_folder = bpy.context.scene.model_folder
+        PCB_Generate.placeTop = context.scene.placeTop
+        PCB_Generate.placeBottom = context.scene.placeBottom
+        PCB_Generate.placeProgram = context.scene.PickAndPlaceProgram
+        PCB_Generate.model_folder = context.scene.model_folder
 
         row.operator('pcb.generate', icon = 'SYSTEM')
