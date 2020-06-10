@@ -51,7 +51,7 @@ class PCB_LayoutPanel(Panel):
         ("INTERNAL", "Internal", "Make sure you downloaded models and placed them in this addon folder\models", "PACKAGE", 1),
         ("SELF", "Select folder", "Select my own models library folder (only .blend files are supported!)","IMPORT", 2)
         ]
-    scene.PickAndPlaceProgram = EnumProperty(name = "", description = "Program which generated Pick and Place file", items = Program, default = "SELF")
+    scene.PickAndPlace = EnumProperty(name = "", description = "Pick and Place files", items = Program, default = "SELF")
 
     def draw(self, context):
 
@@ -94,8 +94,8 @@ class PCB_LayoutPanel(Panel):
 
         col = layout.split(factor=0.5)
         col.label(text="Models database")
-        col.prop(context.scene, 'PickAndPlaceProgram')
-        if bpy.context.scene.PickAndPlaceProgram == 'SELF':
+        col.prop(context.scene, 'PickAndPlace')
+        if bpy.context.scene.PickAndPlace == 'SELF':
             col = layout.column()
             col.prop(context.scene, 'model_folder')
 
@@ -111,29 +111,5 @@ class PCB_LayoutPanel(Panel):
         row = layout.row()
         if(context.scene.output_path is not ""):
             col.label(text="Some files might be overridden in folder: "+ context.scene.output_path, icon='FILE_TICK')
-        
-        PCB_Generate.width_resolution = context.scene.width
-        PCB_Generate.height_resolution = context.scene.height
-        PCB_Generate.GERBER_FOLDER = context.scene.gerber_folder
-        PCB_Generate.OUTPUT_FOLDER = context.scene.output_path
-
-        PCB_Generate.use_separate_files = context.scene.expand
-        PCB_Generate.cu  = context.scene.cu
-        PCB_Generate.mu  = context.scene.mu
-        PCB_Generate.pu  = context.scene.pu
-        PCB_Generate.su  = context.scene.su
-        PCB_Generate.cb  = context.scene.cb
-        PCB_Generate.mb  = context.scene.mb
-        PCB_Generate.pb  = context.scene.pb
-        PCB_Generate.sb  = context.scene.sb
-
-        PCB_Generate.edg = context.scene.edg
-        PCB_Generate.drl = context.scene.drl
-        PCB_Generate.drl2 = context.scene.drl2
-
-        PCB_Generate.placeTop = context.scene.placeTop
-        PCB_Generate.placeBottom = context.scene.placeBottom
-        PCB_Generate.placeProgram = context.scene.PickAndPlaceProgram
-        PCB_Generate.model_folder = context.scene.model_folder
 
         row.operator('pcb.generate', icon = 'SYSTEM')

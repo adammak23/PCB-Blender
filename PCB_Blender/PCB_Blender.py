@@ -377,27 +377,6 @@ class PCB_Generate(Operator):
     bl_idname = "pcb.generate"
     bl_label = "Generate"
     bl_description = "Warning: Files in Output folder might be overriden"
-    GERBER_FOLDER = ""
-    OUTPUT_FOLDER = ""
-    width_resolution = 1024
-    height_resolution = 1024
-
-    use_separate_files = False
-    cu = None
-    mu = None
-    pu = None
-    su = None
-    cb = None
-    mb = None
-    pb = None
-    sb = None
-    edg = None
-    drl = None
-    drl2 = None
-    placeTop = None
-    placeBottom = None
-    placeProgram = None
-    model_folder = None
 
     def execute(self, context):
 
@@ -406,27 +385,27 @@ class PCB_Generate(Operator):
 
         global units
 
-        if(self.placeProgram == 'SELF' and self.model_folder == "" and (self.placeTop != "" or self.placeBottom != "")):
+        if(context.scene.PickAndPlace == 'SELF' and context.scene.model_folder == "" and (context.scene.placeTop != "" or context.scene.placeBottom != "")):
             ShowMessageBox("Please enter path to Your models library", "Error", 'ERROR')
             return {'CANCELLED'}
 
         # Placement list
-        if(self.placeTop is not ''): read_csv(self.placeTop, self.placeProgram, self.model_folder)    
+        if(context.scene.placeTop is not ''): read_csv(context.scene.placeTop, context.scene.PickAndPlace, context.scene.model_folder)    
         UpdateProgress(33)
-        if(self.placeBottom is not ''): read_csv(self.placeBottom, self.placeProgram, self.model_folder)       
+        if(context.scene.placeBottom is not ''): read_csv(context.scene.placeBottom, context.scene.PickAndPlace, context.scene.model_folder)       
         UpdateProgress(66)
 
-        if(str(self.OUTPUT_FOLDER) == ""):
+        if(str(context.scene.output_path) == ""):
             ShowMessageBox("Please enter path to output folder", "Error", 'ERROR')
             return {'CANCELLED'}
-        if(self.use_separate_files is not None):
-            if(self.use_separate_files):
+        if(context.scene.expand is not None):
+            if(context.scene.expand):
                 # Create a new drawing context
                 ctx = GerberCairoContext()
                 # Preprocess and load layers from strings
-                string_up_layers     = [self.edg, self.pu, self.su, self.cu, self.mu, self.drl, self.drl2]
+                string_up_layers     = [context.scene.edg, context.scene.pu, context.scene.su, context.scene.cu, context.scene.mu, context.scene.drl, context.scene.drl2]
                 up_layers = []
-                string_bottom_layers = [self.edg, self.pb, self.sb, self.cb, self.mb, self.drl, self.drl2]
+                string_bottom_layers = [context.scene.edg, context.scene.pb, context.scene.sb, context.scene.cb, context.scene.mb, context.scene.drl, context.scene.drl2]
                 bottom_layers = []
                 for stringlayer in string_up_layers:
                     if(stringlayer is not None and stringlayer is not ""):
@@ -439,14 +418,14 @@ class PCB_Generate(Operator):
                     units = up_layers[0].cam_source.units
 
                 # Render images
-                Top_layer_FileName = CreateImage("Top_layer", up_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
+                Top_layer_FileName = CreateImage("Top_layer", up_layers, ctx, context.scene.output_path, context.scene.width, context.scene.height)
                 UpdateProgress(75)
-                Bottom_layer_FileName = CreateImage("Bottom_layer", bottom_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution)
+                Bottom_layer_FileName = CreateImage("Bottom_layer", bottom_layers, ctx, context.scene.output_path, context.scene.width, context.scene.height)
                 UpdateProgress(85)
                 # Create models
-                Top_layer = CreateModel(Top_layer_FileName, self.OUTPUT_FOLDER, ctx, extrude = True)
+                Top_layer = CreateModel(Top_layer_FileName, context.scene.output_path, ctx, extrude = True)
                 MoveDown(Top_layer, distance=0.0016)
-                Bottom_layer = CreateModel(Bottom_layer_FileName, self.OUTPUT_FOLDER, ctx)
+                Bottom_layer = CreateModel(Bottom_layer_FileName, context.scene.output_path, ctx)
                 MoveDown(Bottom_layer, distance=0.00161)
                 UpdateProgress(95)
 
@@ -457,27 +436,27 @@ class PCB_Generate(Operator):
                 return {'FINISHED'}
 
 
-        if(str(self.GERBER_FOLDER) == ""):
+        if(str(context.scene.gerber_folder) == ""):
             ShowMessageBox("Please enter path to folder with gerber files", "Error", 'ERROR')
             return {'CANCELLED'}
         else:
             # Create a new drawing context
             ctx = GerberCairoContext()
             # Create a new PCB instance
-            pcb = PCB.from_directory(self.GERBER_FOLDER)
+            pcb = PCB.from_directory(context.scene.gerber_folder)
             # Render images
 
             if len(pcb.layers) > 0:
                 units = pcb.layers[0].cam_source.units
             
-            Top_layer_FileName = CreateImage("Top_layer", pcb.top_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
+            Top_layer_FileName = CreateImage("Top_layer", pcb.top_layers, ctx, context.scene.output_path, context.scene.width, context.scene.height, pcb_instance = pcb)
             UpdateProgress(75)
-            Bottom_layer_FileName = CreateImage("Bottom_layer", pcb.bottom_layers, ctx, self.OUTPUT_FOLDER, self.width_resolution, self.height_resolution, pcb_instance = pcb)
+            Bottom_layer_FileName = CreateImage("Bottom_layer", pcb.bottom_layers, ctx, context.scene.output_path, context.scene.width, context.scene.height, pcb_instance = pcb)
             UpdateProgress(85)
             # Create models
-            Top_layer = CreateModel(Top_layer_FileName, self.OUTPUT_FOLDER, ctx, pcb_instance = pcb, extrude = True)
+            Top_layer = CreateModel(Top_layer_FileName, context.scene.output_path, ctx, pcb_instance = pcb, extrude = True)
             MoveDown(Top_layer, distance=0.0016)
-            Bottom_layer = CreateModel(Bottom_layer_FileName, self.OUTPUT_FOLDER, ctx, pcb_instance = pcb)
+            Bottom_layer = CreateModel(Bottom_layer_FileName, context.scene.output_path, ctx, pcb_instance = pcb)
             MoveDown(Bottom_layer, distance=0.00161)
             UpdateProgress(95)
             
@@ -488,6 +467,6 @@ class PCB_Generate(Operator):
             return {'FINISHED'}
 
         EndProgress()
-        #ShowMessageBox("Some files might be overridden in folder: "+self.OUTPUT_FOLDER, "Warning", 'IMPORT')
+        #ShowMessageBox("Some files might be overridden in folder: "+context.scene.output_path, "Warning", 'IMPORT')
 
         
