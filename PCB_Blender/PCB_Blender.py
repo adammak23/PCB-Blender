@@ -27,6 +27,7 @@ import csv
 units = 'metric'
 
 # Reading Placement file
+
 def read_csv(file_csv, program = 'INTERNAL', folder = None):
     
     # For reading placement files
@@ -159,16 +160,25 @@ def read_csv(file_csv, program = 'INTERNAL', folder = None):
         
         objects.append(oname)
 
-# Blender utils
+# Info Utilities
 
 def RegisterProgress():
-    bpy.context.window_manager.progress_begin(0, 1000)
-    
+    bpy.context.window_manager.progress_begin(0, 1000)  
+
 def UpdateProgress(num):
     bpy.context.window_manager.progress_update(num*10)
 
 def EndProgress():
     bpy.context.window_manager.progress_end()
+
+def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
+
+        def draw(self, context):
+            self.layout.label(text=message)
+
+        bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
+
+# Editor Utilities
 
 def PurgeOrphanData():
     areaType = bpy.context.area.type
@@ -179,13 +189,6 @@ def PurgeOrphanData():
 
 def deselectAll():
     bpy.ops.object.select_all(action='DESELECT')
-
-def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
-
-        def draw(self, context):
-            self.layout.label(text=message)
-
-        bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
 
 def ChangeArea(area_type, space_type):
     for area in bpy.context.screen.areas: 
@@ -211,7 +214,7 @@ def MoveUp(obj, times=1, distance = 0.0001):
 def MoveDown(obj, times=1, distance = 0.0001):
     MoveUp(obj, times, -distance)
 
-# Generating Functions:
+# Generating Mesh:
 
 def RenderBounds(name, bounds, scaler, material):
     if bounds is None: return
@@ -361,7 +364,7 @@ def CreateModel(name, source_folder, ctx, pcb_instance=None, extrude=False):
         
     return mesh
 
-# Cairo-based rendering
+# Rendering
 
 def CreateImage(name, layers, ctx, OUTPUT_FOLDER, w=512, h=512, pcb_instance=None):
      

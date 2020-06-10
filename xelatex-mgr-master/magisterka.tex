@@ -157,10 +157,6 @@ Format \emph{.wrl} zwany VRML (ang. \emph {Virtual Reality Modeling Language}) p
 Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadzanych co roku przez serwis StackOverflow\footnote{\,\url{https://insights.stackoverflow.com/survey/2018/\#development-environments-and-tools}}$^{,}$\footnote{\,\url{https://insights.stackoverflow.com/survey/2019\#development-environments-and-tools}} cieszy się coraz większym uznaniem. Wybór tego środowiska nie był jednak dyktowany jego popularnością lecz nowymi możliwościami otwierającymi się dzięki instalowaniu w nim rozszerzeń.\footnote{\,\url{https://code.visualstudio.com/docs/editor/extension-gallery}} Dodatek stworzony przez Jacques Lucke na potrzeby rozwoju addonów do programu Blender pozwala między innymi na automatyzację procesu aktualizowania tworzonego addonu przez tworzenie skrótu w wewnętrznych folderach Blendera, co znacznie przyśpiesza pracę nad systemem. Ponadto posiada ułatwienia takie jak debugowanie w konsoli, tworzenie odpowiednich struktur i przydatne komendy. Sposób działania dodatku ma na celu także upewnienie się, że rozszerzenie nie koliduje z innym menedżerem pakietów Pythona.\footnote{\,\url{https://marketplace.visualstudio.com/items?itemName=JacquesLucke.blender-development}} 
 
 
-
-
-% ROZDZIAŁ 2
-
 % Czy i gdzie to dać?
 % przegląd krytyczny literatury - analiza krytyczna dotychczasowych badań/rozwiązań z zakresu tematu?
 % majenkotech i Eagle2Blender oba bardzo specyficzne do gEDA i Eagle nieposiadające interfejsu, niewygodne do użycia, wymagają dotatkowych narzędzi, znikoma dokumentacja
@@ -180,50 +176,13 @@ System powinien implementować wszystkie następujące funkcjonalności:
 
 \item Czytanie i interpretacja plików Gerber (RS-274X)
 
-% moduły zewnętrzne pythona: cairo, gerber etc.
-%interpretacja Gerber (RS-274X) i Excellon, interpretacja kształtów i rysowanie za pomoca krzywych, renderowanie obrazu płytki
-%PCB Tools currently supports the following file formats:
-%    Gerber (RS-274X)
-%    Excellon
-%with planned support for IPC-2581, ODB++ and more.
-%https://pcb-tools.readthedocs.io/en/latest/about.html
-% gdzie zamieścić info o licencji?
-
 \item Tworzenie modelu płytki na podstawie otrzymanych plików, zgodnego z rzeczywistymi wymiarami
-% brakujące pliki nie powinny psuć procesu
-% możliwość wybrania dowolnie wielu lub sprecyzowanie konkretnych plików
-% konwersja z mil/mm
-% renderowanie modelu z wymiarów warstwy outline/jakiejkolwiek innej warstwy jeżeli nie ma w przypadku nie podania outline'a
-% wymiary, shader, przesuwanie, idk
 
 \item Czytanie i interpretacja pliku placement w formacie .csv
 
-%(placement files) ładowanie komponentów i linkowanie plików pomysł wzięty z: https://github.com/majenkotech/PCB-Blend
-% obsługa powtarzających się elementów (cache)
-%  smart search - w przypadku nie znalezienia - w przypadku nie znalezienia w ogóle - pusty (może możliwość wyłączenia tego? ale po co jak można usunąć model po prostu...)
-
 \item Udostępnienie użytkownikowi możliwości użycia dostarczonej lub własnej bazy modeli podzespołów
-% tworzenie bazy modeli - importer *.wrl
-% https://kicad.github.io/packages3d/
-% działanie w przypadku braku modeli
-% niedziałający importer w Blenderze przy implementacji w rozdziale 2
-% musi w miarę mało ważyć więc baza modeli będzie osobno
-%All Parts in this repository are licensed under CC-BY 3.0 http://creativecommons.org/licenses/by/3.0/
-% gdzie zamieścić info o licencji?
-%
-% inne bazy modeli:
-% BARDZO DUŻO, ale trzeba by bylo pobierać wszystko skryptem
-% https://grabcad.com/
-% https://www.3dcontentcentral.com/
-% https://www.digikey.com/en/resources/3d-models
-% https://www.te.com/
-% https://www.traceparts.com/en
 
 \end{itemize}
-
-
-
-
 
 \section {Struktura projektu}
 Podstawowy wybór strukturalny następującego rozwiązania jest podyktowany wymaganiami i sposobem komunikacji z API Blendera. Struktura folderów dodatku do programu Blender jest dowolna z założeniem, że w folderze głównym znajduje się plik \emph{\_\_init\_\_.py} odpowiedzialny za rejestrowanie dodatku. Jest on automatycznie wykonywany po wybraniu folderu i włączeniu addonu w sekcji "Dodatki" w programie Blender. Pozostałe elementy są pogrupowane według konwencji modułów w języku Python, zatem każdy moduł posiada swój folder, jest to jednak podyktowane tylko enkapsulacją modułów i wygodą w używaniu referencji między skryptami.
@@ -314,10 +273,11 @@ bl_info = {
 
 \section {Implementacja interfejsu}
 
-Klasa \emph{PCB\_LayoutPanel} dostarcza całą funkcjonalność renderowania interfejsu dzięki dziedziczeniu z klasy bazowej \emph{Panel}. Właściwości takie jak nazwa, miejsce wyświetlania się panelu, typ regionu itp. muszą być zdefiniowane w odpowiednim formacie. Dzięki temu są one automatycznie interpretowane przez API i poprawnie wyświetlane. Właściwości klasy zaczynają się od przedrostka \emph{bl\_}, jest to konwencja używana do odróżnienia wbudowanych właściwości klas Blendera od tych, które zostają dodane przez programistę.
+Klasa \emph{PCB\_LayoutPanel} dostarcza całą funkcjonalność renderowania interfejsu dzięki dziedziczeniu z wewnętrznej klasy bazowej \emph{Panel}. Właściwości takie jak nazwa, miejsce wyświetlania się panelu, wielkość, kontekst, typ regionu itp. muszą być zdefiniowane w odpowiednim formacie. Dzięki temu są one automatycznie interpretowane przez API i poprawnie wyświetlane. Właściwości klasy zaczynają się od przedrostka \emph{bl\_}, jest to konwencja używana do odróżnienia wbudowanych właściwości klas Blendera od tych, które zostają dodane przez programistę.
 
 \lstset{caption={Przykład właściwości panelu z pliku \emph{PCB\_Blender\_panel.py}}}
 \begin{lstlisting}
+class PCB_LayoutPanel(Panel):
 	bl_label = "PCB Renderer"
 	bl_idname = "SCENE_PT_layout"
 	bl_space_type = 'PROPERTIES'
@@ -325,9 +285,12 @@ Klasa \emph{PCB\_LayoutPanel} dostarcza całą funkcjonalność renderowania int
 	bl_context = "scene"
 \end{lstlisting}
 
-Oprócz posiadania statycznych właściwości, klasa powinna przechowywać i przekazywać dynamiczne zmienne. Aby dodać zmienną do zarejestrowanej klasy należy użyć jednej z Definicji Właściwości (ang. \emph{Property Definition}) z modułu \textbf{bpy.props}. Moduł ten definiuje właściwości rozszerzające wewnętrzne dane Blendera. Wynik tych funkcji służy do przypisywania właściwości do klas zarejestrowanych w Blenderze i nie można ich używać bezpośrednio. Są to między innymi \emph{StringProperty, FloatProperty, EnumProperty, BoolProperty} lub dowolne ich zestawienie jako jedna strukturalna zmienna. Funkcje wymagają każdorazowego zdefiniowania nazwy, opisu, wartości domyślnej, podtypu itp. więc aby uniknąć redundancji kodu zostały stworzone funkcje pomocnicze, przedstawione we fragmencie kodu \ref{Listing3}.
+\vspace{5mm}
 
-% trzeba chyba dopisać coś do powyższego fragmentu, albo dać \newpage bo fragment koru przechodzi przez 2 strony...
+Oprócz posiadania statycznych właściwości, klasa powinna przechowywać i przekazywać dynamiczne zmienne. Aby dodać zmienną do zarejestrowanej klasy w Blenderze należy użyć jednej z Definicji Właściwości (ang. \emph{Property Definition}) z modułu \textbf{bpy.props}. Moduł ten definiuje właściwości rozszerzające wewnętrzne dane Blendera. Wynik tych funkcji służy do przypisywania właściwości do klas zarejestrowanych w Blenderze i nie można ich używać bezpośrednio. Są to między innymi \emph{StringProperty, FloatProperty, EnumProperty, BoolProperty} lub dowolne ich zestawienie jako jedna strukturalna zmienna. Funkcje wymagają każdorazowego zdefiniowania nazwy, opisu, wartości domyślnej, podtypu itp. więc aby uniknąć redundancji kodu zostały stworzone funkcje pomocnicze, przedstawione we fragmencie kodu \ref{Listing3}. Zdefiniowanie typu \emph{StringProperty} jako ścieżka do pliku lub folderu sprawia, że do elementu wyświetlającego tą zmienną automatycznie zostanie przypisany przycisk otwierający eksplorator plików w celu wybrania pliku.
+
+% trzeba chyba dopisać coś do powyższego fragmentu, albo dać \newpage bo fragment kodu przechodzi przez 2 strony...
+\newpage
 
 \lstset{caption={Funkcje pomocnicze tworzące zmienną o tym samym typie lecz innym zastosowaniu -- ścieżki pliku i ścieżka folderu}\label{Listing3}}
 \begin{lstlisting}
@@ -340,20 +303,48 @@ def DirPath(_name, _description="", _default=""):
 	description=_description, subtype = 'DIR_PATH')
 \end{lstlisting}
 
+Oprócz zmiennych, aby poprawnie zaimplementować dany interfejs, klasa musi zawierać też funkcję \emph{draw()} odpowiedzialną za renderowanie elementów w panelu. Wygląd i rozmieszczenie elementów jest zdefioniowane przy pomocy obiektu klasy \emph{UILayout} i jego elementów takich jak kolumny i rzędy w których umieszcza się referencje do wspomnianych wyżej, dynamicznych zmiennych. Następnie w jednym z elementów zostaje umieszczone wywołanie operatora z klasy \emph{PCB\_Generate}, który przyjmuje kontekst w którym zostal wywołany --- a zatem również wszystkie zmienne.
 
-Oprócz zmiennych, aby poprawnie zaimplementować dany interfejs, klasa musi zawierać też funkcję \emph{draw()} odpowiedzialną za rozmieszczenie elementów renderowanych w panelu.
+% mogę to bardziej rozpisać i dać przykłady, ale są to bardzo proste i trywialne jednolinijkowce. Ewentualnie jeszcze logika chowania się kilku elementów, jakieś 3 linijki kodu
 
-\section {czytanie, interpretacja Gerbera, excellon + renderowanie? czy kolejny punkt zobaczymy}
-% funkcja wykonania (execute),  pobiera instancję operatora i bieżący kontekst. 
-%informacje o środowisku wywoływanego operatora - bieżący wybór, aktywny obiekt itp. - są przekazywane do funkcji execute () w argumencie kontekstowym
-% dziedziczenie (implementowanie) klasy Operator
-%API Blendera wymaga od klasy operatora implementacji ściśle zdefiniowanych metod. Jest to rodzaj „umowy” pomiędzy skryptem a systemem rdzenia Blendera. Zgadzamy się na wdrożenie wymaganych funkcji w swojej klasie. Blender zgadza się wywoływać je w ściśle określonych okolicznościach. W programowaniu obiektowym taka lista zakontraktowanych funkcji i właściwości nazywa się „interfejsem”. Aby trochę pomóc w jego implementacji, Blender API dostarcza klasę bazową dla operatorów pochodnych, o nazwie bpy.types.Operator. W żargonie programowania obiektowego Operatoris jest tak zwaną „klasą abstrakcyjną”. Po prostu zapewnia domyślne, puste implementacje wszystkich metod wymaganych przez interfejs. Nasza klasa operatora dziedziczy tę domyślną treść z bazy (bpy.types.Operator).
+\section {Interpretacja plików Gerber  (excellon + renderowanie kolejny punkt)}
+Jak wspomniano wcześniej, funkcja wykonania operatora (\emph{execute}), pobiera w argumencie informacje o środowisku wywoływanego i bieżący kontekst.
+API Blendera wymaga od klasy operatora implementacji ściśle zdefiniowanych metod. Jest to rodzaj „umowy” pomiędzy skryptem a systemem rdzenia Blendera. Zgadzamy się na wdrożenie wymaganych funkcji w swojej klasie. Blender zgadza się wywoływać je w ściśle określonych okolicznościach. W programowaniu obiektowym taka lista zakontraktowanych funkcji i właściwości nazywa się „interfejsem”. Aby trochę pomóc w jego implementacji, Blender API dostarcza klasę bazową dla operatorów pochodnych, o nazwie \emph{bpy.types.Operator}. W żargonie programowania obiektowego Operator jest tak zwaną „klasą abstrakcyjną”. Po prostu zapewnia domyślne, puste implementacje wszystkich metod wymaganych przez interfejs. Nasza klasa operatora dziedziczy tę domyślną treść z klasy bazowej.
+
+% moduły zewnętrzne pythona: cairo, gerber etc.
+%interpretacja Gerber (RS-274X) i Excellon, interpretacja kształtów i rysowanie za pomoca krzywych, renderowanie obrazu płytki
+%PCB Tools currently supports the following file formats:
+%    Gerber (RS-274X)
+%    Excellon
+%with planned support for IPC-2581, ODB++ and more.
+%https://pcb-tools.readthedocs.io/en/latest/about.html
+% gdzie zamieścić info o licencji?
+
+% podział na funkcje użytkowe, tworzące siatkę, renderujące
+% brakujące pliki nie powinny psuć procesu
+% możliwość wybrania dowolnie wielu lub sprecyzowanie konkretnych plików
+% konwersja z mil/mm
+% renderowanie modelu z wymiarów warstwy outline/jakiejkolwiek innej warstwy jeżeli nie ma w przypadku nie podania outline'a
+% wymiary, shader, przesuwanie, idk
 \section {zanim będziemy mogli wczytać plik placement musmy mieć modele - stworzenie bazy modeli, importer *.wrl\label{wrl}}
+
 % przejrzeć commity i wypisać funkcjonalności zaimplementowane w importerze
+
+% tworzenie bazy modeli - importer *.wrl
+% https://kicad.github.io/packages3d/
+% działanie w przypadku braku modeli
+% niedziałający importer w Blenderze przy implementacji w rozdziale 2
+% musi w miarę mało ważyć więc baza modeli będzie osobno
+%All Parts in this repository are licensed under CC-BY 3.0 http://creativecommons.org/licenses/by/3.0/
+% gdzie zamieścić info o licencji?
 \section {czytanie placement .csv i stawianie modelu}
+
 
 % ew .Funkcjonalność panelu
 
+%(placement files) ładowanie komponentów i linkowanie plików pomysł wzięty z: https://github.com/majenkotech/PCB-Blend
+% obsługa powtarzających się elementów (cache)
+%  smart search - w przypadku nie znalezienia - w przypadku nie znalezienia w ogóle - pusty (może możliwość wyłączenia tego? ale po co jak można usunąć model po prostu...)
 \chapter{Podsumowanie}
 
     % przypomniec cel pracy,
@@ -369,6 +360,12 @@ W efekcie końcowym zostały utworzone \emph{de facto} 2 addony.
 \section {Problemy napotkane podczas realizacji systemu}
 \subsection {importer *.wrl}
 \section{Możliwości rozwoju systemu}
+% globalne definiowane kolorów modelu?
+% style PCB w gerber.cairo
+% wspieranie innych rozszerzeń:
+https://pcb-tools.readthedocs.io/en/latest/about.html
+(with planned support for IPC-2581, ODB++ and more.)
+
 \section{Wnioski}
 
 
