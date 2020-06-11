@@ -76,7 +76,7 @@ Produkcja przemysłowa
 \centering
 \includegraphics[width=0.9\hsize]{fig/hokusai}
 \caption{Joel Betancourt znany jako Garabating - "Katsushika Hokusai Electronic Circuit Board"\label{RYS.1}}
-\source{https://garabating.com/post/44549621917/katsushika-hokusai-electronic-circuit-board}
+\source{\url{https://garabating.com/post/44549621917/katsushika-hokusai-electronic-circuit-board}}
 \end{figure}
 
 Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod uwagę mnogość technicznej wiedzy, pomiarów i zależności takich jak: optymalizacja długości ścieżek oraz ich szerokość, ochrona miejsc narażonych na dużą temperaturę, ograniczenia mechaniczne i montażowe, itd. Nawet zastosowanie automatucznego wyznaczania ścieżek do optymalizacji nie zawsze da poprawny rezultat.\footnote{\,\href{https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/}{Autodesk.com - Top 10 pcb component placement tips}} Z uwagi na ilość i różnorodność ograniczeń nie jest możliwa całkowita automatyzacja sprawdzania poprawności wykonanego projektu, zatem przydatna dla projektanta okazuje się wizualizacja efektu końcowego. Jest ona także niezbędnym elementem procesu marketingowego, logistycznego czy edukacyjnego. Istnieje wiele programów do projektowania PCB jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
@@ -326,18 +326,22 @@ Funkcje odnoszące się do bieżącego kontekstu i modyfikujące go wraz ze stan
 \begin{itemize}
 \item \emph{DeselectAll} --- Jak wskazuje nazwa, odznacza wszelkie obiekty aktywne na scenie, przydatna funkcjonalność gwarantująca powtarzalność wykonywanych operacji bez znaczenia w jakim stanie początkowym użytkownik uruchomi polecenia generujące obiekty.
 \item \emph{ChangeArea} --- Zmienia tryb okna wyszukując obecny aktywny region w kontekście.
-\item \emph{ChangeClipping} --- Zmienia minimalną odległość od renderowanego obiektu w oknie widoku do jakiej może zbliżyć się kamera. Podstawową wartością w Blenderze jest 10 centymetrów co jest zazwyczaj zbyt dużą odległością na oglądanie płytki drukowanej rzeczywistych wymiarów.
-\item \emph{PurgeOrphanData} Funkcja czyszcząca pamięć podręczną programu z nieużywanych na scenie elementów (wytworzonych obiektów, siatek modeli, zaimportowanych zdjęć i dołączonych plików \emph{.blend}). Nie jest ona używana podczas przebiegu programu, jednak jest używana w procesie rozwoju i testowania aplikacji, ułatwiając resetowanie stanu całego programu.
+\item \emph{ChangeClipping} --- Modyfikuje minimalną odległość od renderowanego obiektu w oknie widoku do jakiej może zbliżyć się kamera. Podstawową wartością w Blenderze jest 10 centymetrów co jest zazwyczaj zbyt dużą odległością na oglądanie płytki drukowanej rzeczywistych wymiarów.
+\item \emph{PurgeOrphanData} --- Funkcja czyszcząca pamięć podręczną programu z nieużywanych na scenie elementów (wytworzonych obiektów, siatek modeli, zaimportowanych zdjęć i dołączonych plików \emph{.blend}). Nie jest ona obecnie wywoływana podczas przebiegu programu, jednak jest używana w procesie rozwoju i testowania aplikacji, ułatwiając resetowanie stanu całego programu.
 \end{itemize}
 \subsection{Interpretacja plików}
-\subsubsection{Gerber i Excellon}
+\subsubsection{pcb-tools}
+Do wczytania plików Gerber i Excellon został wykorzystany moduł Pythona \emph{pcb-tools 0.1.6}, stworzony przez Paulo Henrique Silva i udostępniony na zasadach licencji Apache\footnote{\,\url{https://pypi.org/project/pcb-tools/}}. Narzędzia udostępniane przez moduł pozwalają na interpretację instrukcji maszynowych zawartych w plikach i zamianę ich na obiekty --- tzw. prymitywy (ang. \emph{primitives}), składające się z podstawowych wielokątów i krzywych --- a także ekstrakcję informacji o wymiarach. Moduł został zmodyfikowany aby umożliwić mu funkcjonowanie bez dynamicznego pobierania zewnętrznych bibliotek.
+\subsubsection{cairocffi}
+Cairocffi jest to oparty o CFFI\footnote{\,Interfejs do języka Python, umożliwiający wywoływanie metod w języku C}$^{,}$\footnote{\,\url{https://cffi.readthedocs.io/en/latest/}} zamiennik modułu \emph{Pycairo} --- zestaw powiązań Pythona i obiektowego API dla \emph{Cairo}. \emph{Cairo} jest to biblioteka grafiki wektorowej 2D z obsługą wielu urządzeń wyjściowych, w tym buforów obrazów, plików PNG, PostScript, PDF i SVG. 
+Klasa \emph{GerberCairoContext} w pliku cairo\_backend.py odpowiada za powiązania obiektów 
 \subsubsection{Placement}
 O ile pliki placement i ścieżka do bazy modeli 3D zostały zapewnione
 \subsection{Renderowanie}
-% pcb-tools 0.1.6
+
 % cffi __version_info__ = (1, 14, 0)
 % cairocffi version_info = (1, 17, 2) skompilowana wersja dll
-% moduły zewnętrzne pythona: cairo, gerber etc.
+% moduły zewnętrzne pythona: cairo etc.
 %interpretacja Gerber (RS-274X) i Excellon, interpretacja kształtów i rysowanie za pomoca krzywych, renderowanie obrazu płytki
 %PCB Tools currently supports the following file formats:
 %    Gerber (RS-274X)
@@ -373,6 +377,7 @@ O ile pliki placement i ścieżka do bazy modeli 3D zostały zapewnione
 %  smart search - w przypadku nie znalezienia - w przypadku nie znalezienia w ogóle - pusty (może możliwość wyłączenia tego? ale po co jak można usunąć model po prostu...)
 \chapter{Podsumowanie}
 
+\url{https://github.com/adammak23/PCB-Blender}
     % przypomniec cel pracy,
     % jak zostały spełnione wymagania: implikacje, konsekwencje, walory,
     % w jaki sposób zaimplementowana technologia rozwiązuje postawione problemy
