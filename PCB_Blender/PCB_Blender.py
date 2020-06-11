@@ -110,7 +110,7 @@ def read_csv(file_csv, program = 'INTERNAL', folder = None):
     objects_data  = bpy.data.objects
     objects_scene = bpy.context.scene.objects
 
-    deselectAll()
+    DeselectAll()
 
     objects = []
 
@@ -187,7 +187,7 @@ def PurgeOrphanData():
     bpy.ops.outliner.orphans_purge()
     bpy.context.area.type = areaType
 
-def deselectAll():
+def DeselectAll():
     bpy.ops.object.select_all(action='DESELECT')
 
 def ChangeArea(area_type, space_type):
@@ -204,17 +204,13 @@ def ChangeClipping(amount):
                 if s.type == 'VIEW_3D':
                     s.clip_start = amount
 
-# Move Utils
+## Move Utils
 
-def MoveUp(obj, times=1, distance = 0.0001):
+def Move(obj, distance = 0.0001):
     if obj is None: return
-    for x in range(times):
-        obj.location += mathutils.Vector((0,0,distance))
+    obj.location += mathutils.Vector((0,0,distance))
 
-def MoveDown(obj, times=1, distance = 0.0001):
-    MoveUp(obj, times, -distance)
-
-# Generating Mesh:
+# Mesh
 
 def RenderBounds(name, bounds, scaler, material):
     if bounds is None: return
@@ -286,7 +282,7 @@ def RenderOutline(name, layer, material, offset, scaler):
     bpy.ops.uv.cube_project(cube_size=1, scale_to_bounds=True)
  
     bpy.ops.object.mode_set(mode='OBJECT')
-    deselectAll()
+    DeselectAll()
 
     return MeshObj
 
@@ -427,17 +423,10 @@ class PCB_Generate(Operator):
                 UpdateProgress(85)
                 # Create models
                 Top_layer = CreateModel(Top_layer_FileName, context.scene.output_path, ctx, extrude = True)
-                MoveDown(Top_layer, distance=0.0016)
+                Move(Top_layer, distance=-0.0016)
                 Bottom_layer = CreateModel(Bottom_layer_FileName, context.scene.output_path, ctx)
-                MoveDown(Bottom_layer, distance=0.00161)
+                Move(Bottom_layer, distance=-0.00161)
                 UpdateProgress(95)
-
-                ChangeArea('VIEW_3D', 'MATERIAL')
-                ChangeClipping(0.001)
-
-                #PurgeOrphanData()
-                return {'FINISHED'}
-
 
         if(str(context.scene.gerber_folder) == ""):
             ShowMessageBox("Please enter path to folder with gerber files", "Error", 'ERROR')
@@ -458,18 +447,17 @@ class PCB_Generate(Operator):
             UpdateProgress(85)
             # Create models
             Top_layer = CreateModel(Top_layer_FileName, context.scene.output_path, ctx, pcb_instance = pcb, extrude = True)
-            MoveDown(Top_layer, distance=0.0016)
+            Move(Top_layer, distance=-0.0016)
             Bottom_layer = CreateModel(Bottom_layer_FileName, context.scene.output_path, ctx, pcb_instance = pcb)
-            MoveDown(Bottom_layer, distance=0.00161)
+            Move(Bottom_layer, distance=-0.00161)
             UpdateProgress(95)
             
-            ChangeArea('VIEW_3D', 'MATERIAL')
-            ChangeClipping(0.001)
-
-            #PurgeOrphanData()
-            return {'FINISHED'}
-
+        ChangeArea('VIEW_3D', 'MATERIAL')
+        ChangeClipping(0.001)
         EndProgress()
         #ShowMessageBox("Some files might be overridden in folder: "+context.scene.output_path, "Warning", 'IMPORT')
+        #PurgeOrphanData()
+        return {'FINISHED'}
+
 
         
