@@ -158,7 +158,7 @@ Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadz
 
 
 % Czy i gdzie to dać?
-% przegląd krytyczny literatury - analiza krytyczna dotychczasowych badań/rozwiązań z zakresu tematu?
+% podrozdział: przegląd krytyczny literatury - analiza krytyczna dotychczasowych badań/rozwiązań z zakresu tematu
 % majenkotech i Eagle2Blender oba bardzo specyficzne do gEDA i Eagle nieposiadające interfejsu, niewygodne do użycia, wymagają dotatkowych narzędzi, znikoma dokumentacja
 %https://bitbucket.org/hyOzd/pcb2blender/src/master/
 % https://github.com/majenkotech/PCB-Blend
@@ -217,7 +217,8 @@ Skrypty w języku Python można zintegrować z Blenderem na następujące sposob
 \item Poprzez zdefiniowanie menu, nagłówków i paneli.
 \item Wstawiając nowe przyciski do istniejących menu, nagłówków i paneli.
 \end{itemize}
-W Pythonie odbywa się to poprzez zdefiniowanie klasy, która jest podklasą istniejącego typu. 
+%W Pythonie odbywa się to poprzez zdefiniowanie klasy, która jest podklasą istniejącego typu.
+API Blendera wymaga od klasy implementacji ściśle zdefiniowanych metod. Jest to rodzaj „umowy” pomiędzy skryptem a systemem rdzenia Blendera. Zgadzamy się na wdrożenie wymaganych funkcji w swojej klasie a Blender zgadza się wywoływać je w ściśle określonych okolicznościach. W programowaniu obiektowym taka lista zakontraktowanych funkcji i właściwości nazywa się „interfejsem”. Aby pomóc w jego implementacji, API dostarcza klasę bazową dla operatorów pochodnych, o nazwie \emph{bpy.types.Operator}. W żargonie programowania obiektowego Operator jest tak zwaną „klasą abstrakcyjną”. Po prostu zapewnia domyślne, puste implementacje wszystkich metod wymaganych przez interfejs. Nasza klasa operatora dziedziczy tę domyślną treść z klasy bazowej.
 Tak więc, przechodząc do rzeczywistego stanu rzeczy, omawiany addon o nazwie \emph{PCB-Blender} jest zdefiniowany jako skompresowane archiwum składające się z następujących elementów:
 \begin{itemize}
 \item \emph{PCB\_LayoutPanel} -- Klasa odpowiedzialna za wyświetlanie interfejsu i przekazywanie danych wybranych przez użytkownika, dziedzicząca z klas abstrakcyjnych \emph{Panel} i \emph{ImportHelper}. Wraz z klasami pomocniczymi znajduje się w pliku PCB\_Blender\_panel.py,
@@ -249,6 +250,7 @@ Nie posiadają one jednak możliwości masowego pobierania modeli. Pomijając t�
 
 \chapter{Szczegóły implementacyjne systemu}
 W tym rozdziale zostanie omówiony sposób implementacji kluczowych i pobocznych funkcjonalności systemu.
+
 \section {Rejestrowanie addonu}
 Każdy dodatek do Blendera musi posiadać obiekt \emph{bl\_info}, zawierający metadane addonu oraz implementować metody \emph{register()} oraz \emph{unregister()}. Wprowadzone w wersji 2.8 API usprawnienia znacznie ułatwiają ten proces. Jeżeli nie potrzebujemy dodatkowych funkcjonalności podczas rejestrowania i usuwania dodatku lub jego komponentów, możemy użyć funkcji \emph{register\_classes\_factory} z pakietu \textbf{bpy.utils}, która automatycznie je zaimplementuje.
 
@@ -308,8 +310,8 @@ Oprócz zmiennych, aby poprawnie zaimplementować dany interfejs, klasa musi zaw
 % mogę to bardziej rozpisać i dać przykłady, ale są to bardzo proste i trywialne jednolinijkowce. Ewentualnie jeszcze logika chowania się kilku elementów, jakieś 3 linijki kodu
 
 \section {Interpretacja plików Gerber  (excellon + renderowanie kolejny punkt)}
-Jak wspomniano wcześniej, funkcja wykonania operatora (\emph{execute}), pobiera w argumencie informacje o środowisku wywoływanego i bieżący kontekst.
-API Blendera wymaga od klasy operatora implementacji ściśle zdefiniowanych metod. Jest to rodzaj „umowy” pomiędzy skryptem a systemem rdzenia Blendera. Zgadzamy się na wdrożenie wymaganych funkcji w swojej klasie. Blender zgadza się wywoływać je w ściśle określonych okolicznościach. W programowaniu obiektowym taka lista zakontraktowanych funkcji i właściwości nazywa się „interfejsem”. Aby trochę pomóc w jego implementacji, Blender API dostarcza klasę bazową dla operatorów pochodnych, o nazwie \emph{bpy.types.Operator}. W żargonie programowania obiektowego Operator jest tak zwaną „klasą abstrakcyjną”. Po prostu zapewnia domyślne, puste implementacje wszystkich metod wymaganych przez interfejs. Nasza klasa operatora dziedziczy tę domyślną treść z klasy bazowej.
+Jak wspomniano wcześniej, funkcja wykonania operatora (\emph{execute}) pobiera w argumencie informacje o środowisku i bieżący kontekst w jakim jest wywoływana. Następnie wykonuje odpowiednie obliczenia i przekształcenia w programie.
+
 
 % moduły zewnętrzne pythona: cairo, gerber etc.
 %interpretacja Gerber (RS-274X) i Excellon, interpretacja kształtów i rysowanie za pomoca krzywych, renderowanie obrazu płytki
