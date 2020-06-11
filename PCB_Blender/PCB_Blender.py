@@ -28,7 +28,7 @@ units = 'metric'
 
 # Reading Placement file
 
-def read_csv(file_csv, program = 'INTERNAL', folder = None):
+def read_csv(file_csv, program = 'SELF', folder = None):
     
     # For reading placement files
     objects = None
@@ -78,18 +78,15 @@ def read_csv(file_csv, program = 'INTERNAL', folder = None):
     #For each missing model try to find another with similar name (with most fitting keywords)
     #Every component is usually formed as follows: Type_(Subtype_)Dimensions_(AddiotionalDimensions_)(Rotation_)(AdditionalAttributes)
     separator = '_'
-    
     for missing in required:
-
-        #print("Attempting to search: ", missing)
         separatedList = missing.split(separator)
-
         for compfile in compfiles:
+            UpdateProgress(i/len(compfiles))
             found = False
             with bpy.data.libraries.load(compfile, link=True) as (data_from, data_to):
                 i = 0
+                # Search models with names starting with most keywords possible
                 while i < len(separatedList)-1:
-                    # Search models with names starting with most keywords possible
                     newSearch = separator.join(separatedList[:len(separatedList)-i])
                     newFound = [value for value in data_from.meshes if value.startswith(newSearch)]
                     if len(newFound) > 0:

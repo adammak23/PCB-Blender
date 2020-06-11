@@ -40,8 +40,8 @@
 
 \begin{document}
 
-% TOOD: ZMIENIĆ STRESZCZENIE
-
+% TODO: ZMIENIĆ STRESZCZENIE
+%Rozdział 3 przedstawia implementację poszczególnych elementów równocześnie z przedstawieniem kolejności przepływu danych do poszczególnych komponentów i funkcji.(kolejność podrozdziałów przedstawia także proces wykonywany w aplikacji)
 %2 Kolejny rozdział przedstawi natomiast szczegóły implementacji każdego z przedstawionych elementów.
 \begin{abstract}
 Istnieje wiele programów do projektowania płytek drukowanych, jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest znakomitym narzędziem mogącym wspomagać ten proces.
@@ -330,17 +330,50 @@ Funkcje odnoszące się do bieżącego kontekstu i modyfikujące go wraz ze stan
 \item \emph{PurgeOrphanData} --- Funkcja czyszcząca pamięć podręczną programu z nieużywanych na scenie elementów (wytworzonych obiektów, siatek modeli, zaimportowanych zdjęć i dołączonych plików \emph{.blend}). Nie jest ona obecnie wywoływana podczas przebiegu programu, jednak jest używana w procesie rozwoju i testowania aplikacji, ułatwiając resetowanie stanu całego programu.
 \end{itemize}
 \subsection{Interpretacja plików}
-\subsubsection{pcb-tools}
-Do wczytania plików Gerber i Excellon został wykorzystany moduł Pythona \emph{pcb-tools 0.1.6}, stworzony przez Paulo Henrique Silva i udostępniony na zasadach licencji Apache\footnote{\,\url{https://pypi.org/project/pcb-tools/}}. Narzędzia udostępniane przez moduł pozwalają na interpretację instrukcji maszynowych zawartych w plikach i zamianę ich na obiekty --- tzw. prymitywy (ang. \emph{primitives}), składające się z podstawowych wielokątów i krzywych --- a także ekstrakcję informacji o wymiarach. Moduł został zmodyfikowany aby umożliwić mu funkcjonowanie bez dynamicznego pobierania zewnętrznych bibliotek.
-\subsubsection{cairocffi}
-Cairocffi jest to oparty o CFFI\footnote{\,Interfejs do języka Python, umożliwiający wywoływanie metod w języku C}$^{,}$\footnote{\,\url{https://cffi.readthedocs.io/en/latest/}} zamiennik modułu \emph{Pycairo} --- zestaw powiązań Pythona i obiektowego API dla \emph{Cairo}. \emph{Cairo} jest to biblioteka grafiki wektorowej 2D z obsługą wielu urządzeń wyjściowych, w tym buforów obrazów, plików PNG, PostScript, PDF i SVG. 
-Klasa \emph{GerberCairoContext} w pliku cairo\_backend.py odpowiada za powiązania obiektów 
 \subsubsection{Placement}
-O ile pliki placement i ścieżka do bazy modeli 3D zostały zapewnione
-\subsection{Renderowanie}
+O ile pliki placement i ścieżka do bazy modeli 3D zostały zapewnione, program przeczyta plik \emph{.csv} i zarejestruje nazwy, numery porządkowe, pozycje i rotacje wymaganych komponentów. Nazwy plików muszą zostać przycięte do dlugości 63 znaków, ponieważ jest to limit długości nazwy obiektu w pliku Blendera. Następnie, przeszukując rekursywnie folder wskazany jako baza modeli, dołączy wszystkie znalezione pliki \emph{.blend}, jednocześnie sprawdzając czy plik posiada szukany model. Nie są to operacje rzutujące na ilość alokowanej pamięci ponieważ tworzą tylko połączenia z plikiem źródłowym.
 
-% cffi __version_info__ = (1, 14, 0)
-% cairocffi version_info = (1, 17, 2) skompilowana wersja dll
+W przypadku gdy któryś z modeli nie został znaleziony jest uruchamiana funkcja wyszukiwania modelu o podobnej nazwie. Jest to algorytm, który porównuje początek nazwy obiektu, jednak dzięki uwzględnieniu stosowanej konwencji w nazewnictwie modeli podzespołów, jest w stanie osiągnąć o wiele mniejszą złożoność czasową niż podstawowy algorytm naiwny. Nazwy komponentów są to zazwyczaj ciągi nazw i oznaczeń oddzielone znakami "\_".
+% czy ten kod w ogóle jest potrzebny?
+\lstset{caption={Algorytm wyszukiwania komponentu po nazwie z uwzględnieniem całych słów (czy ten kod w ogóle jest potrzebny?)}}
+\begin{lstlisting}
+for missing in required:
+    separatedList = missing.split('_')
+    for compfile in compfiles:
+        UpdateProgress(i/len(compfiles))
+        found = False
+        with bpy.data.libraries.load(compfile, link=True)
+        as (data_from, data_to):
+            i = 0
+            # Search models with names starting with most keywords possible
+            while i < len(separatedList)-1:
+                newSearch = separator.join
+                (separatedList[:len(separatedList)-i])
+                newFound = [value for value in
+                data_from.meshes if value.startswith(newSearch)]
+                if len(newFound) > 0:
+                    elementFound = min(newFound, key=len)
+                    requested  = separator.join(separatedList)
+                    print("Found: ", elementFound,
+                    " similar to requested: ", requested)
+                    data_to.meshes.append(elementFound)
+                    for col in layout_table:
+                        if col[2] == requested:
+                            col[2] = elementFound
+                    found = True
+                    break
+                else:
+                    i+=1
+        if found:
+            break
+\end{lstlisting}
+Po uzyskaniu listy modeli, program ustawia je w odpowiednich miejscach zgodnych z wcześniej przeczytanymi koordynatami, uwzględniając ich rotację oraz skalę, która różni się w zależności jaki typ jednostki jest używany w projekcie (milimetr lub mil --- 1/1000 cala). W przypadku braku modelu, w odpowiednie miejsce zostaje ustawiony pusty obiekt, posiadający nazwę i numer porządkowy.
+\subsubsection{Gerber}
+Do wczytania plików Gerber i Excellon został wykorzystany moduł Pythona \emph{pcb-tools 0.1.6}, stworzony przez Paulo Henrique Silva i udostępniony na zasadach licencji Apache\footnote{\,\url{https://pypi.org/project/pcb-tools/}}. Narzędzia udostępniane przez moduł pozwalają na interpretację instrukcji maszynowych zawartych w plikach i zamianę ich na obiekty --- tzw. prymitywy (ang. \emph{primitives}), składające się z podstawowych wielokątów i krzywych --- a także ekstrakcję informacji o wymiarach. Moduł został zmodyfikowany aby umożliwić mu funkcjonowanie bez dynamicznego pobierania zewnętrznych bibliotek.
+\subsubsection{Renderowanie}
+Cairocffi jest to oparty o CFFI\footnote{\,Interfejs do języka Python, umożliwiający wywoływanie metod w języku C}$^{,}$\footnote{\,\url{https://cffi.readthedocs.io/en/latest/}} zamiennik modułu \emph{Pycairo} --- zestawu powiązań Pythona i obiektowego API dla \emph{Cairo}. \emph{Cairo} jest to biblioteka grafiki wektorowej 2D z obsługą wielu urządzeń wyjściowych, w tym buforów obrazów, plików PNG, PostScript, PDF i SVG. 
+Klasa \emph{GerberCairoContext} w pliku cairo\_backend.py odpowiada za powiązania funkcji renderowania obiektów bezpośrednio do biblioteki \emph{cairocffi}. Efektem wyjściowym jest stworzenie obrazu w formacie .PNG i zapisanie go w folderze wskazanym wcześniej przez użytkownika.
+
 % moduły zewnętrzne pythona: cairo etc.
 %interpretacja Gerber (RS-274X) i Excellon, interpretacja kształtów i rysowanie za pomoca krzywych, renderowanie obrazu płytki
 %PCB Tools currently supports the following file formats:
@@ -393,7 +426,7 @@ W efekcie końcowym zostały utworzone \emph{de facto} 2 addony.
 \section{Możliwości rozwoju systemu}
 % globalne definiowane kolorów modelu?
 % style PCB w gerber.cairo
-% wspieranie innych rozszerzeń:
+wspieranie innych rozszerzeń:
 https://pcb-tools.readthedocs.io/en/latest/about.html
 (with planned support for IPC-2581, ODB++ and more.)
 
@@ -403,7 +436,8 @@ https://pcb-tools.readthedocs.io/en/latest/about.html
 
 % zakończenie
 \summary
-%Możliwości, jakie stoją przed archiwum prac magisterskich opartych na XML-u, są ograniczone jedynie czasem, jaki należy poświęcić na pełną implementację systemu. Nie ma przeszkód technologicznych do stworzenia co najmniej równie doskonałego repozytorium, jak ma to miejsce w przypadku ETD. Jeżeli chcemy w pełni uczestniczyć w rozwoju nowej ery informacji, musimy szczególną uwagę przykładać do odpowiedniej klasyfikacji i archiwizacji danych. Sądzę, że język XML znacznie to upraszcza.
+% cffi: version_info__ = (1, 14, 0)
+% cairocffi: version_info = (1, 17, 2) (+skompilowana wersja cairo.dll, chyba niepotrzebna?)
 
 % załączniki (opcjonalnie):
 %\appendix
