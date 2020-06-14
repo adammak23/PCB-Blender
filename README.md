@@ -22,10 +22,17 @@ Full credit:
 	- [majenkotech - PCB-Blend](https://github.com/majenkotech/PCB-Blend) (.blend)
 	- [hyOzd - pcb2blender](https://bitbucket.org/hyOzd/pcb2blender/src/master/) (.blend)
 
-ToDo's (for .wrl importer):
+Potential additional functionalities that can be included in the project to improve the user experience and increase the program's capabilities:
+For .wrl importer
 - Decrease filezise by instanced mesh (a lot of models have multiple repeating elements), potential solutions (in regards to model 3D database creation):
 	- a lot of manual work;
 	- super smart importer that recognizes similarities;
 	- array modifier (e.g. PinSocket 1x1 multiplied to create all other same-type sockets)
+For PCB-Blender
+- Rendering any number of layers (the ability to select any number of files and the order in which they are rendered)
+- Append more regular expressions (detecting and correctly classifying more extensions and file names)
+- Define other palettes and color schemes for PCB images renders
+- Support for other project file formats (the pcb-tools module announces in its description that they planned support for IPC-2581, ODB ++ and other ([source](https://pcb-tools.readthedocs.io/en))
+
 
 
