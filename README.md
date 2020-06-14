@@ -34,7 +34,7 @@ For PCB-Blender
 - Rendering any number of layers (the ability to select any number of files and the order in which they are rendered)
 - Append more regular expressions (detecting and correctly classifying more extensions and file names)
 - Define other palettes and color schemes for PCB images renders
-- Support for other project file formats (the pcb-tools module announces in its description that they planned support for IPC-2581, ODB ++ and other ([source](https://pcb-tools.readthedocs.io/en))
+- Support for other project file formats (the pcb-tools module announces in its description that they planned support for IPC-2581, ODB ++ and other ([source](https://pcb-tools.readthedocs.io/en/latest/about.html))
 
 
 
