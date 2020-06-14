@@ -43,7 +43,7 @@
 \begin{abstract}
 Niniejsza praca przedstawia proces tworzenia i implementacji dodatku do programu Blender. Narzędzie ma na celu wspomaganie procesu projektowania PCB i tworzenie wizualizacji. Pierwszy rozdział przedstawia funkcje programu z punktu widzenia użytkownika oraz opis środowiska i technologii wykorzystanych w pracy.
 Kolejny rozdział konkretyzuje wymagania projektowe konieczne przy implementacji oraz opisuje strukturę projektu.
-Rozdział trzeci przedstawia implementację poszczególnych modułów równocześnie z przedstawieniem kolejności przepływu danych do poszczególnych komponentów i funkcji (kolejność podrozdziałów przedstawia także proces wykonywany w aplikacji). Ostatni rozdział omawia problemy napotkane podczas tworzenia oprogramowania, przedstawia możliwości rozwoju systemu oraz podsumowuje całokształt wykonanej pracy. 
+Rozdział trzeci przedstawia implementację poszczególnych modułów równocześnie z przedstawieniem kolejności przepływu danych do poszczególnych komponentów i funkcji (kolejność podrozdziałów przedstawia także proces wykonywany w aplikacji). Ostatni rozdział przedstawia możliwości rozwoju systemu oraz podsumowuje całokształt wykonanej pracy. 
 
 \end{abstract}
 
@@ -158,13 +158,6 @@ Format \emph{.wrl} zwany VRML (ang. \emph {Virtual Reality Modeling Language}) p
 \subsection{Środowisko Visual Studio Code}
 Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadzanych co roku przez serwis StackOverflow\footnote{\,\url{https://insights.stackoverflow.com/survey/2018/\#development-environments-and-tools}}$^{,}$\footnote{\,\url{https://insights.stackoverflow.com/survey/2019\#development-environments-and-tools}} cieszy się coraz większym uznaniem. Wybór tego środowiska nie był jednak dyktowany jego popularnością lecz nowymi możliwościami otwierającymi się dzięki instalowaniu w nim rozszerzeń.\footnote{\,\url{https://code.visualstudio.com/docs/editor/extension-gallery}} Dodatek stworzony przez Jacques Lucke na potrzeby rozwoju addonów do programu Blender pozwala między innymi na automatyzację procesu aktualizowania tworzonego addonu przez tworzenie skrótu w wewnętrznych folderach Blendera, co znacznie przyśpiesza pracę nad systemem. Ponadto posiada ułatwienia takie jak debugowanie w konsoli, tworzenie odpowiednich struktur i przydatne komendy. Sposób działania dodatku ma na celu także upewnienie się, że rozszerzenie nie koliduje z innym menedżerem pakietów Pythona.\footnote{\,\url{https://marketplace.visualstudio.com/items?itemName=JacquesLucke.blender-development}} 
 
-
-% Czy i gdzie to dać?
-% podrozdział: przegląd krytyczny literatury - analiza krytyczna dotychczasowych badań/rozwiązań z zakresu tematu
-% majenkotech i Eagle2Blender oba bardzo specyficzne do gEDA i Eagle nieposiadające interfejsu, niewygodne do użycia, wymagają dotatkowych narzędzi, znikoma dokumentacja
-%https://bitbucket.org/hyOzd/pcb2blender/src/master/
-% https://github.com/majenkotech/PCB-Blend
-
 \chapter{Architektura zrealizowanego systemu}
 Aby zobrazować podstawowe założenia projektu, w niniejszym rozdziale zostanie omówiona koncepcyjna struktura zrealizowanego systemu. Przedstawi ona bardziej szczegółowo mechanizmy działania najważniejszych komponentów aplikacji, a finalnie pomoże w samym procesie tworzenia oprogramowania.
 
@@ -198,7 +191,7 @@ Z poziomu kodu, API Blendera udostępnia główne moduły pod słowem kluczowym 
 \item \textbf{bpy.types} -- Posiada definicje wszystkich klas używanych w strukturach.
 \end{itemize}
 Istnieje także wiele mniejszych, pobocznych modułów i podmodułów pomocniczych. Niektóre z nich nie należą nawet do głównego modułu \textbf{bpy}. Mniejsze moduły, między innymi: bpy.props, bpy\_extras, bpy.utils, mathutils, bmesh, będą omówione w dalszej części tej pracy.
-% ew. zostaną wspomniane w rozdziale X odnośnie implementacji
+
 API Blendera wymaga od klas implementacji ściśle zdefiniowanych metod. Jest to rodzaj „umowy” pomiędzy skryptem a systemem rdzenia Blendera. Zgadzamy się na wdrożenie wymaganych funkcji w swojej klasie a Blender zgadza się wywoływać je w ściśle określonych okolicznościach. W programowaniu obiektowym taka lista zakontraktowanych funkcji i właściwości nazywa się „interfejsem”. Aby pomóc w jego implementacji, API Blendera dostarcza odpowiednie klasy bazowe, które w żargonie programowania obiektowego są tak zwanymi „klasami abstrakcyjnymi”. Zapewniają domyślne, puste implementacje wszystkich metod wymaganych przez interfejs. Nasze klasy dziedziczą tę domyślną treść z klasy bazowej.
 
 \subsection{Implementacja wzorca projektowego} \label{mvp}
@@ -337,7 +330,7 @@ Funkcje odnoszące się do bieżącego kontekstu i modyfikujące go wraz ze stan
 O ile pliki placement i ścieżka do bazy modeli 3D zostały zapewnione, program uruchomi metodę \emph{ReadPlacement\_csv}, przeczyta plik \emph{.csv}, zarejestruje nazwy, numery porządkowe, pozycje i rotacje wymaganych komponentów. Nazwy plików muszą zostać przycięte do dlugości 63 znaków, ponieważ jest to limit długości nazwy obiektu w wewnętrznej strukturze pliku Blendera. Następnie, przeszukując rekursywnie folder wskazany jako baza modeli, dołączy wszystkie znalezione pliki \emph{.blend}, jednocześnie sprawdzając czy plik posiada szukany obiekt. Nie są to operacje rzutujące na ilość alokowanej pamięci ponieważ tworzą tylko połączenia z plikiem źródłowym.
 
 W przypadku gdy któryś z modeli nie został znaleziony jest uruchamiana funkcja wyszukiwania modelu o podobnej nazwie. Jest to algorytm, który porównuje początek nazwy obiektu, jednak dzięki uwzględnieniu stosowanej konwencji w nazewnictwie modeli podzespołów, jest w stanie osiągnąć o wiele mniejszą złożoność czasową niż podstawowy algorytm naiwny. Nazwy komponentów są to zazwyczaj ciągi nazw i oznaczeń oddzielone znakami "\_".
-% czy ten kod w ogóle jest potrzebny?, linijki musiały zostać przycięte i przechodzi on przez 2 strony
+% czy ten kod w ogóle jest potrzebny?, linijki musiały zostać przycięte i przechodzi on przez 2 strony, ewentualnie coś dopisać, żeby się ładnie mieściło
 \lstset{caption={Algorytm wyszukiwania komponentu po nazwie z uwzględnieniem całych słów}}
 \begin{lstlisting}
 for missing in required:
@@ -385,71 +378,64 @@ Klasa \emph{GerberCairoContext} w pliku cairo\_backend.py odpowiada za powiązan
 Jeżeli użytkownik wskazał pliki warstw i wierceń lub folder je zawierający, zostaną one pogrupowane w celu stworzenia dwóch obrazów plytki --- górnej i dolnej warstwy. Następnie jest uruchamiana metoda \emph{CreateImage} której efektem wyjściowym jest stworzenie dwóch obrazów w formacie .PNG o wcześniej zdefiniowanej rozdzielczości i zapisanie go w folderze wskazanym przez użytkownika. Nazwy plików posiadają prefiks "Top\_layer" lub "Bottom\_layer" oraz datę i czas stworzenia jako sufiks. 
 
 Kolejnym krokiem jest stworzenie modelu płytki poprzez uruchomienie metody \emph{CreateModel}. W zależności od tego czy podczas interpretacji pliku gerber, została wykryta warstwa konturowa lub nie, zostaje stworzona siatka będąca obramowaniem płytki. W przypadku braku warstwy konturowej, wymiary siatki zostają wybrane jako punkty graniczne (ang. \emph{bounds}) obiektu PCB, to znaczy prostokątu obliczonego na podstawie maksymalnych i minimalnych koordynatów użytych we wszystkich warstwach. Model jest odpowiednio skalowany aby zachować rzeczywiste wymiary.
-% opisać bardziej sposób renderowania (trochę nudne) + fragment kodu?
+% ew. opisać bardziej sposób renderowania (trochę nudne) + fragment kodu?
 Dwuwymiarowy kształt płytki zostaje następnie pogrubiony metodą \emph{Extrude} około 1.6 milimetra --- jest to standardowa przyjęta grubość płytki po złożeniu wszystkich warstw \cite{Khandpur}.
 Ostatecznie zostają stworzone i nadane obu stronom płytki dwa materiały używające wcześniej stworzonych plików .PNG jako tekstur. Dodatkowo jest stworzony lub załadowany (jeżeli już istnieje w pamięci podręcznej) materiał boczny imitujący kolor krzemowej płytki i przypisane są mu odpowiednie wartości.
 
+\section {Baza modeli\label{wrl}}
+
+Aby stworzyć modele komponentów i zapisać je w postaci pliku \emph{.blend} wymagane było użycie samego programu Blender. Niestety importer plików \emph{.wrl} nie działał prawidłowo (nie wczytywał materiałów, ucinał modele, tworzył bardzo dużą ilość niezoptymalizowanej geometrii). Ponadto nie posiadał możliwości importu wielu plików na raz.
+
+Z uwagi na powyższe, w ramach pracy powstała zmodyfikowana wersja wbudowanego w Blendera importera plików .wrl w celu stworzenia bazy modeli. Było to możliwe dzięki udostępnionemu publicznie kodowi Blendera. Niektóre z usprawnień zostały zaproponowane jako oficjalna zmiana w przyszłych wersjach programu Blender. Modyfikacje obejmują:
+\begin{itemize}
+\item Dodanie obsługi materiałów
+\item Optymalizacja procesu tworzenia geometrii (usuwanie wielokrotnych wierzchołków)
+\item Obsługa importu wielu plików z wybranego folderu
+\item Odśmiecanie pamięci (ang. garbage collection)
+\item Zapisywanie materiałów tworzonych przy imporcie w pamięci podręcznej
+\item Obsługa wyjątków przy wczytywaniu nietypowych lub wielokrotnie zagnieżdżonych struktur w plikach
+\item Poprawne wczytywanie nazwy obiektu
+\end{itemize}
+% Oczywiście mogę tu rozpisać więcej informacji o tych fragmentach
 
 
-\section {Stworzenie bazy modeli, importer .wrl\label{wrl}}
+%\vspace*{\fill}
+\vspace{5mm}
+\noindent Pliki użyte w celu stworzenia bazy modeli pochodzą z oficjalnej strony pakietów KiCad\footnote{https://kicad.github.io/packages3d/}, która udostępnionia je na zasadach licencji \textbf{CC-BY 3.0}\footnote{http://creativecommons.org/licenses/by/3.0/}.
+\vspace{5mm}
 
-W ramach pracy powstał także importer w celu stworzenia bazy modeli
-% przejrzeć commity i wypisać funkcjonalności zaimplementowane w importerze
 
-% https://kicad.github.io/packages3d/
-% All Parts in this repository are licensed under CC-BY 3.0 http://creativecommons.org/licenses/by/3.0/
-% gdzie zamieścić info o licencji?
-
-% działanie w przypadku braku modeli
-% niedziałający importer w Blenderze przy implementacji w rozdziale 2
-% musi w miarę mało ważyć więc baza modeli będzie osobno
-
+% Czy i gdzie to dać?
+% podrozdział: przegląd krytyczny literatury - analiza krytyczna dotychczasowych badań/rozwiązań z zakresu tematu
+% majenkotech i Eagle2Blender oba bardzo specyficzne do gEDA i Eagle nieposiadające interfejsu, niewygodne do użycia, wymagają dotatkowych narzędzi, znikoma dokumentacja
+% https://bitbucket.org/hyOzd/pcb2blender/src/master/
+% https://github.com/majenkotech/PCB-Blend
 
 \chapter{Podsumowanie}
+Celem niniejszej pracy było stworzenie dodatku do programu Blender, który tworzy realistyczną i wierną rzeczywistym wymiarom wizualizację modelu 3D płytki drukowanej która powstałaby w procesie produkcji przemysłowej.
+Aby dodatek był łatwy w użytkowaniu, całość stworzonego i opisanego w tej pracy oprogramowania, wraz z bazami modeli koniecznymi do prawidłowego wczytania modeli z plików \emph{placement}, jest dostępna pod adresem:\newline\url{https://github.com/adammak23/PCB-Blender}.
 
-\url{https://github.com/adammak23/PCB-Blender}
-    % przypomnieć cel pracy,
-    % jak zostały spełnione wymagania: implikacje, konsekwencje, walory,
-    % w jaki sposób zaimplementowana technologia rozwiązuje postawione problemy
-    % czy wszystkie problemy zostały rozwiązane,
-    % jakie nie zostały rozwiązane, dlaczego?
+% pakiet modeli z gEDA https://github.com/majenkotech/PCB-Blend
+% pakiet modeli z KiCAD (wrl) https://kicad.github.io/packages3d/
 
-W efekcie końcowym zostały utworzone \emph{de facto} 2 addony.
-%Aplikacja,  mimo  iż  jest  dedykowana  dla  projektów stworzonych w gEDA, KiCad,  jest  o  wiele  bardziej uniwersalna, ponieważ w praktyce wystarczy dodać modele, aby uzyskać format możliwy do odczytania. Podsumowując,  w  wyniku  prac  implementacyjnych  udało  się  zrealizować projekt,  który  jest  zgodny  z  przyjętymi  wcześniej  wymaganiami  i  założeniami przedstawionymi  na  etapie  opracowywania  koncepcji  rozwiązania.  Pomijając  jedną dużą modyfikację związaną ze zmianą metodologii postępowania, projekt powstałych klas pozostał w niezmienionej formie. Warto także zaznaczyć, że przyjęta architektura realizuje   wszystkie   postawione   wymagania   funkcjonalne.   Niestety   aplikacja   nie uniknęła wad. Jedną, ale za to dość poważną, jest spore zapotrzebowanie na pamięć przy przetwarzaniu dużych plików. Jednak dla mniejszych zbiorów danych wydajność czasowa jest na akceptowalnym poziomie. W  kolejnym  rozdziale  przedstawione  zostanie  podsumowanie całokształtu prac związanych z analizą oraz implementacją omawianej aplikacji.
-
-\section{Realizacja założonych celów pracy magisterskiej}
-\section {Problemy napotkane podczas realizacji systemu}
-\subsection {importer .wrl}
 \section{Możliwości rozwoju systemu}
-% renderowanie dowolnej ilości warstw w dowolnej wybranej kolejności
-% dopisywanie wyrażeń regularnych
-% możliwość wybrania dowolnie wielu lub sprecyzowanie konkretnych plików
-% brakujące pliki nie powinny psuć procesu
-% globalne definiowane kolorów modelu?
-% style PCB w gerber.cairo
-%PCB Tools currently supports the following file formats:
-%    Gerber (RS-274X)
-%    Excellon
-%with planned support for IPC-2581, ODB++ and more.
-%https://pcb-tools.readthedocs.io/en/latest/about.html
-% gdzie zamieścić info o licencji?
-wspieranie innych rozszerzeń:
-https://pcb-tools.readthedocs.io/en/latest/about.html
-(with planned support for IPC-2581, ODB++ and more.)
+\subsubsection{PCB-Blender}
+Potencjalne dodatkowe funkcjonalności które mogą być z wprowadzone do projektu w celu polepszenia doświadczeń użytkownika i zwiększenia możliwości programu:
+\begin{itemize}
+\item Renderowanie dowolnej ilości warstw (możliwość wybrania dowolnie wielu plików i kolejności ich renderowania).
+\item Dopisywanie wyrażeń regularnych (wykrywanie i poprawna klasyfikacja większej ilości rozszerzeń i nazw plików).
+\item Definiowane innych palet i schematów kolorystycznych dla renderowanych obrazów płytek.
+\item Wsparcie dla innych formatów plików projektowych (moduł pcb-tools zapowiada w swoim opisie planowane wsparcie dla formatów IPC-2581, ODB++ i innych\footnote{https://pcb-tools.readthedocs.io/en/latest/about.html}).
+\end{itemize}
 
-\section{Wnioski}
+\subsubsection{Importer formatu .WRL}
+\begin{itemize}
+\item Optymalizacja --- zmniejszenie zapotrzebowanie na pamięć przy przetwarzaniu dużych plików.
+\item Zmniejszenie rozmiaru plików przy pomocy instancionowaniu geometrii (wiele elementów posiada powtarzające się elementy).
+\end{itemize}
 
-
-
-% zakończenie
 \summary
-% cffi: version_info__ = (1, 14, 0)
-% cairocffi: version_info = (1, 17, 2) (+skompilowana wersja cairo.dll, chyba niepotrzebna?)
-
-% załączniki (opcjonalnie):
-%\appendix
-%\chapter{Tytuł załącznika 1}
-%Treść załącznika 1.
+Podsumowując, w efekcie końcowym zostały utworzone \emph{de facto} 2 dodatki. Jeden oferujący zakładaną funkcjonalność oraz drugi, powstały jako narzędzie do tworzenia bazy modeli. W wyniku prac implementacyjnych udało się zrealizować projekt, który jest zgodny z przyjętymi wcześniej wymaganiami i założeniami przedstawionymi na etapie opracowywania koncepcji rozwiązania. Powstałe oprogramowanie nie wyczerpuje jednak wszystkich możliwości rozwiązania problemu, jako, że instnieje i ciągle powstaje wiele programów i formatów używanych w produkcji PCB. Dzięki zastosowaniu modułowego podejścia do systemu, jest on uniwersalny i łatwy do rozbudowania o dodatkowe funkcjonalności.
 
 
 % literatura (obowiązkowo):
