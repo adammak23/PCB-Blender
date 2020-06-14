@@ -28,7 +28,7 @@ units = 'metric'
 
 # Reading Placement file
 
-def read_csv(file_csv, program = 'SELF', folder = None):
+def ReadPlacement_csv(file_csv, program = 'SELF', folder = None):
     
     # For reading placement files
     objects = None
@@ -386,9 +386,9 @@ class PCB_Generate(Operator):
             return {'CANCELLED'}
 
         # Placement list
-        if(context.scene.placeTop is not ''): read_csv(context.scene.placeTop, context.scene.PickAndPlace, context.scene.model_folder)    
+        if(context.scene.placeTop is not ''): ReadPlacement_csv(context.scene.placeTop, context.scene.PickAndPlace, context.scene.model_folder)    
         UpdateProgress(33)
-        if(context.scene.placeBottom is not ''): read_csv(context.scene.placeBottom, context.scene.PickAndPlace, context.scene.model_folder)       
+        if(context.scene.placeBottom is not ''): ReadPlacement_csv(context.scene.placeBottom, context.scene.PickAndPlace, context.scene.model_folder)       
         UpdateProgress(66)
 
         if(str(context.scene.output_path) == ""):
@@ -421,9 +421,10 @@ class PCB_Generate(Operator):
                 # Create models
                 Top_layer = CreateModel(Top_layer_FileName, context.scene.output_path, ctx, extrude = True)
                 Move(Top_layer, distance=-0.0016)
+                UpdateProgress(95)
                 Bottom_layer = CreateModel(Bottom_layer_FileName, context.scene.output_path, ctx)
                 Move(Bottom_layer, distance=-0.00161)
-                UpdateProgress(95)
+
 
         if(str(context.scene.gerber_folder) == ""):
             ShowMessageBox("Please enter path to folder with gerber files", "Error", 'ERROR')
@@ -445,9 +446,9 @@ class PCB_Generate(Operator):
             # Create models
             Top_layer = CreateModel(Top_layer_FileName, context.scene.output_path, ctx, pcb_instance = pcb, extrude = True)
             Move(Top_layer, distance=-0.0016)
+            UpdateProgress(95)
             Bottom_layer = CreateModel(Bottom_layer_FileName, context.scene.output_path, ctx, pcb_instance = pcb)
             Move(Bottom_layer, distance=-0.00161)
-            UpdateProgress(95)
             
         ChangeArea('VIEW_3D', 'MATERIAL')
         ChangeClipping(0.001)
