@@ -1,4 +1,4 @@
-\documentclass[brudnopis]{xmgr}
+\documentclass{xmgr}
 % Jeśli nowe rozdziały mają się zaczynać na stronach nieparzystych:
 %\documentclass[openright]{xmgr}
 
@@ -247,11 +247,11 @@ Nie posiadają one jednak możliwości masowego pobierania modeli. Pomijając t�
 
 
 \chapter{Szczegóły implementacyjne systemu}
-W tym rozdziale zostanie omówiony sposób implementacji kluczowych i pobocznych funkcjonalności systemu. Sposób implementacji narzucony przez wybrany wzorzec projektowy wpasowuje się w przyjęte i zalecane praktyki tworzenia dodatków w Blenderze. Niniejszy rozdział zastał podzielony na części
-%TODO: Za krótki wstęp. Rozwiń pisząc np. o tym jaki będzie stan na końcu rozdziału, Co wynika z założeń opisanych wcześniej itd. 
+W tym rozdziale zostanie omówiona implementacja kluczowych i pobocznych funkcjonalności systemu. Sposób implementacji narzucony przez wybrany wzorzec projektowy wpasowuje się w przyjęte i zalecane praktyki programowania obiektowego jak również tworzenia dodatków w Blenderze. Dzięki przyjętym wcześniej założeniom, funkcjonalności programu zostały podzielone na niezależne części których implementacja zostanie teraz przedstawiona. Niniejszy rozdział zastał podzielony na fragmenty przedstawiające: rejestrowanie dodatku, implementację interfejsu, renderowanie PCB, tworzenie bazy modeli oraz rozważania na temat dalszych możliwości rozwoju stworzonego rozwiązania.
+
 
 \section {Rejestrowanie addonu}
-Każdy dodatek do Blendera musi posiadać obiekt \emph{bl\_info}, zawierający metadane addonu oraz implementować metody \emph{register} oraz \emph{unregister}. Wprowadzone w wersji 2.8 API usprawnienia znacznie ułatwiają ten proces. Jeżeli nie są wymagane dodatkowe funkcjonalności podczas rejestrowania i usuwania dodatku lub jego komponentów, istnieje możliwość użycia funkcji \emph{register\_classes\_factory} z pakietu \textbf{bpy.utils}, która automatycznie je zaimplementuje.
+Zgodnie z dokumentacją, każdy dodatek do Blendera musi posiadać obiekt \emph{bl\_info}, zawierający metadane addonu oraz implementować metody \emph{register} oraz \emph{unregister}. Instalacja dodatku następuje poprzez wybranie folderu dodatku, wówczas dodatek zostaje dodany do listy wyświetlającej między innymi metadane dostarczone w obiekcie \emph{bl\_info}. Po aktywowaniu dodatku w programie zostaje wykonana metoda \emph{register} i analogicznie \emph{unregister} w przypadku usuwania addonu. Wprowadzone w wersji 2.8 API Blendera usprawnienia znacznie ułatwiają ten proces. Jeżeli nie są wymagane dodatkowe funkcjonalności podczas rejestrowania i usuwania dodatku lub jego komponentów, istnieje możliwość użycia funkcji \emph{register\_classes\_factory} z pakietu \textbf{bpy.utils}, która automatycznie je zaimplementuje. Poniżej przedstawiony jest w całości plik odpowiedzialny za instalowanie, włączanie i wyłączanie dodatku.
 
 \lstset{caption={\emph{\_\_init\_\_.py} -- Plik rejestrujący dodatek.}}
 \begin{lstlisting}
@@ -274,9 +274,9 @@ bl_info = {
 \source{Opracowanie własne}
 \section {Implementacja interfejsu}
 
-Klasa \emph{PCB\_LayoutPanel} dostarcza całą funkcjonalność renderowania interfejsu dzięki dziedziczeniu z wewnętrznej klasy bazowej \emph{Panel}. Właściwości takie jak nazwa, miejsce wyświetlania się panelu, wielkość, kontekst, typ regionu itp. muszą być zdefiniowane w odpowiednim formacie. Dzięki temu są one automatycznie interpretowane przez API i poprawnie wyświetlane. Właściwości klasy zaczynają się od przedrostka \emph{bl\_}, jest to konwencja używana do odróżnienia wbudowanych właściwości klas Blendera od tych, które zostają dodane przez programistę.
-
-\lstset{caption={Przykład właściwości panelu z pliku \emph{PCB\_Blender\_panel.py}}}
+Klasa \emph{PCB\_LayoutPanel} dostarcza całą funkcjonalność renderowania interfejsu dzięki dziedziczeniu z wewnętrznej klasy bazowej \emph{Panel}. Poprzez implementację tej klasy, w programie zostaje utworzony panel w wybranym regionie. Właściwości takie jak nazwa, miejsce wyświetlania się panelu, wielkość, kontekst, typ regionu itp. muszą być zdefiniowane w odpowiednim formacie. Dzięki temu są one automatycznie interpretowane przez API i poprawnie wyświetlane. Właściwości klasy zaczynają się od przedrostka \emph{bl\_}, jest to konwencja używana w celu odróżnienia wbudowanych właściwości wewnętrznych klas Blendera od tych, które zostają dodane przez programistę. Przykład implementacji wbudowanych właściwości klasy dziedziczącej znajduje się poniżej.
+\newpage
+\lstset{caption={Właściwości panelu z pliku \emph{PCB\_Blender\_panel.py}}}
 \begin{lstlisting}
 class PCB_LayoutPanel(Panel):
 	bl_label = "PCB Renderer"
@@ -290,10 +290,6 @@ class PCB_LayoutPanel(Panel):
 
 Oprócz posiadania statycznych właściwości, klasa powinna przechowywać i przekazywać dynamiczne zmienne. Aby dodać zmienną do zarejestrowanej klasy w Blenderze należy użyć jednej z Definicji Właściwości (ang. \emph{Property Definition}) z modułu \textbf{bpy.props}. Moduł ten definiuje właściwości rozszerzające wewnętrzne dane Blendera. Wynik tych funkcji służy do przypisywania właściwości do klas zarejestrowanych w Blenderze i nie można ich używać bezpośrednio. Są to między innymi \emph{StringProperty, FloatProperty, EnumProperty, BoolProperty} lub dowolne ich zestawienie jako jedna strukturalna zmienna. Funkcje wymagają każdorazowego zdefiniowania nazwy, opisu, wartości domyślnej, podtypu itp. więc aby uniknąć redundancji kodu zostały stworzone funkcje pomocnicze, przedstawione we fragmencie kodu \ref{Listing3}. Zdefiniowanie typu \emph{StringProperty} jako ścieżka do pliku lub folderu sprawia, że do elementu wyświetlającego tą zmienną automatycznie zostanie przypisany przycisk otwierający eksplorator plików w celu wybrania pliku.
 
-% trzeba chyba dopisać coś do powyższego fragmentu, albo dać \newpage bo fragment kodu przechodzi przez 2 strony...
-
-
-%kod również powinien być podpisany i ponumerowany: np.: Skrypt 3.1 Definicja FilePath [źródło: opracowanie własne]
 \lstset{caption={Funkcje pomocnicze tworzące zmienną o tym samym typie lecz innym zastosowaniu -- ścieżki pliku i ścieżka folderu}\label{Listing3}}
 \begin{lstlisting}
 def FilePath(_name, _description="", _default=""):
@@ -304,10 +300,30 @@ def DirPath(_name, _description="", _default=""):
 	return StringProperty(name=_name, default = _default,
 	description=_description, subtype = 'DIR_PATH')
 \end{lstlisting}
+\source{Opracowanie własne}
 
-Oprócz zmiennych, aby poprawnie zaimplementować dany interfejs, klasa musi zawierać też funkcję \emph{draw} odpowiedzialną za renderowanie elementów w panelu. Wygląd i rozmieszczenie elementów jest zdefioniowane przy pomocy obiektu klasy \emph{UILayout} i jego elementów takich jak kolumny i rzędy w których umieszcza się referencje do wspomnianych wyżej, dynamicznych zmiennych. Następnie w jednym z elementów zostaje umieszczone wywołanie operatora z klasy \emph{PCB\_Generate}, który przyjmuje kontekst w którym zostal wywołany --- a zatem również wszystkie zmienne.
+Oprócz zmiennych, aby poprawnie zaimplementować dany interfejs, klasa musi zawierać też funkcję \emph{draw} odpowiedzialną za renderowanie elementów w panelu. Wygląd i rozmieszczenie obiektów jest zdefioniowany przy pomocy obiektu klasy \emph{UILayout} i jego elementów takich jak kolumny i rzędy w których umieszcza się referencje do wspomnianych wyżej, dynamicznych zmiennych. 
+W elementach układu można umieszczać opisy, ikony a nawet definiować ich zachowanie przy pomocy instrukcji warunkowych. Poniżej znajduje się fragment kodu, używający zmiennej \emph{boolowskiej} oraz instrukcji warunkowej w celu zdefiniowania zachowania listy rozwijanej.
 
-% mogę to bardziej rozpisać i dać przykłady, ale są to bardzo proste i trywialne jednolinijkowce. Ewentualnie jeszcze logika chowania się kilku elementów, jakieś 3 linijki kodu
+\lstset{caption={Fragment kodu z klasy \emph{PCB\_LayoutPanel} definiujący zachowanie się rozwijalnej listy elementów}\label{Listing4}}
+\begin{lstlisting}
+row = layout.row()
+	row.prop(context.scene, "expand", icon="TRIA_DOWN"
+	if context.scene.expand
+	else "TRIA_RIGHT", icon_only=True, emboss=False)
+	row.label(text="Or select individually specific files:")
+
+	if bpy.context.scene.expand:
+		col = layout.column()
+		col.label(
+		text="To use gerber folder, collapse this section!",
+		icon='ERROR')
+\end{lstlisting}
+\source{Opracowanie własne}
+
+Następnie w jednym z elementów zostaje umieszczone wywołanie operatora z klasy \emph{PCB\_Generate}, który przyjmuje kontekst w którym zostal wywołany --- a zatem również wszystkie zmienne.
+
+% mogę to bardziej rozpisać i dać przykłady, ale są to bardzo proste i trywialne jednolinijkowce. 
 
 \section {Tworzenie PCB}
 Jak wspomniano wcześniej, funkcja wykonania operatora (\emph{execute}) pobiera w argumencie informacje o środowisku i bieżący kontekst w jakim jest wywoływana. Następnie wykonuje w programie odpowiednie obliczenia i przekształcenia, które zostały podzielone na następujące kategorie.
@@ -316,7 +332,7 @@ Tak samo jak w przypadku klasy odpowiedzialnej za renderowanie interfejsu, tutaj
 \subsubsection{Funkcje informacyjne}
 Wszystkie z tych funkcji odnoszą się do obiektu klasy \textbf{bpy.context.window\_manager}.
 \begin{itemize}
-\item Funkcje \emph{RegisterProgress, UpdateProgress} oraz \emph{EndProgress} służą do wyświetlania postępu w wykonywaniu obliczeń i są używanie na przestrzeni wszystkich innych funkcji o znaczącej złożoności. 
+\item Funkcje \emph{RegisterProgress, UpdateProgress} oraz \emph{EndProgress} służą do wyświetlania postępu w wykonywaniu obliczeń i są używanie na przestrzeni wszystkich innych funkcji o znaczącej złożoności. % dopisać co konkretnie robi? kod?
 \item Funkcja \emph{ShowMessageBox} jest używana we wstępnej fazie walidacji otrzymanych zmiennych zanim zostaną wywołane pozostałe funkcje obliczające. Służy do wyświetlenia komunikatu informacyjnego lub błędu, zazwyczaj zestawiona z anulowaniem lub przerwaniem wykonywania obliczeń, objaśniająca użytkownikowi powód zaprzestania działania.
 \end{itemize}
 \subsubsection{Funkcje edytujące}
@@ -333,8 +349,8 @@ Funkcje odnoszące się do bieżącego kontekstu i modyfikujące go wraz ze stan
 O ile pliki placement i ścieżka do bazy modeli 3D zostały zapewnione, program uruchomi metodę \emph{ReadPlacement\_csv}, przeczyta plik \emph{.csv}, zarejestruje nazwy, numery porządkowe, pozycje i rotacje wymaganych komponentów. Nazwy plików muszą zostać przycięte do dlugości 63 znaków, ponieważ jest to limit długości nazwy obiektu w wewnętrznej strukturze pliku Blendera. Następnie, przeszukując rekursywnie folder wskazany jako baza modeli, dołączy wszystkie znalezione pliki \emph{.blend}, jednocześnie sprawdzając czy plik posiada szukany obiekt. Nie są to operacje rzutujące na ilość alokowanej pamięci ponieważ tworzą tylko połączenia z plikiem źródłowym.
 
 W przypadku gdy któryś z modeli nie został znaleziony jest uruchamiana funkcja wyszukiwania modelu o podobnej nazwie. Jest to algorytm, który porównuje początek nazwy obiektu, jednak dzięki uwzględnieniu stosowanej konwencji w nazewnictwie modeli podzespołów, jest w stanie osiągnąć o wiele mniejszą złożoność czasową niż podstawowy algorytm naiwny. Nazwy komponentów są to zazwyczaj ciągi nazw i oznaczeń oddzielone znakami "\_".
-% czy ten kod w ogóle jest potrzebny?, linijki musiały zostać przycięte i przechodzi on przez 2 strony, ewentualnie coś dopisać, żeby się ładnie mieściło
-\lstset{caption={Algorytm wyszukiwania komponentu po nazwie z uwzględnieniem całych słów}}
+
+\lstset{caption={Algorytm wyszukiwania komponentu po nazwie z uwzględnieniem całych słów oddzielanych separatorem "\_"}}
 \begin{lstlisting}
 for missing in required:
     separatedList = missing.split('_')
@@ -389,7 +405,7 @@ Ostatecznie zostają stworzone i nadane obu stronom płytki dwa materiały używ
 
 Aby stworzyć modele komponentów i zapisać je w postaci pliku \emph{.blend} wymagane było użycie samego programu Blender. Niestety importer plików \emph{.wrl} nie działa prawidłowo (nie wczytuje materiałów, ucina modele, tworzy bardzo dużą ilość niezoptymalizowanej geometrii). Ponadto nie posiada możliwości importu wielu plików na raz.
 
-Z uwagi na powyższe, w ramach pracy powstała zmodyfikowana wersja wbudowanego w Blendera importera plików .wrl w celu stworzenia bazy modeli. Było to możliwe dzięki udostępnionemu publicznie kodowi Blendera. Niektóre z usprawnień zostały zaproponowane jako oficjalna zmiana w przyszłych wersjach programu Blender. Modyfikacje obejmują:
+Z uwagi na powyższe, w ramach pracy powstała zmodyfikowana wersja wbudowanego w Blendera importera plików \emph{.wrl} w celu stworzenia bazy modeli. Było to możliwe dzięki udostępnionemu publicznie kodowi Blendera. Niektóre z usprawnień zostały zaproponowane jako oficjalna zmiana w przyszłych wersjach programu Blender. Modyfikacje obejmują:
 \begin{itemize}
 \item Dodanie obsługi materiałów
 \item Optymalizacja procesu tworzenia geometrii (usuwanie wielokrotnych wierzchołków)
@@ -431,9 +447,7 @@ Potencjalne dodatkowe funkcjonalności które mogą być z wprowadzone do projek
 
 
 \summary
-%Powtórz jeszcze raz co zostało zaprezentowane w poszczególnych rozdziałach (bez wspominania w pierwszym rozdziale to i to. Tylko inaczej: W pracy zostały zaprezentowane wymagania funkcjonalne. Następnie zostały opisane szczegóły architektoniczne. Należało podzielic rpojekt tak i tak. No i merge z potencjalnym rozwiojem
 
-% moim zdaniem też trochę mało kodu. Po przeczytaniu pracy ma się wrażenie, że 3/4 pracy to są opisane wymagania i narzędzia, a implementacja została po macoszemu potraktowana. Uszczegółów implementacje
 Praca ta omawia proces tworzenia dodatku do programu Blender. Na podstawie plików projektowych, dodatek tworzy realistyczną i wierną rzeczywistym wymiarom wizualizację modelu 3D płytki drukowanej, która powstałaby w procesie produkcji przemysłowej. W pierwszym rozdziale zostały opisane wszystkie technologie użyte podczas tworzenia oprogramowania. Dalej, została omówiona architektura realizowanego systemu, implementacja interfejsu i logiki, a także proces tworzenia zasobów w postaci bazy modeli 3D.
 Aby dodatek był łatwy w użytkowaniu, całość stworzonego i opisanego w tej pracy oprogramowania, wraz z bazami modeli koniecznymi do prawidłowego wczytywania plików \emph{placement}, jest dostępna pod adresem dołączonym do pracy w załączniku \ref{linki}. 
 
