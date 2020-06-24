@@ -51,7 +51,7 @@ Rozdział trzeci przedstawia implementację poszczególnych modułów programu r
 
 
 % słowa kluczowe
-\keywords{Wizualizacja, Grafika, Elektronika, 3D, Blender, Python, PCB }
+\keywords{Wizualizacja, Grafika, Elektronika, 3D, Blender, Python, PCB}
 
 % tytuł i spis treści
 \maketitle
@@ -210,17 +210,17 @@ W tym przypadku, w dużym uproszczeniu Modelem jest logika modułu, Widokiem -- 
 
 Skrypty w języku Python można zintegrować z Blenderem na następujące sposoby:
 \begin{itemize}
-\item Definiując silnik renderujący.
-\item Poprzez zdefiniowanie operatorów.
-\item Poprzez zdefiniowanie menu, nagłówków i paneli.
-\item Wstawiając nowe przyciski do istniejących menu, nagłówków i paneli.
+\item Definiując silnik renderujący
+\item Poprzez zdefiniowanie operatorów
+\item Poprzez zdefiniowanie menu, nagłówków i paneli
+\item Wstawiając nowe przyciski do istniejących menu, nagłówków i paneli
 \end{itemize}
 
 Odbywa się to poprzez zdefiniowanie klasy, która jest podklasą istniejącego typu.
 Tak więc, przechodząc do rzeczywistego stanu rzeczy, omawiany addon o nazwie \emph{PCB-Blender} jest zdefiniowany jako skompresowane archiwum składające się z następujących elementów:
 \begin{itemize}
-\item \emph{PCB\_LayoutPanel} -- Klasa odpowiedzialna za wyświetlanie interfejsu i przekazywanie danych wybranych przez użytkownika, dziedzicząca z klas abstrakcyjnych \emph{Panel} i \emph{ImportHelper}. Wraz z klasami pomocniczymi znajduje się w pliku PCB\_Blender\_panel.py,
-\item \emph{PCB\_Generate} -- Klasa dziedzicząca z klasy \emph{Operator}, znajdująca się razem z klasami pośrednimi w pliku PCB\_Blender.py,
+\item \emph{PCB\_LayoutPanel} -- Klasa odpowiedzialna za wyświetlanie interfejsu i przekazywanie danych wybranych przez użytkownika, dziedzicząca z klas abstrakcyjnych \emph{Panel} i \emph{ImportHelper}. Wraz z klasami pomocniczymi znajduje się w pliku PCB\_Blender\_panel.py.
+\item \emph{PCB\_Generate} -- Klasa dziedzicząca z klasy \emph{Operator}, znajdująca się razem z klasami pośrednimi w pliku PCB\_Blender.py.
 \item \emph{\_\_init\_\_.py} -- Plik zawierający metadane i rejestrujący powyższe klasy,
 \item Foldery zawierające pozostałe moduły Pythona do których odnosi się główny Operator -- \emph{PCB\_Generate}.
 \end{itemize}
@@ -251,7 +251,7 @@ W tym rozdziale zostanie omówiona implementacja kluczowych i pobocznych funkcjo
 
 
 \section {Rejestrowanie addonu}
-Zgodnie z dokumentacją, każdy dodatek do Blendera musi posiadać obiekt \emph{bl\_info}, zawierający metadane addonu oraz implementować metody \emph{register} oraz \emph{unregister}. Instalacja dodatku następuje poprzez wybranie folderu dodatku, wówczas dodatek zostaje dodany do listy wyświetlającej między innymi metadane dostarczone w obiekcie \emph{bl\_info}. Po aktywowaniu dodatku w programie zostaje wykonana metoda \emph{register} i analogicznie \emph{unregister} w przypadku usuwania addonu. Wprowadzone w wersji 2.8 API Blendera usprawnienia znacznie ułatwiają ten proces. Jeżeli nie są wymagane dodatkowe funkcjonalności podczas rejestrowania i usuwania dodatku lub jego komponentów, istnieje możliwość użycia funkcji \emph{register\_classes\_factory} z pakietu \textbf{bpy.utils}, która automatycznie je zaimplementuje. Poniżej przedstawiony jest w całości plik odpowiedzialny za instalowanie, włączanie i wyłączanie dodatku.
+Zgodnie z dokumentacją, każdy dodatek do Blendera musi posiadać obiekt \emph{bl\_info}, zawierający metadane addonu i implementować metody \emph{register} oraz \emph{unregister}. Instalacja dodatku następuje poprzez wybranie folderu dodatku, wówczas dodatek zostaje dodany do listy wyświetlającej między innymi metadane dostarczone w obiekcie \emph{bl\_info}. Po aktywowaniu dodatku w programie zostaje wykonana metoda \emph{register} i analogicznie \emph{unregister} w przypadku usuwania addonu. Wprowadzone w wersji 2.8 API Blendera usprawnienia znacznie ułatwiają ten proces. Jeżeli nie są wymagane dodatkowe funkcjonalności podczas rejestrowania i usuwania dodatku lub jego komponentów, istnieje możliwość użycia funkcji \emph{register\_classes\_factory} z pakietu \textbf{bpy.utils}, która automatycznie je zaimplementuje. Poniżej przedstawiony jest w całości plik odpowiedzialny za instalowanie, włączanie i wyłączanie dodatku.
 
 \lstset{caption={\emph{\_\_init\_\_.py} -- Plik rejestrujący dodatek.}}
 \begin{lstlisting}
@@ -326,14 +326,14 @@ Następnie w jednym z elementów zostaje umieszczone wywołanie operatora z klas
 % mogę to bardziej rozpisać i dać przykłady, ale są to bardzo proste i trywialne jednolinijkowce. 
 
 \section {Tworzenie PCB}
-Jak wspomniano wcześniej, funkcja wykonania operatora (\emph{execute}) pobiera w argumencie informacje o środowisku i bieżący kontekst w jakim jest wywoływana. Następnie wykonuje w programie odpowiednie obliczenia i przekształcenia, które zostały podzielone na następujące kategorie.
+Jak wspomniano wcześniej, funkcja wykonania operatora (\emph{execute}) pobiera w argumencie informacje o środowisku i bieżący kontekst w jakim jest wywoływana. Następnie wykonuje w programie odpowiednie obliczenia i przekształcenia, które zostały podzielone na następujące kategorie:
 \subsection{Funkcje użytkowe}
-Tak samo jak w przypadku klasy odpowiedzialnej za renderowanie interfejsu, tutaj też zostały stworzone funkcje pomocnicze w celu uniknięcia powtarzalności kodu oraz zwiększenia czytelności przebiegu metod. Są one używane w obrębie całego projektu.
+Tak samo jak w przypadku klasy odpowiedzialnej za renderowanie interfejsu, tutaj też zostały stworzone funkcje pomocnicze w celu uniknięcia powtarzalności kodu oraz zwiększenia czytelności przebiegu całego programu. Są one używane w obrębie całego projektu.
 \subsubsection{Funkcje informacyjne}
 Wszystkie z tych funkcji odnoszą się do obiektu klasy \textbf{bpy.context.window\_manager}.
 \begin{itemize}
-\item Funkcje \emph{RegisterProgress, UpdateProgress} oraz \emph{EndProgress} służą do wyświetlania postępu w wykonywaniu obliczeń i są używanie na przestrzeni wszystkich innych funkcji o znaczącej złożoności. % dopisać co konkretnie robi? kod?
-\item Funkcja \emph{ShowMessageBox} jest używana we wstępnej fazie walidacji otrzymanych zmiennych zanim zostaną wywołane pozostałe funkcje obliczające. Służy do wyświetlenia komunikatu informacyjnego lub błędu, zazwyczaj zestawiona z anulowaniem lub przerwaniem wykonywania obliczeń, objaśniająca użytkownikowi powód zaprzestania działania.
+\item Funkcje \emph{RegisterProgress, UpdateProgress} oraz \emph{EndProgress} służą do wyświetlania kursora postępu podczas wykonywania obliczeń i są używanie na przestrzeni wszystkich innych funkcji o znaczącej złożoności.
+\item Funkcja \emph{ShowMessageBox} jest używana we wstępnej fazie walidacji otrzymanych zmiennych zanim zostaną wywołane pozostałe funkcje obliczające. Służy do wyświetlenia komunikatu informacyjnego lub błędu. Zazwyczaj zestawiona z anulowaniem lub przerwaniem wykonywania obliczeń, objaśniająca użytkownikowi powód zaprzestania działania.
 \end{itemize}
 \subsubsection{Funkcje edytujące}
 Funkcje odnoszące się do bieżącego kontekstu i modyfikujące go wraz ze stanem aplikacji.
@@ -341,12 +341,12 @@ Funkcje odnoszące się do bieżącego kontekstu i modyfikujące go wraz ze stan
 \item \emph{DeselectAll} --- Odznacza wszelkie obiekty aktywne na scenie, przydatna funkcjonalność gwarantująca powtarzalność wykonywanych operacji bez znaczenia w jakim stanie początkowym użytkownik uruchomi polecenia generujące obiekty.
 \item \emph{ChangeArea} --- Zmienia tryb okna wyszukując obecny aktywny region w kontekście.
 \item \emph{ChangeClipping} --- Modyfikuje minimalną odległość od renderowanego obiektu w oknie widoku do jakiej może zbliżyć się kamera. Podstawową wartością w Blenderze jest 10 centymetrów co jest zazwyczaj zbyt dużą odległością na oglądanie płytki drukowanej rzeczywistych wymiarów.
-\item \emph{PurgeOrphanData} --- Funkcja czyszcząca pamięć podręczną programu z nieużywanych na scenie elementów (wytworzonych obiektów, siatek modeli, zaimportowanych zdjęć i dołączonych plików \emph{.blend}). Nie jest ona obecnie wywoływana podczas przebiegu programu, jednak jest używana w procesie rozwoju i testowania aplikacji, ułatwiając resetowanie stanu całego programu.
+\item \emph{PurgeOrphanData} --- Funkcja czyszcząca pamięć podręczną programu z nieużywanych na scenie elementów (wytworzonych obiektów, siatek modeli, zaimportowanych zdjęć i dołączonych plików \emph{.blend}). Nie jest ona obecnie wywoływana podczas przebiegu programu, jednak jest używana w procesie rozwoju i testowania aplikacji, ułatwiając resetowanie stanu całego programu w celu uzyskania powtarzalności testów.
 \end{itemize}
 \subsection{Interpretacja plików}
 \subsubsection{Placement}
 % ładowanie komponentów i linkowanie plików pomysł wzięty z: https://github.com/majenkotech/PCB-Blend
-O ile pliki placement i ścieżka do bazy modeli 3D zostały zapewnione, program uruchomi metodę \emph{ReadPlacement\_csv}, przeczyta plik \emph{.csv}, zarejestruje nazwy, numery porządkowe, pozycje i rotacje wymaganych komponentów. Nazwy plików muszą zostać przycięte do dlugości 63 znaków, ponieważ jest to limit długości nazwy obiektu w wewnętrznej strukturze pliku Blendera. Następnie, przeszukując rekursywnie folder wskazany jako baza modeli, dołączy wszystkie znalezione pliki \emph{.blend}, jednocześnie sprawdzając czy plik posiada szukany obiekt. Nie są to operacje rzutujące na ilość alokowanej pamięci ponieważ tworzą tylko połączenia z plikiem źródłowym.
+O ile pliki placement i ścieżka do bazy modeli 3D zostały zapewnione, program uruchomi metodę \emph{ReadPlacement\_csv}, przeczyta plik \emph{.csv}, zarejestruje nazwy, numery porządkowe, pozycje i rotacje wymaganych komponentów. Nazwy plików muszą zostać przycięte do dlugości 63 znaków, ponieważ jest to limit długości nazwy obiektu w wewnętrznej strukturze pliku Blendera. Następnie, przeszukując rekursywnie folder wskazany jako baza modeli, dołączy wszystkie znalezione pliki \emph{.blend}, jednocześnie sprawdzając czy plik posiada szukany obiekt. Nie są to operacje rzutujące na ilość alokowanej pamięci ponieważ tworzą tylko połączenia z plikiem źródłowym, jednak wraz ze wzrostem ilości przeszukiwanych plików, znacząco wzrasta czas wykonywanych operacji.
 
 W przypadku gdy któryś z modeli nie został znaleziony jest uruchamiana funkcja wyszukiwania modelu o podobnej nazwie. Jest to algorytm, który porównuje początek nazwy obiektu, jednak dzięki uwzględnieniu stosowanej konwencji w nazewnictwie modeli podzespołów, jest w stanie osiągnąć o wiele mniejszą złożoność czasową niż podstawowy algorytm naiwny. Nazwy komponentów są to zazwyczaj ciągi nazw i oznaczeń oddzielone znakami "\_".
 
@@ -382,14 +382,24 @@ for missing in required:
         if found:
             break
 \end{lstlisting}
-Po uzyskaniu listy modeli, program ustawia je w odpowiednich miejscach zgodnych z wcześniej przeczytanymi koordynatami, uwzględniając ich rotację oraz skalę, która różni się w zależności jaki typ jednostki jest używany w projekcie (milimetr lub mil --- 1/1000 cala). W przypadku braku modelu, w odpowiednie miejsce zostaje ustawiony pusty obiekt, posiadający nazwę i numer porządkowy.
-Wczytane modele oraz dołączone pliki \emph{.blend} są zapisywane w tak zwanej pamięci podręcznej (ang. \emph{cache}) programu. Sprawia to, że kolejna operacja wczytująca modele nie musi dodawać więcej plików z bazy modeli oraz ładować siatki już użytych modeli komponentów. Dzięki temu kolejne użycie programu (bez wyłączania go) jest szybsze.
-
+Po uzyskaniu listy modeli, program ustawia je w odpowiednich miejscach zgodnych z wcześniej przeczytanymi koordynatami, uwzględniając ich rotację oraz skalę. Skala komponentów różni się w zależności od tego jaki typ jednostki jest używany w projekcie (milimetr lub mil --- 1/1000 cala). W przypadku braku modelu, w odpowiednie miejsce zostaje ustawiony pusty obiekt, posiadający nazwę i numer porządkowy.
+Wczytane modele oraz informacje o dołączonych plikach \emph{.blend} są zapisywane w tak zwanej pamięci podręcznej (ang. \emph{cache}) programu. Sprawia to, że kolejna operacja wczytująca modele nie musi dodawać więcej plików z bazy modeli oraz ładować siatki już użytych modeli komponentów. Dzięki temu kolejne użycie programu (bez wyłączania go) jest znacznie szybsze.
+% TODO: więcej info
 \subsubsection{Gerber}
-Do wczytania plików Gerber i Excellon został wykorzystany moduł Pythona \emph{pcb-tools 0.1.6}, stworzony przez Paulo Henrique Silva i udostępniony na zasadach licencji Apache\footnote{\,\url{https://pypi.org/project/pcb-tools/}}. Moduł został zmodyfikowany aby umożliwić mu funkcjonowanie bez dynamicznego pobierania zewnętrznych bibliotek. Narzędzia udostępniane przez moduł pozwalają na interpretację instrukcji G-code zawartych w plikach i zamianę ich na obiekty.
+Do wczytania plików Gerber i Excellon został wykorzystany moduł Pythona \emph{pcb-tools 0.1.6}, stworzony przez Paulo Henrique Silva i udostępniony na zasadach licencji Apache\footnote{\,\url{https://pypi.org/project/pcb-tools/}}. Narzędzia udostępniane przez moduł pozwalają na interpretację instrukcji G-code zawartych w plikach i zamianę ich na obiekty. Moduł, aby umożliwić mu funkcjonowanie w ramach projektu, został zmodyfikowany. Modyfikacje obejmują:
+\begin{itemize}
+\item Statyczne dołączenie bibliotek używanych przez moduł
+\item Zmiany nagłówków sktyptów
+\item Dodanie słów kluczowych do słownika wyszukującego i klasyfikującego typy warstw po nazwie pliku w skrypcie \emph{layers.py}
+\item Dodana obsługa wykrywania obramowania płytki na podstawie wczytanych warstw
+\item Lustrzane odbicie dolnej warstwy renderowaniej plytki
+\item Przechwytywanie danych wyjściowych w celu zapisu do pliku \emph{.PNG}
+\end{itemize} 
 
+% TODO: więcej info
 W procesie interpretacji pliku zostaje utworzona nowa instancja klasy \emph{PCB}, która będzie zawierała między innymi obiekty reprezentujące poszczególne warstwy i funkcje wskazujące odpowiednie grupy warstw. Typy warstw są rozpoznawane przez program przy pomocy wyszukiwania wzorca i słownika zawierającego wyrażenia regularne znajdującego się w pliku \emph{layers.py}. Każdej warstwie zostaje przydzielony typ (określający sposób w jaki będzie musiała zostać później wyrenderowana) oraz grupa obiektów 2D opisujących kształty --- tzw. prymitywy (ang. \emph{primitives}), składające się z wielokątów i krzywych o różnych grubościach. Ostatecznie warstwy są sortowane w odpowiedniej kolejności i dzielone na grupy górne, dolne, wiercenia, i kontur.
 
+% TODO: więcej info
 \subsubsection{Renderowanie}
 \emph{Cairocffi} jest to oparty o CFFI\footnote{\,Interfejs do języka Python, umożliwiający wywoływanie metod w języku C}$^{,}$\footnote{\,\url{https://cffi.readthedocs.io/en/latest/}} zamiennik modułu \emph{Pycairo} --- zestawu powiązań Pythona i obiektowego API dla \emph{Cairo}. \emph{Cairo} jest to biblioteka grafiki wektorowej 2D z obsługą wielu urządzeń wyjściowych, w tym buforów obrazów, plików PNG, PostScript, PDF i SVG. 
 Klasa \emph{GerberCairoContext} w pliku cairo\_backend.py odpowiada za powiązania funkcji renderowania obiektów bezpośrednio do biblioteki \emph{Cairocffi}.
@@ -401,6 +411,7 @@ Kolejnym krokiem jest stworzenie modelu płytki poprzez uruchomienie metody \emp
 Dwuwymiarowy kształt płytki zostaje następnie pogrubiony metodą \emph{Extrude} około 1.6 milimetra --- jest to standardowa przyjęta grubość płytki po złożeniu wszystkich warstw \cite{Khandpur}.
 Ostatecznie zostają stworzone i nadane obu stronom płytki dwa materiały używające wcześniej stworzonych plików .PNG jako tekstur. Dodatkowo jest stworzony lub załadowany (jeżeli już istnieje w pamięci podręcznej) materiał boczny imitujący kolor krzemowej płytki i przypisane są mu odpowiednie wartości.
 
+% TODO: więcej info
 \section {Baza modeli\label{wrl}}
 
 Aby stworzyć modele komponentów i zapisać je w postaci pliku \emph{.blend} wymagane było użycie samego programu Blender. Niestety importer plików \emph{.wrl} nie działa prawidłowo (nie wczytuje materiałów, ucina modele, tworzy bardzo dużą ilość niezoptymalizowanej geometrii). Ponadto nie posiada możliwości importu wielu plików na raz.
