@@ -5,6 +5,7 @@
 % install minted package to highlight source code
 % \usepackage{minted}
 \usepackage{listings}
+
 \lstset{language=Python}
 \lstset{frame=lines}
 %\lstset{caption={Insert code directly in your document}}
@@ -92,6 +93,8 @@ Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod
 
 Celem niniejszej pracy jest stworzenie łatwego do rozbudowania i spójnego systemu umożliwiającego import plików projektowych używanych bezpośrednio w przemyśle PCB do programu Blender, następnie interpretację i wyświetlenie pełnowymiarowego modelu 3D płytki drukowanej która powstałaby w procesie produkcji przemysłowej. Dodatek będzie posiadał prosty i przejrzysty interfejs który zapewnia dostęp do wszystkich funkcjonalności, ale nie przytłacza odbiorcy nadmiarem funkcji. Pozwoli to nie tylko osobom technicznym z poza branży grafiki komputerowej na łatwy dostęp do wizualizacji i edycji swoich projektów ale także na łatwiejszą integrację projektów przemysłowych z marketingową i graficzną częścią przemysłu.
 
+\newpage
+
 % Opcje programu z punktu widzenia użytkownika
 \section{Wymagania funkcjonalne}
 
@@ -104,12 +107,7 @@ Zrealizowany system jest dodatkiem (ang. \emph{add-on}) do programu Blender, kom
 \item Przycisk tworzący model 3D płytki na podstawie wybranych plików
 \end{itemize}
 
-\begin{figure}[!tbh]
-\centering
-\includegraphics[width=0.75\hsize]{fig/addon_1}
-\caption{Zainstalowany dodatek w programie Blender 2.82a}
-\source{Opracowanie własne}
-\end{figure}
+\newpage
 
 \section {Opis technologii wykorzystanych w pracy}
 
@@ -452,60 +450,185 @@ def guess_layer_class(filename):
 \emph{Cairocffi} jest to oparty o CFFI\footnote{\,Interfejs do języka Python, umożliwiający wywoływanie metod w języku C}$^{,}$\footnote{\,\url{https://cffi.readthedocs.io/en/latest/}} zamiennik modułu \emph{Pycairo} --- zestawu powiązań Pythona i obiektowego API dla \emph{Cairo}. \emph{Cairo} jest to biblioteka grafiki wektorowej 2D z obsługą wielu formatów wyjściowych, w tym buforów obrazów, plików \emph{PNG, PostScript, PDF} i \emph{SVG}. 
 Klasa \emph{GerberCairoContext} w pliku cairo\_backend.py odpowiada za powiązania funkcji renderowania obiektów bezpośrednio do biblioteki \emph{Cairocffi}. Jak wspomniano wcześniej, moduł ten został statycznie dołączony do projektu.
 
-Jeżeli użytkownik wskazał pliki warstw i wierceń lub folder je zawierający, program po wykonaniu analizy stworzy instancję obiektu PCB. Następnie jest uruchamiana metoda \emph{CreateImage} która przekazuje obiekt PCB do klasy \emph{GerberCairoContext}. Wszystkie składowe warstw i obiekty płytki zostały wcześniej pogrupowane w celu stworzenia dwóch obrazów płytki --- górnej i dolnej warstwy. Obrazy są tworzone poprzez nakładanie na siebie w odpowiedniej kolejności wyników z renderów poszczególnych składowych warstw: miedzi, laminatu, oznaczeń i wierceń. Właściwości i klasyfikacja warstwy odpowiadają za kolor tła i elementów (prymitywów).
+Jeżeli użytkownik wskazał pliki warstw i wierceń lub folder je zawierający, program po wykonaniu analizy stworzy instancję obiektu PCB. Następnie jest uruchamiana metoda \emph{CreateImage} która przekazuje obiekt PCB do klasy \emph{GerberCairoContext}. Wszystkie składowe warstw i obiekty płytki zostały wcześniej pogrupowane w celu stworzenia dwóch obrazów płytki --- górnej i dolnej warstwy. Obrazy są tworzone poprzez nakładanie na siebie w odpowiedniej kolejności wyników z renderów poszczególnych składowych warstw: miedzi, laminatu, oznaczeń i wierceń. Właściwości i klasyfikacja warstwy odpowiadają za kolor tła i elementów (prymitywów). Fragment kodu \ref{Listing7} przedstawia główną funkcję renderującą warstwę.
 Efektem wyjściowym jest stworzenie dwóch obrazów w formacie \emph{.PNG}. Pliki posiadają wcześniej zdefiniowaną rozdzielczość, a zapisane są w folderze wskazanym przez użytkownika. Nazwy plików posiadają prefiks "Top\_layer" lub "Bottom\_layer" oraz datę i czas stworzenia jako sufiks. 
 
-\subsubsection{Tworzenie modelu 3D}
-Kolejnym krokiem jest stworzenie modelu płytki poprzez uruchomienie metody \emph{CreateModel}. W zależności od tego czy podczas interpretacji pliku gerber, została wykryta warstwa konturowa lub nie, zostaje stworzona siatka będąca obramowaniem płytki. W przypadku braku warstwy konturowej, wymiary siatki zostają wybrane jako punkty graniczne (ang. \emph{bounds}) obiektu PCB, to znaczy prostokątu obliczonego na podstawie maksymalnych i minimalnych koordynatów użytych we wszystkich warstwach. Model jest odpowiednio skalowany aby zachować rzeczywiste wymiary.
-% ew. opisać bardziej sposób renderowania (trochę nudne) + fragment kodu?
-Dwuwymiarowy kształt płytki zostaje następnie pogrubiony metodą \emph{Extrude} około 1.6 milimetra --- jest to standardowa przyjęta grubość płytki po złożeniu wszystkich warstw \cite{Khandpur}.
-Ostatecznie zostają stworzone i nadane obu stronom płytki dwa materiały używające wcześniej stworzonych plików \emph{.PNG} jako tekstur. Dodatkowo jest stworzony lub załadowany (jeżeli już istnieje w pamięci podręcznej) materiał boczny imitujący kolor krzemowej płytki i przypisane są mu odpowiednie wartości.
+\lstset{caption={Główna funkcja renderująca warstwę.}\label{Listing7}}
+\begin{lstlisting}
+def render_layer(self, layer, filename=None, settings=None, bgsettings=None,
+		verbose=False, bounds=None):
+    if settings is None:
+        settings = THEMES['default'].get(layer.layer_class, RenderSettings())
+    if bgsettings is None:
+        bgsettings = THEMES['default'].get('background', RenderSettings())
+    if self._render_count == 0:
+        if verbose:
+            print('[Render]: Rendering Background.')
+        self.clear()
+        if bounds is not None:
+            self.set_bounds(bounds)
+        else:
+            self.set_bounds(layer.bounds)
+        self.paint_background(bgsettings)
+    if verbose:
+        print('[Render]: Rendering {} Layer.'.format(layer.layer_class))
+    self._render_count += 1
+    self._render_layer(layer, settings)
+    if filename is not None: self.dump(filename, verbose)
+\end{lstlisting}
 
-% TODO: więcej info
+\subsubsection{Tworzenie modelu 3D}
+Kolejnym krokiem jest stworzenie modelu płytki poprzez uruchomienie metody \emph{CreateModel}. W zależności od tego czy podczas interpretacji pliku gerber, została wykryta warstwa konturowa lub nie, zostaje stworzona siatka będąca obramowaniem płytki. W przypadku braku warstwy konturowej, wymiary siatki zostają wybrane jako punkty graniczne (ang. \emph{bounds}) obiektu PCB, to znaczy prostokątu obliczonego na podstawie maksymalnych i minimalnych koordynatów użytych we wszystkich warstwach. Model jest odpowiednio skalowany aby zachować rzeczywiste wymiary. Dwuwymiarowy kształt płytki zostaje następnie pogrubiony metodą \emph{Extrude} około 1.6 milimetra --- jest to standardowa przyjęta grubość płytki po złożeniu wszystkich warstw \cite{Khandpur}. Funkcjonalność opisana powyżej jest zaprezentowana w wycinku \ref{Listing8}
+
+\lstset{caption={Fragment funkcji tworzącej model płytki.}\label{Listing8}}
+\begin{lstlisting}
+mesh = None
+    scaler = mathutils.Vector((1, 1, 1))
+    if units == "metric":
+        scaler = mathutils.Vector((.001, .001, .001))
+    if units == "inch":
+        scaler = mathutils.Vector((.0254, .0254, .0254))
+    if(pcb_instance is not None):
+        if(pcb_instance.outline_layer is not None):
+            outline = pcb_instance.outline_layer
+            mesh = RenderOutline(name, outline, mat, None, scaler)
+    else:
+        bounds = ctx.first_bounds
+        mesh = RenderBounds(name, bounds, scaler, mat)
+    if mesh is None:
+        bounds = pcb_instance.layers[0].bounds
+        mesh = RenderBounds(name, bounds, scaler, mat)
+    if extrude and mesh:
+        Extrude(mesh, 0.0016, extrudeMat)
+    return mesh
+\end{lstlisting}
+
+\newpage
+
+Ostatecznie zostają stworzone i nadane obu stronom płytki dwa materiały używające wcześniej stworzonych plików \emph{.PNG} jako tekstur. Dodatkowo jest stworzony lub załadowany (jeżeli już istnieje w pamięci podręcznej) materiał boczny imitujący kolor krzemowej płytki i przypisane są mu odpowiednie wartości. Fragment \ref{Listing9} przedstawia opisany proces.
+
+\lstset{caption={Fragment funkcji tworzącej model, nadający modelom płytki odpowiednie materiały.}\label{Listing9}}
+\begin{lstlisting}
+mat = bpy.data.materials.new(name = name)
+mat.use_nodes = True
+bsdf = mat.node_tree.nodes["Principled BSDF"]
+texImage = mat.node_tree.nodes.new('ShaderNodeTexImage')
+texImage.image = bpy.data.images.load(
+os.path.join(source_folder, name + '.png'))
+mat.node_tree.links.new(bsdf.inputs['Base Color'],
+texImage.outputs['Color'])
+
+extrudeMat = None
+if extrude:
+    extrudeMat = bpy.data.materials.get("ExtrudeMat")
+    if extrudeMat is None:
+        extrudeMat = bpy.data.materials.new(name = "ExtrudeMat")
+
+    extrudeMat.use_nodes = True
+    bsdf = extrudeMat.node_tree.nodes["Principled BSDF"]
+
+    # Base substrate color
+    bsdf.inputs[0].default_value = (0.350555, 0.266215, 0.0896758, 1)
+
+    # Subsurface factor
+    bsdf.inputs[1].default_value = 0.05
+
+    extrudeMat.node_tree.links.new(bsdf.inputs['Base Color'],
+    texImage.outputs['Color'])
+\end{lstlisting}
+
 \section {Baza modeli\label{wrl}}
 
 Aby stworzyć modele komponentów i zapisać je w postaci pliku \emph{.blend} wymagane było użycie samego programu Blender. Niestety importer plików \emph{.wrl} nie działa prawidłowo (nie wczytuje materiałów, ucina modele, tworzy bardzo dużą ilość niezoptymalizowanej geometrii). Ponadto nie posiada możliwości importu wielu plików na raz.
 
-Z uwagi na powyższe, w ramach pracy powstała zmodyfikowana wersja wbudowanego w Blendera importera plików \emph{.wrl} w celu stworzenia bazy modeli. Było to możliwe dzięki udostępnionemu publicznie kodowi Blendera. Niektóre z usprawnień zostały zaproponowane jako oficjalna zmiana w przyszłych wersjach programu Blender. Modyfikacje obejmują:
-\begin{itemize}
-\item Dodanie obsługi materiałów
-\item Optymalizacja procesu tworzenia geometrii (usuwanie wielokrotnych wierzchołków)
-\item Obsługa importu wielu plików z wybranego folderu
-\item Czyszczenie pamięci (ang. \emph{garbage collection})
-\item Zapisywanie materiałów tworzonych przy imporcie w pamięci podręcznej
-\item Obsługa wyjątków przy wczytywaniu nietypowych lub wielokrotnie zagnieżdżonych struktur w plikach
-\item Poprawne wczytywanie nazwy obiektu
-\end{itemize}
-% Oczywiście mogę tu rozpisać więcej informacji o tych fragmentach
+Z uwagi na powyższe, w ramach pracy powstała zmodyfikowana wersja wbudowanego w Blender importera plików \emph{.wrl} w celu stworzenia bazy modeli. Było to możliwe dzięki udostępnionemu publicznie kodowi Blendera. Niektóre z usprawnień zostały zaproponowane jako oficjalna zmiana w przyszłych wersjach programu Blender. Modyfikacje obejmują:
+\begin{enumerate}
+\item Dodanie obsługi materiałów wraz z przypisywaniem domyślnego koloru w przypadku braku informacji, przedstawione poniżej.
+\lstset{caption={Wczytywanie danych materiału z pliku \emph{.wrl}}\label{Listing11}}
+\begin{lstlisting}
+bpymat = bpy.data.materials.new(vrmlname)
+diff_color = mat.getFieldAsFloatTuple(
+	'diffuseColor', [0.5, 0.5, 0.5, 1], ancestry)
+
+if(len(diff_color) == 3):
+    # .wrl does not have alpha, we need to add 4th element
+    diff_color = diff_color + [1]
+bpymat.diffuse_color = diff_color
+
+bpymat.specular_color = mat.getFieldAsFloatTuple(
+	'specularColor', [0.0, 0.0, 0.0], ancestry)
+\end{lstlisting}
+\item Optymalizacja procesu tworzenia geometrii (usuwanie powtarzających się wierzchołków).
+\item Obsługa importu wielu plików z wybranego folderu.
+\item Z uwagi na wprowadzoną obsługę wczytywania wielu plików oraz stosowania optymalizacji geometrii, wymagana była implementacja czyszczenia pamięci (ang. \emph{garbage collection}). Zmniejszenie alokowanej pamięci podręcznej programu znacznie przyspieszyło działanie algorytmu.
+\item Wczytywanie nazwy obiektu.
+\lstset{caption={Wczytywanie nazwy obiektu z pliku \emph{.wrl}}\label{Listing12}}
+\begin{lstlisting}
+# .wrl Appearance node structure:
+# ('material', 'DEF', 'Name_of_the_material', 'Material')
+# Material name is also used for caching
+
+if mat.reference is not None:
+    if mat.reference.id is not None and len(mat.reference.id) >= 3:
+        vrmlname = mat.reference.id[2]
+\end{lstlisting}
+\item Zapisywanie materiałów tworzonych przy imporcie w pamięci podręcznej w celu ponownego użycia.
+\item Obsługa wyjątków i błędów powstałych przy wczytywaniu nietypowych lub wielokrotnie zagnieżdżonych struktur w plikach \emph{.wrl}.
+
+
+\end{enumerate}
+
+\chapter{Efekty pracy}
+
+\section{Praktyczne zastosowanie}
+
+Niniejszy podrozdział przedstawia wygląd i przykładowy sposób użycia dodatku w praktyce.
+
+Poniżej przedstawiono opis dodatku, wyświetlany w panelu preferencji. Po wybraniu archiwum dodatku należy go włączyć (zainstalować) zaznaczając pole wyboru po lewej stronie nazwy dodatku. 
+\begin{figure}[!tbh]
+\centering
+\includegraphics[width=1\hsize]{fig/addon_prefs}
+\caption{Opis dodatku wyświetlany po instalacji w oknie preferencji}
+\source{Opracowanie własne}
+\end{figure}
+
+Jak przedstawia zdjęcie \ref{img2}, po instalacji, panel opcji dodatku znajduje się w zakładce właściwości sceny.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.75\hsize]{fig/addon_panel}
+\caption{Zainstalowany dodatek w programie Blender 2.82a}
+\source{Opracowanie własne} \label{img2}
+\end{figure}
+
+\newpage
+
+Po wybraniu plików Gerber
+
+\lstset{caption={Przykładowy początek pliku warstwy (Gerber)}, language=Clean} 
+\lstinputlisting[linerange={5-17,24-28}]{code/copper.gbr}
 
 \section{Możliwości dalszego rozwoju systemu}
+Ten podrozdział opisuje potencjalne dodatkowe funkcjonalności które mogą być z wprowadzone do projektu w celu polepszenia doświadczeń użytkownika i zwiększenia możliwości programu.
+
 \subsubsection{PCB-Blender}
-Potencjalne dodatkowe funkcjonalności które mogą być z wprowadzone do projektu w celu polepszenia doświadczeń użytkownika i zwiększenia możliwości programu:
 \begin{itemize}
 \item Stworzenie kolejnych baz modeli na podstawie komponentów z innych programów projektowych.
 \item Stworzenie słownika nazw modeli aby wiele nazw wskazywało na jeden model.
 \item Renderowanie dowolnej ilości warstw (możliwość wybrania dowolnie wielu plików i kolejności ich renderowania).
 \item Dopisywanie wyrażeń regularnych (wykrywanie i poprawna klasyfikacja większej ilości rozszerzeń i nazw plików).
 \item Definiowane innych palet i schematów kolorystycznych dla renderowanych obrazów płytek.
-\item Wsparcie dla innych formatów plików projektowych (moduł pcb-tools zapowiada w swoim opisie planowane wsparcie dla formatów IPC-2581, ODB++ i innych\footnote{https://pcb-tools.readthedocs.io/en/latest/about.html}).
+\item Wsparcie dla innych formatów plików projektowych (moduł pcb-tools zapowiada w swoim opisie planowane wsparcie dla formatów IPC-2581, ODB++ i innych\footnote{\,\url{https://pcb-tools.readthedocs.io/en/latest/about.html}}).
 \end{itemize}
 
 \subsubsection{Importer formatu \emph{.WRL}}
 \begin{itemize}
 \item Optymalizacja --- zmniejszenie zapotrzebowania na pamięć przy przetwarzaniu dużych plików.
-\item Zmniejszenie rozmiaru plików przy pomocy instancionowania geometrii (wiele elementów posiada powtarzające się elementy).
+\item Zmniejszenie rozmiaru plików przy pomocy instancjonowania geometrii (wiele elementów posiada powtarzające się elementy).
 \end{itemize}
-
-
-
-% Czy dodanie gdzieś rozdziału "przegląd krytyczny literatury - analiza krytyczna dotychczasowych badań/rozwiązań z zakresu tematu" ma sens? Jeżeli tak to gdzie go wcisnąć? Znalazłem 2 addony jeżeli chodzi o kompatybilność z blenderem:  (https://bitbucket.org/hyOzd/pcb2blender/src/master/, https://github.com/majenkotech/PCB-Blend). Jest ich o wiele więcej jeżeli patrzeć by tylko na Pythona. Oba bardzo specyficzne: do gEDA i Eagle, nieposiadające interfejsu, niewygodne do użycia, wymagają dotatkowych narzędzi, znikoma dokumentacja, jednak wziąłem pomysł z jednego z nich do wczytywania modeli.
-
-% https://bitbucket.org/hyOzd/pcb2blender/src/master/
-% https://github.com/majenkotech/PCB-Blend
 
 % pakiet modeli z gEDA https://github.com/majenkotech/PCB-Blend
 % pakiet modeli z KiCAD (wrl) https://kicad.github.io/packages3d/
-
 
 \summary
 
