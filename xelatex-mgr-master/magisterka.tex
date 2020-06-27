@@ -10,6 +10,8 @@
 %\lstset{caption={Insert code directly in your document}}
 \lstset{label={lst:code_direct}}
 \lstset{basicstyle=\footnotesize}
+%url line breaking
+\gappto{\UrlBreaks}{\UrlOrds}
 %\defaultfontfeatures{Scale=MatchLowercase}
 %\setmainfont[Numbers=OldStyle,Ligatures=TeX]{Minion Pro}
 %\setsansfont[Numbers=OldStyle,Ligatures=TeX]{Myriad Pro}
@@ -59,7 +61,7 @@ Rozdział trzeci przedstawia implementację poszczególnych modułów programu r
 % wstęp
 \introduction
 
-Obwody drukowane czy też inaczej płytki drukowane (zwane dalej "PCB", ang. Printed Circuit Board) to podstawa dla każdego modułu elektronicznego. Są to płytki izolacyjne z połączeniami elektrycznymi i punktami lutowniczymi, służącymi do montażu podzespołów elektronicznych. Dzięki swojej budowie oraz dobranym częściom składowym pozwalają inżynierom z roku na rok konstruować coraz to nowocześniejsze i bardziej funkcjonalne urządzenia. PCB służy przede wszystkim do montowania wszelkich podzespołów elektronicznych oraz zapewnienia im wspólnego stabilnego połączenia.
+Obwody drukowane czy też inaczej płytki drukowane (zwane dalej "PCB", ang. \emph{Printed Circuit Board}) to podstawa dla każdego modułu elektronicznego. Są to płytki izolacyjne z połączeniami elektrycznymi i punktami lutowniczymi, służącymi do montażu podzespołów elektronicznych. Dzięki swojej budowie oraz dobranym częściom składowym pozwalają inżynierom z roku na rok konstruować coraz to nowocześniejsze i bardziej funkcjonalne urządzenia. PCB służy przede wszystkim do montowania wszelkich podzespołów elektronicznych oraz zapewnienia im wspólnego stabilnego połączenia.
 
 \vspace{5mm}
 Tworzenie PCB składa się z trzech głównych etapów \cite{Abboud}:
@@ -75,14 +77,14 @@ Produkcja przemysłowa
     
     Najważniejszym punktem projektowania układu jest rozmieszczenie komponentów. Ten proces jest skomplikowanym, twórczym przedsięwzięciem i prawdopodobnie jednym z najtrudniejszych aspektów procesu projektowania PCB. Wielu inżynierów uważa go za formę sztuki (rysunek~\ref{RYS.1}.) gdyż w przeciwieństwie do schematu, który opiera się tylko na matematyce, jest nieco bardziej płynny i elastyczny oraz pozwala na kreatywne wdrożenie swojego projektu w życie.
 
+Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod uwagę mnogość technicznej wiedzy, pomiarów i zależności takich jak: optymalizacja długości ścieżek oraz ich szerokość, ochrona miejsc narażonych na dużą temperaturę, ograniczenia mechaniczne i montażowe, itd. Nawet zastosowanie automatucznego wyznaczania ścieżek do optymalizacji nie zawsze da poprawny rezultat.\footnote{\,\href{https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/}{Autodesk.com - Top 10 pcb component placement tips}} Z uwagi na ilość i różnorodność ograniczeń nie jest możliwa całkowita automatyzacja sprawdzania poprawności wykonanego projektu, zatem przydatna dla projektanta okazuje się wizualizacja efektu końcowego. Jest ona także niezbędnym elementem procesu marketingowego, logistycznego czy edukacyjnego. Istnieje wiele programów do projektowania PCB jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest narzędziem mogącym wspomagać ten proces.
+
 \begin{figure}[!tbh]
 \centering
-\includegraphics[width=0.9\hsize]{fig/hokusai}
-\caption{Joel Betancourt znany jako Garabating - "Katsushika Hokusai Electronic Circuit Board"\label{RYS.1}}
+\includegraphics[width=0.82\hsize]{fig/hokusai}
+\caption{"Katsushika Hokusai Electronic Circuit Board" - Joel Betancourt znany jako Garabating\label{RYS.1}}
 \source{\url{https://garabating.com/post/44549621917/katsushika-hokusai-electronic-circuit-board}}
 \end{figure}
-
-Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod uwagę mnogość technicznej wiedzy, pomiarów i zależności takich jak: optymalizacja długości ścieżek oraz ich szerokość, ochrona miejsc narażonych na dużą temperaturę, ograniczenia mechaniczne i montażowe, itd. Nawet zastosowanie automatucznego wyznaczania ścieżek do optymalizacji nie zawsze da poprawny rezultat.\footnote{\,\href{https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/}{Autodesk.com - Top 10 pcb component placement tips}} Z uwagi na ilość i różnorodność ograniczeń nie jest możliwa całkowita automatyzacja sprawdzania poprawności wykonanego projektu, zatem przydatna dla projektanta okazuje się wizualizacja efektu końcowego. Jest ona także niezbędnym elementem procesu marketingowego, logistycznego czy edukacyjnego. Istnieje wiele programów do projektowania PCB jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiadają odpowiednich narzędzi do zaawansowanego renderowania, animacji i tworzenia szeroko pojętej “sztuki”. Popularny program do tworzenia grafiki 3D - Blender, z uwagi na możliwość rozbudowania go o dodatki jest narzędziem mogącym wspomagać ten proces.
 
 % ROZDZIAŁ 1
 
@@ -154,9 +156,6 @@ Plik zawiera opis elementów montowanych za pomocą technologii montażu przewle
 \subsection{Pliki VRML i X3D}
 Format \emph{.wrl} zwany VRML (ang. \emph {Virtual Reality Modeling Language}) powstały w 1994 roku, stał się pierwszym internetowym formatem 3D, został później zastąpiony przez format X3D \cite{vrml}. Jego ówczesna powszechność sprawiła, że wiele programów przemysłowych tworzonych w latach dziewięćdziesiątych posiada bazy modeli w tym właśnie formacie. Więcej o praktycznym wykorzystaniu tego standardu w rozdziale \ref{wrl}.
 
-% specyfikacja formatu VRML:
-% http://www.graphics.stanford.edu/courses/cs248-98-fall/Assignments/Assignment3/VRML2_Specification/
-
 \subsection{Środowisko Visual Studio Code}
 Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadzanych co roku przez serwis StackOverflow\footnote{\,\url{https://insights.stackoverflow.com/survey/2018/\#development-environments-and-tools}}$^{,}$\footnote{\,\url{https://insights.stackoverflow.com/survey/2019\#development-environments-and-tools}} cieszy się coraz większym uznaniem. Wybór tego środowiska nie był jednak dyktowany jego popularnością lecz nowymi możliwościami otwierającymi się dzięki instalowaniu w nim rozszerzeń.\footnote{\,\url{https://code.visualstudio.com/docs/editor/extension-gallery}} Dodatek stworzony przez Jacques Lucke na potrzeby rozwoju addonów do programu Blender pozwala między innymi na automatyzację procesu aktualizowania tworzonego addonu przez tworzenie skrótu w wewnętrznych folderach Blendera, co znacznie przyśpiesza pracę nad systemem. Ponadto posiada ułatwienia takie jak debugowanie w konsoli, tworzenie odpowiednich struktur i przydatne komendy. Sposób działania dodatku ma na celu także upewnienie się, że rozszerzenie nie koliduje z innym menedżerem pakietów Pythona.\footnote{\,\url{https://marketplace.visualstudio.com/items?itemName=JacquesLucke.blender-development}} 
 
@@ -175,7 +174,7 @@ System powinien implementować wszystkie następujące funkcjonalności:
 
 \item Tworzenie modelu płytki na podstawie otrzymanych plików, zgodnego z rzeczywistymi wymiarami
 
-\item Czytanie i interpretacja pliku placement w formacie .csv
+\item Czytanie i interpretacja pliku placement w formacie \emph{.csv}
 
 \item Udostępnienie użytkownikowi możliwości użycia dostarczonej lub własnej bazy modeli podzespołów
 
@@ -290,7 +289,7 @@ class PCB_LayoutPanel(Panel):
 
 Oprócz posiadania statycznych właściwości, klasa powinna przechowywać i przekazywać dynamiczne zmienne. Aby dodać zmienną do zarejestrowanej klasy w Blenderze należy użyć jednej z Definicji Właściwości (ang. \emph{Property Definition}) z modułu \textbf{bpy.props}. Moduł ten definiuje właściwości rozszerzające wewnętrzne dane Blendera. Wynik tych funkcji służy do przypisywania właściwości do klas zarejestrowanych w Blenderze i nie można ich używać bezpośrednio. Są to między innymi \emph{StringProperty, FloatProperty, EnumProperty, BoolProperty} lub dowolne ich zestawienie jako jedna strukturalna zmienna. Funkcje wymagają każdorazowego zdefiniowania nazwy, opisu, wartości domyślnej, podtypu itp. więc aby uniknąć redundancji kodu zostały stworzone funkcje pomocnicze, przedstawione we fragmencie kodu \ref{Listing3}. Zdefiniowanie typu \emph{StringProperty} jako ścieżka do pliku lub folderu sprawia, że do elementu wyświetlającego tą zmienną automatycznie zostanie przypisany przycisk otwierający eksplorator plików w celu wybrania pliku.
 
-\lstset{caption={Funkcje pomocnicze tworzące zmienną o tym samym typie lecz innym zastosowaniu -- ścieżki pliku i ścieżka folderu}\label{Listing3}}
+\lstset{caption={Funkcje pomocnicze tworzące zmienną o tym samym typie lecz innym zastosowaniu -- ścieżka pliku i ścieżka folderu}\label{Listing3}}
 \begin{lstlisting}
 def FilePath(_name, _description="", _default=""):
 	return StringProperty(name=_name, default = _default,
@@ -345,8 +344,8 @@ Funkcje odnoszące się do bieżącego kontekstu i modyfikujące go wraz ze stan
 \end{itemize}
 \subsection{Interpretacja plików}
 \subsubsection{Placement}
-% ładowanie komponentów i linkowanie plików pomysł wzięty z: https://github.com/majenkotech/PCB-Blend
-O ile pliki placement i ścieżka do bazy modeli 3D zostały zapewnione, program uruchomi metodę \emph{ReadPlacement\_csv}, przeczyta plik \emph{.csv}, zarejestruje nazwy, numery porządkowe, pozycje i rotacje wymaganych komponentów. Nazwy plików muszą zostać przycięte do dlugości 63 znaków, ponieważ jest to limit długości nazwy obiektu w wewnętrznej strukturze pliku Blendera. Następnie, przeszukując rekursywnie folder wskazany jako baza modeli, dołączy wszystkie znalezione pliki \emph{.blend}, jednocześnie sprawdzając czy plik posiada szukany obiekt. Nie są to operacje rzutujące na ilość alokowanej pamięci ponieważ tworzą tylko połączenia z plikiem źródłowym, jednak wraz ze wzrostem ilości przeszukiwanych plików, znacząco wzrasta czas wykonywanych operacji.
+
+O ile pliki placement i ścieżka do bazy modeli 3D zostały zapewnione, program uruchomi metodę \emph{ReadPlacement\_csv}, przeczyta plik \emph{.csv}, zarejestruje nazwy, numery porządkowe, pozycje i rotacje wymaganych komponentów. Nazwy plików muszą zostać przycięte do dlugości 63 znaków, ponieważ jest to limit długości nazwy obiektu w wewnętrznej strukturze Blendera. Następnie, przeszukując rekursywnie folder wskazany jako baza modeli, dołączy wszystkie znalezione pliki \emph{.blend}, jednocześnie sprawdzając czy plik posiada szukany obiekt. Nie są to operacje rzutujące na ilość alokowanej pamięci ponieważ tworzą tylko połączenia z plikiem źródłowym, jednak wraz ze wzrostem ilości przeszukiwanych plików, znacząco wzrasta czas wykonywanych operacji.
 
 W przypadku gdy któryś z modeli nie został znaleziony jest uruchamiana funkcja wyszukiwania modelu o podobnej nazwie. Jest to algorytm, który porównuje początek nazwy obiektu, jednak dzięki uwzględnieniu stosowanej konwencji w nazewnictwie modeli podzespołów, jest w stanie osiągnąć o wiele mniejszą złożoność czasową niż podstawowy algorytm naiwny. Nazwy komponentów są to zazwyczaj ciągi nazw i oznaczeń oddzielone znakami "\_".
 
@@ -384,32 +383,92 @@ for missing in required:
 \end{lstlisting}
 Po uzyskaniu listy modeli, program ustawia je w odpowiednich miejscach zgodnych z wcześniej przeczytanymi koordynatami, uwzględniając ich rotację oraz skalę. Skala komponentów różni się w zależności od tego jaki typ jednostki jest używany w projekcie (milimetr lub mil --- 1/1000 cala). W przypadku braku modelu, w odpowiednie miejsce zostaje ustawiony pusty obiekt, posiadający nazwę i numer porządkowy.
 Wczytane modele oraz informacje o dołączonych plikach \emph{.blend} są zapisywane w tak zwanej pamięci podręcznej (ang. \emph{cache}) programu. Sprawia to, że kolejna operacja wczytująca modele nie musi dodawać więcej plików z bazy modeli oraz ładować siatki już użytych modeli komponentów. Dzięki temu kolejne użycie programu (bez wyłączania go) jest znacznie szybsze.
-% TODO: więcej info
+% TODO: Opisać to szczegółowo? kod?
 \subsubsection{Gerber}
 Do wczytania plików Gerber i Excellon został wykorzystany moduł Pythona \emph{pcb-tools 0.1.6}, stworzony przez Paulo Henrique Silva i udostępniony na zasadach licencji Apache\footnote{\,\url{https://pypi.org/project/pcb-tools/}}. Narzędzia udostępniane przez moduł pozwalają na interpretację instrukcji G-code zawartych w plikach i zamianę ich na obiekty. Moduł, aby umożliwić mu funkcjonowanie w ramach projektu, został zmodyfikowany. Modyfikacje obejmują:
 \begin{itemize}
 \item Statyczne dołączenie bibliotek używanych przez moduł
-\item Zmiany nagłówków sktyptów
-\item Dodanie słów kluczowych do słownika wyszukującego i klasyfikującego typy warstw po nazwie pliku w skrypcie \emph{layers.py}
-\item Dodana obsługa wykrywania obramowania płytki na podstawie wczytanych warstw
-\item Lustrzane odbicie dolnej warstwy renderowaniej plytki
-\item Przechwytywanie danych wyjściowych w celu zapisu do pliku \emph{.PNG}
+\item Zmiany nagłówków sktyptów, aby wskazywały na dołączone moduły
+\item Dodanie słów kluczowych do słownika wyszukującego i klasyfikującego typy warstw po nazwie pliku, w skrypcie \emph{layers.py}
+\item Lustrzane odbicie dolnej warstwy renderowaniej płytki\footnote{Dolne warstwy płytek w programach projektujących są tworzone w odbiciu lustrzanym aby wprowadzić przejrzystość. Projektowanie odbywa się zazwyczaj w widoku rzutu z góry.}
+\item Przechwytywanie danych wyjściowych w celu zapisu do pliku w formacie \emph{.PNG}
+\item Dodana obsługa wykrywania obramowania płytki na podstawie wczytanych warstw, na wypadek gdyby warstwa odpowiedzialna za kształt nie została znaleziona (przedstawiona we fragmencie kodu \ref{Listing5})
 \end{itemize} 
 
-% TODO: więcej info
-W procesie interpretacji pliku zostaje utworzona nowa instancja klasy \emph{PCB}, która będzie zawierała między innymi obiekty reprezentujące poszczególne warstwy i funkcje wskazujące odpowiednie grupy warstw. Typy warstw są rozpoznawane przez program przy pomocy wyszukiwania wzorca i słownika zawierającego wyrażenia regularne znajdującego się w pliku \emph{layers.py}. Każdej warstwie zostaje przydzielony typ (określający sposób w jaki będzie musiała zostać później wyrenderowana) oraz grupa obiektów 2D opisujących kształty --- tzw. prymitywy (ang. \emph{primitives}), składające się z wielokątów i krzywych o różnych grubościach. Ostatecznie warstwy są sortowane w odpowiedniej kolejności i dzielone na grupy górne, dolne, wiercenia, i kontur.
+\lstset{caption={Obliczanie obramowania płytki na podstawie warstw}\label{Listing5}}
+\begin{lstlisting}
+x_range = [10000, -10000]
+y_range = [10000, -10000]
+for layer in layers:
+	bounds = layer.bounds
+	if(self.first_bounds is None):
+		self.first_bounds = bounds
 
-% TODO: więcej info
+	if self.first_bounds is not None:
+		layer_x, layer_y = self.first_bounds
+		x_range[0] = min(x_range[0], layer_x[0])
+		x_range[1] = max(x_range[1], layer_x[1])
+		y_range[0] = min(y_range[0], layer_y[0])
+		y_range[1] = max(y_range[1], layer_y[1])
+width = x_range[1] - x_range[0]
+height = y_range[1] - y_range[0]
+
+scale = math.floor(min(float(max_width)/width, float(max_height)/height))
+self.scale = (scale, scale)
+\end{lstlisting}
+
+W procesie interpretacji pliku zostaje utworzona nowa instancja klasy \emph{PCB}, która będzie zawierała między innymi obiekty reprezentujące poszczególne warstwy i funkcje wskazujące odpowiednie grupy warstw. Typy warstw są rozpoznawane przez program przy pomocy wyszukiwania wzorca w jego nazwie. W przyszłości możliwe jest dodanie wyszukiwania wzorca także w treści pliku. Byłaby to niezawodna i uniwersalna, lecz skomplikowana i czasochłonna operacja. Wszystkie fragmenty tekstu są porównywane za pomocą wyrażeń regularnych zdefiniowanych w słowniku, znajdującym się w pliku \emph{layers.py}. Fragment kodu \ref{Listing6} pokazuje główną funkcję, odpowiedzialną za definiowanie typu warstwy.
+
+Każdej warstwie zostaje przydzielony typ (określający sposób w jaki będzie musiała zostać później wyrenderowana) oraz grupa obiektów 2D opisujących kształty --- tzw. prymitywy (ang. \emph{primitives}), składające się z wielokątów i krzywych o różnych grubościach. Ostatecznie warstwy są sortowane w odpowiedniej kolejności i dzielone na grupy: górne, dolne, wiercenia, i kontur.
+
+\newpage
+\lstset{caption={Funkcja klasyfikująca warstwę do odpowiedniej kategorii.}\label{Listing6}}
+\begin{lstlisting}
+def guess_layer_class(filename):
+    try:
+        layer = guess_layer_class_by_content(filename)
+        if layer:
+            return layer
+    except:
+        pass
+    try:
+        directory, filename = os.path.split(filename)
+        name, ext = os.path.splitext(filename.lower())
+        for hint in hints:
+            if hint.regex:
+                if re.findall(hint.regex, filename, re.IGNORECASE):
+                    return hint.layer
+            patterns = [r'^(\w*[.-])*{}([.-]\w*)?$'
+                       .format(x) for x in hint.name]
+            if ext[1:] in hint.ext 
+            or any(re.findall(p, name, re.IGNORECASE) for p in patterns):
+                return hint.layer
+    except:
+        pass
+    return 'unknown'
+\end{lstlisting}
+
 \subsubsection{Renderowanie}
-\emph{Cairocffi} jest to oparty o CFFI\footnote{\,Interfejs do języka Python, umożliwiający wywoływanie metod w języku C}$^{,}$\footnote{\,\url{https://cffi.readthedocs.io/en/latest/}} zamiennik modułu \emph{Pycairo} --- zestawu powiązań Pythona i obiektowego API dla \emph{Cairo}. \emph{Cairo} jest to biblioteka grafiki wektorowej 2D z obsługą wielu urządzeń wyjściowych, w tym buforów obrazów, plików PNG, PostScript, PDF i SVG. 
-Klasa \emph{GerberCairoContext} w pliku cairo\_backend.py odpowiada za powiązania funkcji renderowania obiektów bezpośrednio do biblioteki \emph{Cairocffi}.
+\emph{Cairocffi} jest to oparty o CFFI\footnote{\,Interfejs do języka Python, umożliwiający wywoływanie metod w języku C}$^{,}$\footnote{\,\url{https://cffi.readthedocs.io/en/latest/}} zamiennik modułu \emph{Pycairo} --- zestawu powiązań Pythona i obiektowego API dla \emph{Cairo}. \emph{Cairo} jest to biblioteka grafiki wektorowej 2D z obsługą wielu formatów wyjściowych, w tym buforów obrazów, plików \emph{PNG, PostScript, PDF} i \emph{SVG}. 
+Klasa \emph{GerberCairoContext} w pliku cairo\_backend.py odpowiada za powiązania funkcji renderowania obiektów bezpośrednio do biblioteki \emph{Cairocffi}. Jak wspomniano wcześniej, moduł ten został statycznie dołączony do projektu.
 
-Jeżeli użytkownik wskazał pliki warstw i wierceń lub folder je zawierający, zostaną one pogrupowane w celu stworzenia dwóch obrazów plytki --- górnej i dolnej warstwy. Następnie jest uruchamiana metoda \emph{CreateImage} której efektem wyjściowym jest stworzenie dwóch obrazów w formacie .PNG o wcześniej zdefiniowanej rozdzielczości i zapisanie go w folderze wskazanym przez użytkownika. Nazwy plików posiadają prefiks "Top\_layer" lub "Bottom\_layer" oraz datę i czas stworzenia jako sufiks. 
+%TODO: moar
+Jeżeli użytkownik wskazał pliki warstw i wierceń lub folder je zawierający, program po wykonaniu analizy stworzy instancję obiektu PCB. Następnie jest uruchamiana metoda \emph{CreateImage} która przekazuje obiekt PCB do klasy \emph{GerberCairoContext}. Wszystkie składowe obiekty płytki
+
+zostaną one pogrupowane w celu stworzenia dwóch obrazów płytki --- górnej i dolnej warstwy
+warstwy odpowiednie właściwości i prymitywy
+Każda ze składowych warstwy
+
+
+
+Każda z warstw, wraz z należącymi do niej obiektami jest renderowana jako osobny obraz oraz nakładana na pozostałe w odpowiedniej kolejności. Efektem wyjściowym jest stworzenie dwóch obrazów w formacie \emph{.PNG}.
+
+Pliki posiadają wcześniej zdefiniowaną rozdzielczość, a zapisane są w folderze wskazanym przez użytkownika. Nazwy plików posiadają prefiks "Top\_layer" lub "Bottom\_layer" oraz datę i czas stworzenia jako sufiks. 
 
 Kolejnym krokiem jest stworzenie modelu płytki poprzez uruchomienie metody \emph{CreateModel}. W zależności od tego czy podczas interpretacji pliku gerber, została wykryta warstwa konturowa lub nie, zostaje stworzona siatka będąca obramowaniem płytki. W przypadku braku warstwy konturowej, wymiary siatki zostają wybrane jako punkty graniczne (ang. \emph{bounds}) obiektu PCB, to znaczy prostokątu obliczonego na podstawie maksymalnych i minimalnych koordynatów użytych we wszystkich warstwach. Model jest odpowiednio skalowany aby zachować rzeczywiste wymiary.
 % ew. opisać bardziej sposób renderowania (trochę nudne) + fragment kodu?
 Dwuwymiarowy kształt płytki zostaje następnie pogrubiony metodą \emph{Extrude} około 1.6 milimetra --- jest to standardowa przyjęta grubość płytki po złożeniu wszystkich warstw \cite{Khandpur}.
-Ostatecznie zostają stworzone i nadane obu stronom płytki dwa materiały używające wcześniej stworzonych plików .PNG jako tekstur. Dodatkowo jest stworzony lub załadowany (jeżeli już istnieje w pamięci podręcznej) materiał boczny imitujący kolor krzemowej płytki i przypisane są mu odpowiednie wartości.
+Ostatecznie zostają stworzone i nadane obu stronom płytki dwa materiały używające wcześniej stworzonych plików \emph{.PNG} jako tekstur. Dodatkowo jest stworzony lub załadowany (jeżeli już istnieje w pamięci podręcznej) materiał boczny imitujący kolor krzemowej płytki i przypisane są mu odpowiednie wartości.
 
 % TODO: więcej info
 \section {Baza modeli\label{wrl}}
@@ -421,7 +480,7 @@ Z uwagi na powyższe, w ramach pracy powstała zmodyfikowana wersja wbudowanego 
 \item Dodanie obsługi materiałów
 \item Optymalizacja procesu tworzenia geometrii (usuwanie wielokrotnych wierzchołków)
 \item Obsługa importu wielu plików z wybranego folderu
-\item Czyszczenie pamięci (ang. garbage collection)
+\item Czyszczenie pamięci (ang. \emph{garbage collection})
 \item Zapisywanie materiałów tworzonych przy imporcie w pamięci podręcznej
 \item Obsługa wyjątków przy wczytywaniu nietypowych lub wielokrotnie zagnieżdżonych struktur w plikach
 \item Poprawne wczytywanie nazwy obiektu
@@ -440,7 +499,7 @@ Potencjalne dodatkowe funkcjonalności które mogą być z wprowadzone do projek
 \item Wsparcie dla innych formatów plików projektowych (moduł pcb-tools zapowiada w swoim opisie planowane wsparcie dla formatów IPC-2581, ODB++ i innych\footnote{https://pcb-tools.readthedocs.io/en/latest/about.html}).
 \end{itemize}
 
-\subsubsection{Importer formatu .WRL}
+\subsubsection{Importer formatu \emph{.WRL}}
 \begin{itemize}
 \item Optymalizacja --- zmniejszenie zapotrzebowanie na pamięć przy przetwarzaniu dużych plików.
 \item Zmniejszenie rozmiaru plików przy pomocy instancionowaniu geometrii (wiele elementów posiada powtarzające się elementy).
@@ -470,21 +529,29 @@ Podsumowując, w efekcie końcowym zostały utworzone \emph{de facto} 2 dodatki.
 \bibliography{literatura}
 
 % spis tabel (jeżeli jest potrzebny):
-\listoftables
+%\listoftables
 
 % spis rysunków (jeżeli jest potrzebny):
 \listoffigures
 
 % załączniki (opcjonalnie):
 \appendix
-\chapter{Źródła} \label{linki}
+\chapter{Źródła internetowe} \label{linki}
 \begin{itemize}
 \item Repozytorium projektu: \url{https://github.com/adammak23/PCB-Blender}
+\item Autodesk.com - Top 10 pcb component placement tips: \url{https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/}
+\item Oficjalna strona Python Software Foundation: \url{https://www.python.org/about/}
+\item Oficjalna strona Blender Foundation: \url{https://www.blender.org/}
+\item Dokumentacja formatu Gerber: \url{https://www.ucamco.com/en/gerber}
+\item Specyfikacja formatu VRML: \url{http://www.graphics.stanford.edu/courses/cs248-98-fall/Assignments/Assignment3/VRML2_Specification/}
+\item Dodatki do edytora Visual Studio \url{https://code.visualstudio.com/docs/editor/extension-gallery}
+\item Moduł pcb-tools: \url{https://pypi.org/project/pcb-tools/}
+\item Dokumentacja CFFI: \url{https://cffi.readthedocs.io/en/latest/}
 \end{itemize}
 %\vspace*{\fill}
-\vspace{20mm}
+%\vspace{20mm}
 
-\noindent Pliki użyte w celu stworzenia bazy modeli pochodzą z oficjalnej strony pakietów KiCad\footnote{https://kicad.github.io/packages3d/}, która udostępnionia je na zasadach licencji \textbf{CC-BY 3.0}\footnote{http://creativecommons.org/licenses/by/3.0/}.
+\noindent Pliki użyte w celu stworzenia bazy modeli pochodzą z oficjalnej strony pakietów KiCad\footnote{\,\url{https://kicad.github.io/packages3d/}}, która udostępnionia je na zasadach licencji \textbf{CC-BY 3.0}\footnote{\,\url{http://creativecommons.org/licenses/by/3.0/}}.
 \vspace{5mm}
 
 
