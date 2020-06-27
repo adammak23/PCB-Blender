@@ -603,10 +603,20 @@ Jak przedstawia zdjęcie \ref{img2}, po instalacji, panel opcji dodatku znajduje
 
 \newpage
 
-Po wybraniu plików Gerber
-
 \lstset{caption={Przykładowy początek pliku warstwy (Gerber)}, language=Clean} 
 \lstinputlisting[linerange={5-17,24-28}]{code/copper.gbr}
+
+\lstset{caption={Przykładowy plik placement (\emph{.csv})}, language=Clean} 
+\lstinputlisting[linerange={1-3,6-8}]{code/pos.csv}
+
+Po wypełnieniu pól w palenu dodatku, tzn. wybraniu plików warstw (Gerber) oraz placement, wskazaniu folderu z modelami 3D i folderu wyjściowego, program jest gotowy do wygenerowania płytki. Jeżeli dane zostały wprowadzone prawidłowo, w przypadku naciśnięcia przycisku \emph{"Generate"} zostanie wygenerowany model, w przeciwnym wypadku użytkownik zostanie powiadomiony o ewentualnym błędzie w postaci wyskakującego okna. 
+
+\begin{figure}
+\centering
+\includegraphics[width=1\hsize]{fig/addon_generated}
+\caption{Płytka stworzona za pomocą dodatku}
+\source{Opracowanie własne} \label{img3}
+\end{figure}
 
 \section{Możliwości dalszego rozwoju systemu}
 Ten podrozdział opisuje potencjalne dodatkowe funkcjonalności które mogą być z wprowadzone do projektu w celu polepszenia doświadczeń użytkownika i zwiększenia możliwości programu.
