@@ -448,23 +448,14 @@ def guess_layer_class(filename):
     return 'unknown'
 \end{lstlisting}
 
-\subsubsection{Renderowanie}
+\subsection{Renderowanie}
 \emph{Cairocffi} jest to oparty o CFFI\footnote{\,Interfejs do języka Python, umożliwiający wywoływanie metod w języku C}$^{,}$\footnote{\,\url{https://cffi.readthedocs.io/en/latest/}} zamiennik modułu \emph{Pycairo} --- zestawu powiązań Pythona i obiektowego API dla \emph{Cairo}. \emph{Cairo} jest to biblioteka grafiki wektorowej 2D z obsługą wielu formatów wyjściowych, w tym buforów obrazów, plików \emph{PNG, PostScript, PDF} i \emph{SVG}. 
 Klasa \emph{GerberCairoContext} w pliku cairo\_backend.py odpowiada za powiązania funkcji renderowania obiektów bezpośrednio do biblioteki \emph{Cairocffi}. Jak wspomniano wcześniej, moduł ten został statycznie dołączony do projektu.
 
-%TODO: moar
-Jeżeli użytkownik wskazał pliki warstw i wierceń lub folder je zawierający, program po wykonaniu analizy stworzy instancję obiektu PCB. Następnie jest uruchamiana metoda \emph{CreateImage} która przekazuje obiekt PCB do klasy \emph{GerberCairoContext}. Wszystkie składowe obiekty płytki
+Jeżeli użytkownik wskazał pliki warstw i wierceń lub folder je zawierający, program po wykonaniu analizy stworzy instancję obiektu PCB. Następnie jest uruchamiana metoda \emph{CreateImage} która przekazuje obiekt PCB do klasy \emph{GerberCairoContext}. Wszystkie składowe warstw i obiekty płytki zostały wcześniej pogrupowane w celu stworzenia dwóch obrazów płytki --- górnej i dolnej warstwy. Obrazy są tworzone poprzez nakładanie na siebie w odpowiedniej kolejności wyników z renderów poszczególnych składowych warstw: miedzi, laminatu, oznaczeń i wierceń. Właściwości i klasyfikacja warstwy odpowiadają za kolor tła i elementów (prymitywów).
+Efektem wyjściowym jest stworzenie dwóch obrazów w formacie \emph{.PNG}. Pliki posiadają wcześniej zdefiniowaną rozdzielczość, a zapisane są w folderze wskazanym przez użytkownika. Nazwy plików posiadają prefiks "Top\_layer" lub "Bottom\_layer" oraz datę i czas stworzenia jako sufiks. 
 
-zostaną one pogrupowane w celu stworzenia dwóch obrazów płytki --- górnej i dolnej warstwy
-warstwy odpowiednie właściwości i prymitywy
-Każda ze składowych warstwy
-
-
-
-Każda z warstw, wraz z należącymi do niej obiektami jest renderowana jako osobny obraz oraz nakładana na pozostałe w odpowiedniej kolejności. Efektem wyjściowym jest stworzenie dwóch obrazów w formacie \emph{.PNG}.
-
-Pliki posiadają wcześniej zdefiniowaną rozdzielczość, a zapisane są w folderze wskazanym przez użytkownika. Nazwy plików posiadają prefiks "Top\_layer" lub "Bottom\_layer" oraz datę i czas stworzenia jako sufiks. 
-
+\subsubsection{Tworzenie modelu 3D}
 Kolejnym krokiem jest stworzenie modelu płytki poprzez uruchomienie metody \emph{CreateModel}. W zależności od tego czy podczas interpretacji pliku gerber, została wykryta warstwa konturowa lub nie, zostaje stworzona siatka będąca obramowaniem płytki. W przypadku braku warstwy konturowej, wymiary siatki zostają wybrane jako punkty graniczne (ang. \emph{bounds}) obiektu PCB, to znaczy prostokątu obliczonego na podstawie maksymalnych i minimalnych koordynatów użytych we wszystkich warstwach. Model jest odpowiednio skalowany aby zachować rzeczywiste wymiary.
 % ew. opisać bardziej sposób renderowania (trochę nudne) + fragment kodu?
 Dwuwymiarowy kształt płytki zostaje następnie pogrubiony metodą \emph{Extrude} około 1.6 milimetra --- jest to standardowa przyjęta grubość płytki po złożeniu wszystkich warstw \cite{Khandpur}.
@@ -501,8 +492,8 @@ Potencjalne dodatkowe funkcjonalności które mogą być z wprowadzone do projek
 
 \subsubsection{Importer formatu \emph{.WRL}}
 \begin{itemize}
-\item Optymalizacja --- zmniejszenie zapotrzebowanie na pamięć przy przetwarzaniu dużych plików.
-\item Zmniejszenie rozmiaru plików przy pomocy instancionowaniu geometrii (wiele elementów posiada powtarzające się elementy).
+\item Optymalizacja --- zmniejszenie zapotrzebowania na pamięć przy przetwarzaniu dużych plików.
+\item Zmniejszenie rozmiaru plików przy pomocy instancionowania geometrii (wiele elementów posiada powtarzające się elementy).
 \end{itemize}
 
 
