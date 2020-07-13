@@ -30,7 +30,7 @@
 \email    {adammak23@gmail.com}
 
 
-\title    {Generowanie płytek obwodu drukowanego w środowisku Python jako dodatek do programu graficznego Blender}
+\title    {Generowanie płytek PCB jako dodatek do programu graficznego Blender}
 \date     {2020}
 \miejsce  {Gdańsk}
 
@@ -44,16 +44,21 @@
 \begin{document}
 
 \begin{abstract}
-Istnieje wiele programów do projektowania PCB jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiada odpowiednich narzędzi do zaawansowanego renderowania i produkcji materiałów o charakterze edukacyjnym i prezentacyjnym. Popularny program do tworzenia grafiki 3D --- Blender, z uwagi na możliwość rozbudowania go o dodatki jest narzędziem mogącym wspomagać ten proces.
 
-Niniejsza praca przedstawia proces tworzenia i implementacji dodatku do programu Blender. Narzędzie ma na celu wspomaganie procesu projektowania PCB i tworzenie wizualizacji. Pierwszy rozdział przedstawia wymagane funkcje programu z punktu widzenia użytkownika oraz opis środowiska i technologii wykorzystanych w pracy.
-Kolejny rozdział konkretyzuje wymagania projektowe, konieczne w procesie implementacji oraz opisuje strukturę projektu.
-Rozdział trzeci przedstawia implementację modułów programu, równocześnie z przedstawieniem kolejności przepływu danych do poszczególnych komponentów i funkcji. Kolejność podrozdziałów przedstawia proces wykonywany w aplikacji. Ostatni rozdział podsumowuje całokształt wykonanej pracy oraz przedstawia możliwości dalszego rozwoju systemu.
+Istnieje wiele programów do projektowania obwodów elektronicznych, jednak żadne z nich, z uwagi na swoje ścisłe zastosowania, nie posiada odpowiednich narzędzi do zaawansowanego renderowania i produkcji materiałów o charakterze edukacyjnym i prezentacyjnym. Popularny program do tworzenia grafiki 3D --- Blender, dzięki możliwości rozbudowania go o dodatki jest narzędziem mogącym wspomagać ten proces.
+
+Niniejsza praca przedstawia proces tworzenia i implementacji dodatku do programu Blender. Narzędzie ma na celu tworzenie wizualizacji i wspomaganie projektowania płytek drukowanych, używanych w procesie tworzenia obwodów elektronicznych. Pierwszy rozdział przedstawia wymagane funkcje programu oraz opis środowiska i technologii wykorzystanych w pracy. Przedstawione są formaty i omówiona budowa plików projektowych, wchodzących w skład schematów elektronicznych, które są danymi wejściowymi dla tworzonego systemu.
+
+Kolejny rozdział konkretyzuje wymagania projektowe, wynikające bezpośrednio z opisanych wcześniej, niezbędnych funkcjonalności. Sprecyzowane wymagania są konieczne i pozwalają podzielić rozwiązanie w procesie implementacji na niezależne moduły. Rozdział drugi opisuje także strukturę interfejsu Blendera, jak i całego stworzonego projektu w kontekście implementacji wzorca projektowego i wzajemnych zależności modułów.
+
+Rozdział trzeci przedstawia implementację modułów tworzonego narzędzia, równocześnie z przedstawieniem kolejności przepływu danych do poszczególnych komponentów i funkcji. Kolejność podrozdziałów przedstawia proces wykonywany w aplikacji.
+
+Ostatni rozdział podsumowuje całokształt wykonanej pracy oraz przedstawia użycie dodatku na przykładowych plikach projektowych. Przedstawione zostają także możliwości dalszego rozwoju systemu.
 \end{abstract}
 
 
 % słowa kluczowe
-\keywords{Wizualizacja, Grafika, Elektronika, 3D, Blender, Python, PCB}
+\keywords{Elektronika, 3D, Blender, Addon, Python, PCB, RS-274X, Gerber}
 
 % tytuł i spis treści
 \maketitle
@@ -61,23 +66,23 @@ Rozdział trzeci przedstawia implementację modułów programu, równocześnie z
 % wstęp
 \introduction
 
-Obwody drukowane czy też inaczej płytki drukowane (zwane dalej "PCB", ang. \emph{Printed Circuit Board}) to podstawa dla każdego modułu elektronicznego. Są to płytki izolacyjne z połączeniami elektrycznymi i punktami lutowniczymi, służącymi do montażu podzespołów elektronicznych. Dzięki swojej budowie oraz dobranym częściom składowym pozwalają inżynierom z roku na rok konstruować coraz to nowocześniejsze i bardziej funkcjonalne urządzenia. PCB służy przede wszystkim do montowania wszelkich podzespołów elektronicznych oraz zapewnienia im wspólnego stabilnego połączenia.
+Obwody drukowane lub płytki drukowane (zwane dalej "PCB", ang. \emph{Printed Circuit Board}) to podstawa dla każdego modułu elektronicznego. Są to płytki izolacyjne z połączeniami elektrycznymi i punktami lutowniczymi, służącymi do montażu podzespołów elektronicznych. Dzięki swojej budowie oraz dobranym częściom składowym, pozwalają one inżynierom z roku na rok konstruować coraz to nowocześniejsze i bardziej funkcjonalne urządzenia. PCB służy przede wszystkim do montowania wszelkich podzespołów elektronicznych oraz zapewnienia im wspólnego stabilnego połączenia.
 
 \vspace{5mm}
 Tworzenie PCB składa się z trzech głównych etapów \cite{Abboud}:
 
 \begin{itemize}
 \item
-Logic Design - Stworzenie schematu logiki i reguł projektowych, spis użytych komponentów i ich wzajemnych połączeń
+Logic Design - Stworzenie schematu logiki i reguł projektowych oraz spisu użytych komponentów i ich wzajemnych połączeń.
 \item
-Layout - Zaprojektowanie układu, który decyduje o fizycznym położeniu i połączeniach (tzw. trasowanie -- \emph{routing}) podzespołów
+Layout - Zaprojektowanie układu, który decyduje o fizycznym położeniu i połączeniach (tzw. trasowanie -- \emph{routing}) podzespołów.
 \item
-Produkcja przemysłowa
+Produkcja przemysłowa.
 \end{itemize}
     
     Najważniejszym punktem projektowania układu jest rozmieszczenie komponentów. Ten proces jest skomplikowanym, twórczym przedsięwzięciem i prawdopodobnie jednym z najtrudniejszych aspektów procesu projektowania PCB. Wielu inżynierów uważa go za formę sztuki (rysunek~\ref{RYS.1}.) gdyż w przeciwieństwie do schematu, który opiera się tylko na matematyce, jest nieco bardziej płynny i elastyczny oraz pozwala na kreatywne wdrożenie swojego projektu w życie.
 
-Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod uwagę mnogość technicznej wiedzy, pomiarów i zależności takich jak: optymalizacja długości ścieżek oraz ich szerokość, ochrona miejsc narażonych na dużą temperaturę, ograniczenia mechaniczne i montażowe, itd. Nawet zastosowanie automatucznego wyznaczania ścieżek do optymalizacji nie zawsze da poprawny rezultat.\footnote{\,\href{https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/}{Autodesk.com - Top 10 pcb component placement tips}} Z uwagi na ilość i różnorodność ograniczeń nie jest możliwa całkowita automatyzacja sprawdzania poprawności wykonanego projektu, zatem przydatna dla projektanta okazuje się wizualizacja efektu końcowego. Jest ona także niezbędnym elementem procesu marketingowego, logistycznego czy edukacyjnego.
+Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod uwagę techniczną wiedzę, pomiary i zależności takie jak: optymalizacja długości ścieżek oraz ich szerokość, ochrona miejsc narażonych na dużą temperaturę, ograniczenia mechaniczne i montażowe itd. Nawet zastosowanie automatycznego wyznaczania ścieżek do optymalizacji nie zawsze da poprawny rezultat.\footnote{\,\href{https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/}{Autodesk.com - Top 10 pcb component placement tips}} Z uwagi na ilość i różnorodność ograniczeń nie jest możliwa całkowita automatyzacja sprawdzania poprawności wykonanego projektu, zatem przydatna dla projektanta okazuje się wizualizacja efektu końcowego. Jest ona także niezbędnym elementem procesu marketingowego, logistycznego czy edukacyjnego.
 
 \begin{figure}[!tbh]
 \centering
@@ -88,21 +93,21 @@ Nie oznacza to jednak pełnej dowolności w projekcie, gdyż należy wziąć pod
 
 \chapter{Cel i zakres pracy magisterskiej}
 
-Celem niniejszej pracy jest stworzenie łatwego do rozbudowania i spójnego systemu umożliwiającego import plików używanych bezpośrednio w przemyśle projektowania PCB do programu Blender. Następnie dodatek będzie interpretował i wyświetlał pełnowymiarowy model 3D płytki drukowanej, która powstałaby w procesie produkcji przemysłowej. Aby stworzyć wizualizację wymagane będą projektowe pliki warstw i układu elementów. Ponadto, w ramach pracy stworzona zostanie podstawowa baza modeli 3D, konieczna w przypadku wyświetlania elementów na płytce. Dodatek będzie posiadał prosty i przejrzysty interfejs który zapewni dostęp do wszystkich funkcjonalności, ale nie przytłoczy odbiorcy nadmiarem funkcji. Pozwoli to nie tylko osobom technicznym z poza branży grafiki komputerowej na łatwy dostęp do wizualizacji i edycji swoich projektów ale także na łatwiejszą integrację projektów przemysłowych z marketingową i graficzną częścią przemysłu.
+Celem niniejszej pracy jest stworzenie łatwego do rozbudowania i narzędzia, umożliwiającego import plików używanych bezpośrednio w przemyśle projektowania PCB do programu Blender. Następnie dodatek będzie interpretował i wyświetlał pełnowymiarowy model 3D płytki drukowanej, która powstałaby w procesie produkcji przemysłowej. Aby stworzyć wizualizację wymagane będą projektowe pliki warstw i układu elementów. Ponadto, w ramach pracy stworzona zostanie podstawowa baza modeli 3D, konieczna w przypadku wyświetlania elementów na płytce. Dodatek będzie posiadał prosty i przejrzysty interfejs który zapewni dostęp do wszystkich funkcjonalności, ale nie przytłoczy odbiorcy nadmiarem funkcji. Pozwoli to nie tylko osobom z poza branży grafiki komputerowej na łatwy dostęp do wizualizacji i edycji swoich projektów ale także na łatwiejszą integrację projektów przemysłowych z marketingową i graficzną częścią przemysłu.
 
-Rozdział ten na wstępie definiuje wymagania funkcjonalne jakie spełniać musi tworzone rozwiązanie. Analiza tych wymagań umożliwia zidentyfikowanie i opisanie pożądanego zachowania systemu. Następny fragment opisuje technologie jakimi posłużono się w trakcie tworzenia pracy. Zostają także opisane typy i rozszerzenia plików na jakich omawiany system będzie operował.
+Rozdział ten na wstępie definiuje wymagania funkcjonalne jakie spełniać musi tworzone rozwiązanie. Analiza tych wymagań umożliwia zidentyfikowanie i opisanie pożądanego zachowania systemu. Następny fragment opisuje technologie, jakimi posłużono się w trakcie tworzenia pracy. Zostają także opisane typy i rozszerzenia plików na jakich omawiany system będzie operował.
 \newpage
 
 \section{Wymagania funkcjonalne}
 
-Zrealizowany system jest dodatkiem (ang. \emph{add-on}) do programu Blender, kompatybilnym z wersją 2.8 wzwyż. Wybór konkretnie tej wersji programu był podyktowany jego nową odsłoną oferującą między innymi duże zmiany w interfejsie programistycznym aplikacji (zwanym dalej API --- ang. \emph{application programming interface}). Wtyczka udostępnia użytkownikowi dodatkowe funkcjonalności z poziomu graficznego interfejsu programu w postaci panelu. Następujące wymagania zostały sformułowane z punktu widzenia użytkownika.
+Zrealizowany system jest dodatkiem (ang. \emph{add-on}) do programu Blender, kompatybilnym z wersją 2.8 wzwyż. Wybór konkretnie tej wersji programu był podyktowany jego nową odsłoną oferującą między innymi duże zmiany w interfejsie programistycznym aplikacji (zwanym dalej API --- ang. \emph{application programming interface}). Dodatek udostępnia użytkownikowi dodatkowe funkcjonalności z poziomu graficznego interfejsu programu w postaci panelu. Następujące wymagania zostały sformułowane z punktu widzenia użytkownika.
 \begin{itemize}
 \item Wybranie folderu zawierającego wszystkie pliki projektu PCB lub wybranie pojedynczych plików warstw.
-\item Wskazanie plików pozycji elementów (ang. \emph{"Pick And Place"})\footnote{\,Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}
-\item Użycie wbudowanej lub własnej biblioteki modeli 3D podzespołów
-\item Wybór końcowej rozdzielczości i miejsca zapisu plików wytworzonych w procesie renderowania
-\item Przycisk tworzący model 3D płytki na podstawie wybranych plików
-\item Użytkownik powinien być informowany o błędach powstałych w trakcie procesu generowania płytki
+\item Wskazanie plików pozycji elementów (ang. \emph{"Pick And Place"})\footnote{\,Więcej o strukturze plików projektowych PCB w punkcie 1.2.3}.
+\item Użycie wbudowanej lub własnej biblioteki modeli 3D podzespołów.
+\item Wybór końcowej rozdzielczości i miejsca zapisu plików wytworzonych w procesie renderowania.
+\item Przycisk tworzący model 3D płytki na podstawie wybranych plików.
+\item Użytkownik powinien być informowany o błędach powstałych w trakcie procesu generowania płytki.
 \end{itemize}
 
 \newpage
@@ -110,15 +115,17 @@ Zrealizowany system jest dodatkiem (ang. \emph{add-on}) do programu Blender, kom
 \section {Opis technologii wykorzystanych w pracy}
 
 \subsection{Python}
-Python jest językiem programowania wysokiego poziomu, posiadającym aktywną społeczność i nieograniczone możliwości poprzez rozbudowę go o zewnętrzne pakiety.\footnote {\,\url{https://www.python.org/about/}} API Blendera jest w większości przygotowane do użycia właśnie Pythona i chociaż istnieją ograniczenia tego, do jakich funkcjonalności programu mamy dostęp, jest to jedyne oficjalnie wspierane rozwiązanie dzięki któremu wiele można osiągnąć bez konieczności zagłębiania się w kod C / C++ Blendera.
+Python jest językiem programowania wysokiego poziomu, posiadającym nieograniczone możliwości poprzez rozbudowę go o zewnętrzne pakiety.\footnote {\,\url{https://www.python.org/about/}} API Blendera jest w większości przygotowane do użycia właśnie Pythona i chociaż istnieją ograniczenia tego, do jakich funkcjonalności programu mamy dostęp, jest to jedyne oficjalnie wspierane rozwiązanie dzięki któremu wiele można osiągnąć bez konieczności zagłębiania się w kod C / C++ Blendera.
 
 \subsection {Blender 2.8}
-Darmowy program \emph{Open-source}\footnote{\,\url{https://www.blender.org/about/license/}} cechujący się wszechstronnością i możliwością rozbudowania go o dodatkowe biblioteki lub skrypty napisane w języku Python, które rozszerzają podstawowe funkcjonalności.
+Darmowy program z otwartym kodzie źródłowym (ang. \emph{Open-source}\footnote{\,\url{https://www.blender.org/about/license/}}) cechujący się wszechstronnością i możliwością rozbudowania go o dodatkowe biblioteki lub skrypty napisane w języku Python, które rozszerzają podstawowe funkcjonalności.
 
-Dodatek do programu Blender różni się od dodatkowej biblioteki Pythona jedynie pewnymi dodatkowymi wymaganiami jak obiekt zawierający metadane, takie jak: nazwa, wersja, kategoria, autor, etc. Określa też minimalną wersję Blendera wymaganą do uruchomienia skryptu. Dodatek jest więc sposobem na enkapsulację modułu Pythona w sposób, który użytkownik może z łatwością wykorzystać.
+Dodatek do programu Blender różni się od dodatkowej biblioteki Pythona jedynie pewnymi dodatkowymi wymaganiami. Musi posiadać obiekt zawierający metadane, takie jak: nazwa, wersja, kategoria, autor, etc. Określa też minimalną wersję Blendera wymaganą do uruchomienia skryptu. Dodatek jest więc sposobem na enkapsulację modułu Pythona w sposób, który użytkownik może z łatwością wykorzystać.
 
 Blender ma wbudowany interpreter Pythona, który jest ładowany po uruchomieniu programu. Utrudnia to znacząco wykorzystanie automatycznego pobierania i instalowania zależnych od siebie pakietów, co za tym idzie, tworzony w ramach pracy system, aby ułatwić korzystanie z niego, musi być niezależny od zewnętrznych, dynamicznie pobieranych bibliotek.
 
+\subsection{Środowisko Visual Studio Code}
+Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadzanych co roku przez serwis StackOverflow\footnote{\,\url{https://insights.stackoverflow.com/survey/2018/\#development-environments-and-tools}}$^{,}$\footnote{\,\url{https://insights.stackoverflow.com/survey/2019\#development-environments-and-tools}} cieszy się coraz większym uznaniem. Wybór tego środowiska nie był jednak dyktowany jego popularnością lecz nowymi możliwościami otwierającymi się dzięki instalowaniu w nim rozszerzeń.\footnote{\,\url{https://code.visualstudio.com/docs/editor/extension-gallery}} Dodatek stworzony przez Jacques Lucke na potrzeby rozwoju addonów do programu Blender pozwala między innymi na automatyzację procesu aktualizowania tworzonego addonu przez tworzenie skrótu w wewnętrznych folderach Blendera, co znacznie przyśpiesza pracę nad systemem. Ponadto posiada ułatwienia takie jak debugowanie w konsoli, tworzenie odpowiednich struktur i przydatne komendy. Sposób działania dodatku ma na celu także upewnienie się, że rozszerzenie nie koliduje z innym menedżerem pakietów Pythona.\footnote{\,\url{https://marketplace.visualstudio.com/items?itemName=JacquesLucke.blender-development}} 
 
 % Gerber, G-code, CN/CNC Drill, Placement, WRL(VRML)
 \subsection{Pliki projektowe PCB}
@@ -132,7 +139,7 @@ Płytki drukowane mogą być jednostronne (jedna warstwa miedzi), dwustronne (dw
 Pliki Gerber reprezentują między innymi warstwy miedzi, maskę lutowniczą, legendę oraz dane wiercenia i trasy. Dodatkowe atrybuty dostarczają informacji o sposobie montowania, połączeń i nazw poszczególnych elementów. Format pliku Gerber jest prosty, kompaktowy i jednoznaczny. Jest bazowany na języku \emph{G-code}, oznaczanym RS-274. Dzięki zastosowaniu 7-bitowych znaków ASCII jest czytelny dla człowieka i łatwy do debugowania. Obecnie używany od 2014 roku format to tzw. Rozszerzony Gerber (ang. \emph{Extended Gerber}) lub RS-274X.\footnote{\,Dokumentacja formatu Gerber - \url{https://www.ucamco.com/en/gerber}}
 
 \subsubsection {Drill}
-Kolejnym, generowanym przez projektanta płytki formatem używanym w produkcji są pliki wierceń (ang. \emph{NC / CNC drill}), pierwotnie zaprojektowane przez twórców wiercących i trasujących maszyn CNC jako zastrzeżone, dedykowane formaty wejściowe dla ich urządeń. Znane są pod nazwami takimi jak: Excellon, Hitachi, Sieb \& Meyer, Posalux, itd.\cite{Charras}. Wszystkie z pośród tych formatów są podobne, ponieważ opierają się na wspomnianym wcześniej G-code. Rodzaje wierceń w PCB dzielą się na otwory zwykłe - NPTH (ang. \emph{Not Plated Through Hole}) i pokryte miedzią - PTH (ang. \emph{Plated Through Hole})\cite{voldman}. Stosowanie innego standardu nie jest jednak konieczne, jako że z czasem formaty te zmieniły swoje zastosowanie i obecnie powszechnie stosowaną praktyką jest generowanie tych plików w formacie Gerber.
+Kolejnym, generowanym przez projektanta płytki formatem używanym w produkcji są pliki wierceń --- NC lub CNC (ang. \emph{Numerical control, computer numerical control}), pierwotnie zaprojektowane przez twórców wiercących i trasujących maszyn CNC jako zastrzeżone, dedykowane formaty wejściowe dla ich urządeń. Znane są pod nazwami takimi jak: Excellon, Hitachi, Sieb \& Meyer, Posalux itd.\cite{Charras}. Wszystkie z pośród tych formatów są podobne, ponieważ opierają się na wspomnianym wcześniej G-code. Rodzaje wierceń w PCB dzielą się na otwory zwykłe - NPTH (ang. \emph{Not Plated Through Hole}) i pokryte miedzią - PTH (ang. \emph{Plated Through Hole})\cite{voldman}. Stosowanie innego standardu nie jest jednak konieczne, jako że z czasem formaty te zmieniły swoje zastosowanie i obecnie powszechnie stosowaną praktyką jest generowanie tych plików w formacie Gerber.
 
 \subsubsection {Placement}
 Ostatnim i dosyć kluczowym elementem są pliki wskazujące elementy rozmieszczane na płytce. Jest to prosty format nazywany \emph {Pick-And-Place, Placement list, X-Y file, Mount SMD}  i składa się z kilku wartości:
@@ -149,9 +156,6 @@ Plik zawiera opis elementów montowanych za pomocą technologii montażu przewle
 
 \subsection{Pliki VRML i X3D}
 Format \emph{.wrl} zwany VRML (ang. \emph {Virtual Reality Modeling Language}) powstały w 1994 roku, stał się pierwszym internetowym formatem 3D, został później zastąpiony przez format X3D \cite{vrml}. Jego ówczesna powszechność sprawiła, że wiele programów przemysłowych tworzonych w latach dziewięćdziesiątych posiada bazy modeli w tym właśnie formacie. Więcej o praktycznym wykorzystaniu tego standardu w rozdziale \ref{wrl}.
-
-\subsection{Środowisko Visual Studio Code}
-Visual Studio Code jest to darmowy edytor kodu który według badań przeprowadzanych co roku przez serwis StackOverflow\footnote{\,\url{https://insights.stackoverflow.com/survey/2018/\#development-environments-and-tools}}$^{,}$\footnote{\,\url{https://insights.stackoverflow.com/survey/2019\#development-environments-and-tools}} cieszy się coraz większym uznaniem. Wybór tego środowiska nie był jednak dyktowany jego popularnością lecz nowymi możliwościami otwierającymi się dzięki instalowaniu w nim rozszerzeń.\footnote{\,\url{https://code.visualstudio.com/docs/editor/extension-gallery}} Dodatek stworzony przez Jacques Lucke na potrzeby rozwoju addonów do programu Blender pozwala między innymi na automatyzację procesu aktualizowania tworzonego addonu przez tworzenie skrótu w wewnętrznych folderach Blendera, co znacznie przyśpiesza pracę nad systemem. Ponadto posiada ułatwienia takie jak debugowanie w konsoli, tworzenie odpowiednich struktur i przydatne komendy. Sposób działania dodatku ma na celu także upewnienie się, że rozszerzenie nie koliduje z innym menedżerem pakietów Pythona.\footnote{\,\url{https://marketplace.visualstudio.com/items?itemName=JacquesLucke.blender-development}} 
 
 \chapter{Architektura zrealizowanego systemu}
 Aby zobrazować podstawowe założenia projektu, w niniejszym rozdziale zostanie omówiona koncepcyjna struktura zrealizowanego systemu. Przedstawi ona bardziej szczegółowo mechanizmy działania najważniejszych komponentów aplikacji, a finalnie pomoże w samym procesie tworzenia oprogramowania.
@@ -185,6 +189,7 @@ Z poziomu kodu, API Blendera udostępnia główne moduły pod słowem kluczowym 
 \item \textbf{bpy.ops} -- Zawiera wszystkie \emph{Operatory} Blendera. (W API każda komenda Blendera jest zaimplementowana jako metoda klasy \emph{Operator}).
 \item \textbf{bpy.types} -- Posiada definicje wszystkich klas używanych w strukturach.
 \end{itemize}
+\newpage
 Istnieje także wiele mniejszych, pobocznych modułów i podmodułów pomocniczych. Niektóre z nich nie należą nawet do głównego modułu \textbf{bpy}. Mniejsze moduły, między innymi: bpy.props, bpy\_extras, bpy.utils, mathutils, bmesh, będą omówione lub użyte w dalszej części tej pracy.
 
 API Blendera wymaga od klas implementacji ściśle zdefiniowanych metod. Jest to rodzaj „umowy” pomiędzy skryptem a systemem rdzenia Blendera. Zgadzamy się na wdrożenie wymaganych funkcji w swojej klasie a Blender zgadza się wywoływać je w ściśle określonych okolicznościach. W programowaniu obiektowym taka lista zakontraktowanych funkcji i właściwości nazywa się „interfejsem”. Aby pomóc w jego implementacji, API Blendera dostarcza odpowiednie klasy bazowe, które w żargonie programowania obiektowego są tak zwanymi „klasami abstrakcyjnymi”. Zapewniają domyślne, puste implementacje wszystkich metod wymaganych przez interfejs. Nasze klasy dziedziczą tę domyślną treść z klasy bazowej.
@@ -440,7 +445,7 @@ def guess_layer_class(filename):
 \end{lstlisting}
 
 \subsection{Renderowanie}
-\emph{Cairocffi} jest to oparty o CFFI\footnote{\,Interfejs do języka Python, umożliwiający wywoływanie metod w języku C}$^{,}$\footnote{\,\url{https://cffi.readthedocs.io/en/latest/}} zamiennik modułu \emph{Pycairo} --- zestawu powiązań Pythona i obiektowego API dla \emph{Cairo}. \emph{Cairo} jest to biblioteka grafiki wektorowej 2D z obsługą wielu formatów wyjściowych, w tym buforów obrazów, plików \emph{PNG, PostScript, PDF} i \emph{SVG}. 
+Biblioteka \emph{Cairocffi}, używana przez moduł \emph{pcb-tools}, jest oparta o CFFI\footnote{\,Interfejs do języka Python, umożliwiający wywoływanie metod w języku C}$^{,}$\footnote{\,\url{https://cffi.readthedocs.io/en/latest/}}. Jest to zamiennik modułu \emph{Pycairo} --- zestawu powiązań Pythona i obiektowego API dla \emph{Cairo}. \emph{Cairo} jest to biblioteka grafiki wektorowej 2D z obsługą wielu formatów wyjściowych, w tym buforów obrazów, plików \emph{PNG, PostScript, PDF} i \emph{SVG}. 
 Klasa \emph{GerberCairoContext} w pliku cairo\_backend.py odpowiada za powiązania funkcji renderowania obiektów bezpośrednio do biblioteki \emph{Cairocffi}. Jak wspomniano wcześniej, moduł ten został statycznie dołączony do projektu.
 
 Jeżeli użytkownik wskazał pliki warstw i wierceń lub folder je zawierający, program po wykonaniu analizy stworzy instancję obiektu PCB. Następnie jest uruchamiana metoda \emph{CreateImage} która przekazuje obiekt PCB do klasy \emph{GerberCairoContext}. Wszystkie składowe warstw i obiekty płytki zostały wcześniej pogrupowane w celu stworzenia dwóch obrazów płytki --- górnej i dolnej warstwy. Obrazy są tworzone poprzez nakładanie na siebie w odpowiedniej kolejności wyników z renderów poszczególnych składowych warstw: miedzi, laminatu, oznaczeń i wierceń. Właściwości i klasyfikacja warstwy odpowiadają za kolor tła i elementów (prymitywów). Fragment kodu \ref{Listing7} przedstawia główną funkcję renderującą warstwę.
@@ -642,7 +647,7 @@ Ten podrozdział opisuje potencjalne dodatkowe funkcjonalności które mogą by�
 Praca ta omawia proces tworzenia dodatku do programu Blender. Na podstawie plików projektowych, dodatek tworzy realistyczną i wierną rzeczywistym wymiarom wizualizację modelu 3D płytki drukowanej, która powstałaby w procesie produkcji przemysłowej. W pierwszym rozdziale zostały opisane wszystkie technologie użyte podczas tworzenia oprogramowania. Dalej, została omówiona architektura realizowanego systemu, implementacja interfejsu i logiki, a także proces tworzenia zasobów w postaci bazy modeli 3D.
 Aby dodatek był łatwy w użytkowaniu, całość stworzonego i opisanego w tej pracy oprogramowania, wraz z bazami modeli koniecznymi do prawidłowego wczytywania plików \emph{placement}, jest dostępna pod adresem dołączonym do pracy w załączniku \ref{linki}. 
 
-Podsumowując, w efekcie końcowym zostały utworzone \emph{de facto} 2 dodatki. Jeden oferujący zakładaną funkcjonalność oraz drugi, powstały jako narzędzie do tworzenia bazy modeli. W wyniku prac implementacyjnych udało się zrealizować projekt, który jest zgodny z przyjętymi wcześniej wymaganiami i założeniami przedstawionymi na etapie opracowywania koncepcji rozwiązania. Powstałe oprogramowanie nie wyczerpuje jednak wszystkich możliwości rozwiązania problemu, jako, że instnieje i ciągle powstaje wiele programów i formatów używanych w produkcji PCB. Dzięki zastosowaniu modułowego podejścia do systemu, jest on uniwersalny i łatwy do rozbudowania o dodatkowe funkcjonalności.
+W efekcie końcowym zostały utworzone dwa dodatki. Jeden oferujący zakładaną funkcjonalność oraz drugi, powstały jako narzędzie do tworzenia bazy modeli. W wyniku prac implementacyjnych udało się zrealizować projekt, który jest zgodny z przyjętymi wcześniej wymaganiami i założeniami przedstawionymi na etapie opracowywania koncepcji rozwiązania. Powstałe oprogramowanie nie wyczerpuje jednak wszystkich możliwości rozwiązania problemu, jako, że instnieje i ciągle powstaje wiele programów i formatów używanych w produkcji PCB. Dzięki zastosowaniu modułowego podejścia do systemu, jest on uniwersalny i łatwy do rozbudowania o dodatkowe funkcjonalności.
 
 
 % literatura (obowiązkowo):
@@ -657,7 +662,7 @@ Podsumowując, w efekcie końcowym zostały utworzone \emph{de facto} 2 dodatki.
 
 % załączniki (opcjonalnie):
 \appendix
-\chapter{Źródła internetowe} \label{linki}
+\chapter{Źródła} \label{linki}
 \begin{itemize}
 \item Repozytorium projektu: \url{https://github.com/adammak23/PCB-Blender}
 \item Autodesk.com - Top 10 pcb component placement tips: \url{https://www.autodesk.com/products/eagle/blog/top-10-pcb-component-placement-tips-pcb-beginner/}
@@ -671,12 +676,10 @@ Podsumowując, w efekcie końcowym zostały utworzone \emph{de facto} 2 dodatki.
 \end{itemize}
 %\vspace*{\fill}
 
-\vspace{20mm}
+\vspace{10mm}
 
 \noindent Pliki użyte w celu stworzenia bazy modeli pochodzą z oficjalnej strony pakietów KiCad\footnote{\,\url{https://kicad.github.io/packages3d/}}, która udostępnionia je na zasadach licencji \textbf{CC-BY 3.0}\footnote{\,\url{http://creativecommons.org/licenses/by/3.0/}}.
-\vspace{5mm}
+\vspace{10mm}
 
-
-\oswiadczenie
 
 \end{document}
