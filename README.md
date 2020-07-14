@@ -37,7 +37,7 @@ For PCB-Blender
 - Support for other project file formats (the pcb-tools module announces in its description that they planned support for IPC-2581, ODB ++ and other ([source](https://pcb-tools.readthedocs.io/en/latest/about.html))
 - Creation of subsequent model bases based on components from other design programs (e.g [FreeCAD](https://github.com/marmni/FreeCAD-PCB-library))
 - Create a dictionary of model names so that many names can point to one model
-- Project uses embedded cairocffi library compiled with Python 3.7
 
 Known Bugs and Limitations:
 - [Windows] To remove addon, close Blender, navigate to addons ("Blender/2.8x/scripts/addons") and remove PCB_Blender folder. As long as Python interpreter embedded in Blender is still running, it still has the .pyd or .dll file open, and Windows doesn’t let you remove the file.
+- Project uses embedded cairocffi library compiled with Python 3.7
