@@ -1,4 +1,4 @@
-[![AWESOME CHEATSHEETS LOGO](_design/Logo3.png)]()
+[![AWESOME CHEATSHEETS LOGO](xelatex-mgr-master/fig/addon_generated.png)]()
 
 [![Awesome](https://awesome.re/badge.svg)](https://awesome.re) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/adammak23/FreePCB-Blender/blob/master/LICENSE)
 
