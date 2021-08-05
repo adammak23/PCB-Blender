@@ -6,7 +6,7 @@
 PCB-Blender
 
 Blender addon for visualization of printed circuit board (PCB) projects created in Gerber (RS-274X) and Excellon format.
-Developed as part of my Master Thesis on University of Gdańsk ([PL](https://github.com/adammak23/PCB-Blender/blob/master/xelatex-mgr-master/magisterka.pdf), ENG (to be added))
+Developed as part of my Master Thesis at University of Gdańsk ([PL](https://github.com/adammak23/PCB-Blender/blob/master/xelatex-mgr-master/magisterka.pdf), ENG (to be added))
 
 Links to .blend model packages:
 - [KiCad](https://drive.google.com/file/d/13XPhmWK7C0UOgMiue4U_l_PDTFWbCmsc/view?usp=sharing)
